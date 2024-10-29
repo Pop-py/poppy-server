@@ -76,3 +76,5 @@ jobs:
               'sudo docker tag poppyserver/poppy:latest poppy',
               'sudo docker compose up -d'
             ]" --output text
+        env:
+          DOCKER_COMPOSE_YML: ${{ secrets.DOCKER_COMPOSE_YML }}
