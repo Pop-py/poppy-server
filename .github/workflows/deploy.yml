@@ -26,7 +26,6 @@ jobs:
         run: |
           touch ./docker-compose.yml
           echo "$DOCKER_COMPOSE_YML" > ./docker-compose.yml
-          mkdir ./src/main
           cd ./src/main
           mkdir resources
           cd ./resources
