@@ -63,13 +63,13 @@ jobs:
       - name: EC2에 Docker Compose 배포
         run: |
           echo "$DOCKER_COMPOSE_YML" > docker-compose.yml
-          aws s3 cp docker-compose.yml s3://your-bucket-name/docker-compose.yml
+          aws s3 cp docker-compose.yml s3://poppy-server-bucket/docker-compose.yml
           aws ssm send-command \
             --instance-ids i-01991812d9b9ff3b2 \
             --document-name "AWS-RunShellScript" \
             --parameters "commands=[
               'cd /home/ubuntu',
-              'aws s3 cp s3://your-bucket-name/docker-compose.yml .',
+              'aws s3 cp s3://poppy-server-bucket/docker-compose.yml .',
               'sudo docker compose down',
               'sudo docker rmi poppyserver/poppy:latest || true',
               'sudo docker pull poppyserver/poppy:latest',
