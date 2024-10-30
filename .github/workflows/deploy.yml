@@ -3,8 +3,9 @@ name: CI/CD
 # main branch에 push 될 때 실행
 on:
   push:
-    branches:
-      - 'main'
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
 
 jobs:
   build:
