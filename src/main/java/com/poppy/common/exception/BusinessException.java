@@ -22,7 +22,6 @@ public class BusinessException extends RuntimeException {
         this.httpStatus = HttpStatus.valueOf(errorCode.getCode());
     }
 
-    // 상세 예외 메시지
     public BusinessException(String message, HttpStatus httpStatus) {
         super(message);
         this.code = httpStatus.value();
