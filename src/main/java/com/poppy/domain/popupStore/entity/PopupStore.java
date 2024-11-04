@@ -6,6 +6,7 @@ import com.poppy.domain.storeCategory.entity.StoreCategory;
 import com.poppy.domain.wishList.entity.WishList;
 import jakarta.persistence.*;
 import lombok.Getter;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -15,6 +16,7 @@ import java.util.List;
 @Entity
 @Table(name = "popup_stores")
 @Getter
+@EntityListeners(AuditingEntityListener.class)
 public class PopupStore {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -26,7 +28,16 @@ public class PopupStore {
     private String thumbnail;
 
     @Column(nullable = false)
-    private String location;
+    private String location; // 위치 설명용
+
+    @Column(nullable = false)
+    private String address; // 실제 도로명 주소
+
+    @Column(nullable = false)
+    private Double latitude; // 위도
+
+    @Column(nullable = false)
+    private Double longitude; // 경도
 
     @Column(nullable = false)
     private LocalDate startDate;
