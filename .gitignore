@@ -38,3 +38,5 @@ out/
 
 application.yml
 docker-compose.yml
+
+/src/main/generated/
