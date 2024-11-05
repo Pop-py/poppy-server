@@ -2,6 +2,8 @@ package com.poppy.common.entity;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Embeddable;
+import jakarta.persistence.PrePersist;
+import jakarta.persistence.PreUpdate;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import org.springframework.data.annotation.CreatedDate;
@@ -26,8 +28,14 @@ public class BaseTimeEntity {
         this.updateTime = LocalDateTime.now();
     }
 
-    // update time 갱신
-    public void updateTime() {
+    @PrePersist
+    protected void onCreate() {
+        this.createTime = (this.createTime == null) ? LocalDateTime.now() : this.createTime;
+        this.updateTime = LocalDateTime.now();
+    }
+
+    @PreUpdate
+    protected void onUpdate() {
         this.updateTime = LocalDateTime.now();
     }
 }

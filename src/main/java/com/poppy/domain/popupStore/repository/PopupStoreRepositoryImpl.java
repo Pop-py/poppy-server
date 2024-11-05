@@ -29,16 +29,17 @@ public class PopupStoreRepositoryImpl implements PopupStoreRepositoryCustom {
 
     // 카테고리별 조회
     @Override
-    public List<PopupStore> findByCategory(String categoryName) {
+    public List<PopupStore> findByCategoryId(Long categoryId) {
         return queryFactory
                 .selectFrom(store)
                 .where(
                         isEndFalse(),
-                        categoryEq(categoryName)
+                        store.storeCategory.id.eq(categoryId)
                 )
                 .orderBy(store.baseTime.createTime.desc())
                 .fetch();
     }
+
 
     // 위치별 조회
     @Override

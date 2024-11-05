@@ -1,4 +1,4 @@
-package com.poppy.common.config;
+package com.poppy.common.config.querydsl;
 
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import jakarta.persistence.EntityManager;

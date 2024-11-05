@@ -10,6 +10,7 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -39,13 +40,13 @@ public class PopupStore {
     @Column(nullable = false)
     private Double longitude; // 경도
 
-    @Column(nullable = false)
+    @Column(name = "start_date", nullable = false)
     private LocalDate startDate;
 
-    @Column(nullable = false)
+    @Column(name = "end_date", nullable = false)
     private LocalDate endDate;
 
-    private LocalDateTime time;  // 팝업 스토어 예약 가능 시간 (ex. 17:00)
+    private LocalTime time;  // 팝업 스토어 예약 가능 시간 (ex. 17:00)
 
     // 현재 예약 인원은 Redis에서 처리
     @Column(name = "available_slot", nullable = false)
