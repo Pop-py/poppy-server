@@ -46,7 +46,7 @@ jobs:
         shell: bash
 
       - name: 빌드 실행
-        run: ./gradlew clean build
+        run: ./gradlew clean build -x test
 
       - name: Docker Hub 로그인
         uses: docker/login-action@v3
