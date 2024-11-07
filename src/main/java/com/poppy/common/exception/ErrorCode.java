@@ -14,8 +14,8 @@ public enum ErrorCode {
 
     // 팝업스토어 조회 관련
     LOCATION_NOT_FOUND(404, "해당 위치를 찾을 수 없습니다."),
-    STORE_NOT_FOUND(404, "해당 팝업스토어를 찾을 수 없습니다.");
-
+    STORE_NOT_FOUND(404, "해당 팝업스토어를 찾을 수 없습니다."),
+    INVALID_DATE_RANGE(400, "시작일이 종료일보다 늦을 수 없습니다.");
 
     private final int code;
     private final String message;
