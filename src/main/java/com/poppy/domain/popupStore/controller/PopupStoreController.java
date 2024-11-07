@@ -28,7 +28,7 @@ public class PopupStoreController {
     }
 
     // 팝업스토어 상세 조회
-    @GetMapping("/{id}")
+    @GetMapping("/detail/{id}")
     public RspTemplate<PopupStoreResponseDto> getStoreDetail(@PathVariable Long id){
         return new RspTemplate<>(
                 HttpStatus.OK,
