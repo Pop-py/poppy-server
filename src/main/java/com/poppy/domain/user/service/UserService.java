@@ -44,7 +44,7 @@ public class UserService {
         else {
             user = optionalUser.get();
 
-            if(!checkUser(user, nickname)) {
+            if(checkUser(user, email)) {
                 user = User.builder()
                         .email(email)
                         .nickname(nickname)
@@ -60,8 +60,8 @@ public class UserService {
     }
 
     // 존재하는 유저인지 확인
-    private Boolean checkUser(User user, String nickname) {
-        return user.getNickname().equals(nickname);
+    private Boolean checkUser(User user, String email) {
+        return user.getEmail().equals(email);
     }
 
     public User getById(Long id) {

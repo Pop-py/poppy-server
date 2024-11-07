@@ -48,6 +48,7 @@ public class User {
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<WishList> wishLists = new ArrayList<>();
 
+    // 회원가입용
     @Builder
     public User(String email, String phoneNumber, String nickname, String oauthProvider, Role role) {
         this.email = email;
@@ -56,6 +57,15 @@ public class User {
         this.oauthProvider = oauthProvider;
         this.role = role;
         this.baseTime = new BaseTimeEntity(LocalDateTime.now(), LocalDateTime.now());
+    }
+
+    // 로그인용
+    @Builder
+    public User(String email, String nickname, String oauthProvider, Role role) {
+        this.email = email;
+        this.nickname = nickname;
+        this.oauthProvider = oauthProvider;
+        this.role = role;
     }
 
     // 위시 추가
