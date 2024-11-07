@@ -55,7 +55,16 @@ public class PopupStoreService {
 
     // 날짜별 조회
     public List<PopupStoreResponseDto> getStoresByDate(LocalDate startDate, LocalDate endDate) {
-        List<PopupStore> stores = popupStoreRepository.findByDateRange(startDate, endDate);
+        // 시작일/종료일이 null이면 오늘 날짜로 설정
+        LocalDate effectiveStartDate = startDate != null ? startDate : LocalDate.now();
+        LocalDate effectiveEndDate = endDate != null ? endDate : LocalDate.now();
+
+        // 시작일이 종료일보다 늦은 경우 예외 발생
+        if (effectiveStartDate.isAfter(effectiveEndDate)) {
+            throw new BusinessException(ErrorCode.INVALID_DATE_RANGE);
+        }
+
+        List<PopupStore> stores = popupStoreRepository.findByDateRange(effectiveStartDate, effectiveEndDate);
         if (stores.isEmpty()) {
             throw new BusinessException(ErrorCode.STORE_NOT_FOUND);
         }
