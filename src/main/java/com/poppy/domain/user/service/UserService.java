@@ -38,30 +38,14 @@ public class UserService {
                     .build();
 
             userRepository.save(user);
-            return user;
         }
         // 가입이 되어 있으면 로그인
         else {
             user = optionalUser.get();
-
-            if(checkUser(user, email)) {
-                user = User.builder()
-                        .email(email)
-                        .nickname(nickname)
-                        .oauthProvider("naver")
-                        .role(Role.ROLE_USER)
-                        .build();
-                userRepository.save(user);
-                return user;
-            }
+            user.updateLoginInfo(nickname, "naver", Role.ROLE_USER);
         }
 
         return user;
-    }
-
-    // 존재하는 유저인지 확인
-    private Boolean checkUser(User user, String email) {
-        return user.getEmail().equals(email);
     }
 
     public User getById(Long id) {
