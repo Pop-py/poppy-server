@@ -98,10 +98,6 @@ public class PopupStoreRepositoryImpl implements PopupStoreRepositoryCustom {
         return store.isEnd.eq(false);
     }
 
-    private BooleanExpression categoryEq(String categoryName) {
-        return categoryName != null ? store.storeCategory.name.eq(categoryName) : null;
-    }
-
     private BooleanExpression locationContains(String location) {
         return location != null ? store.location.contains(location) : null;
     }

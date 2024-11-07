@@ -33,10 +33,12 @@ public class PopupStoreService {
         return convertToDto(popupStore);
     }
 
-
     // 카테고리별 조회
     public List<PopupStoreResponseDto> getStoresByCategory(Long categoryId) {
         List<PopupStore> stores = popupStoreRepository.findByCategoryId(categoryId);
+        if (stores.isEmpty()) {
+            throw new BusinessException(ErrorCode.STORE_NOT_FOUND);
+        }
         return stores.stream()
                 .map(this::convertToDto)
                 .collect(Collectors.toList());
