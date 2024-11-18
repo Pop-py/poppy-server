@@ -7,6 +7,7 @@ import com.poppy.domain.user.service.UserService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.security.web.authentication.SimpleUrlAuthenticationSuccessHandler;
@@ -18,6 +19,7 @@ import org.springframework.web.util.UriComponentsBuilder;
 import java.io.IOException;
 import java.net.URI;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 @Slf4j
 @Component
@@ -25,11 +27,13 @@ public class OAuth2LoginSuccessHandler extends SimpleUrlAuthenticationSuccessHan
     private final UserService userService;
     private final OAuthOTUCache oauthOTUCache;
     private final JwtTokenizer jwtTokenizer;
+    private final RedisTemplate<String, String> redisTemplate;
 
-    public OAuth2LoginSuccessHandler(UserService userService, OAuthOTUCache oauthOTUCache, JwtTokenizer jwtTokenizer) {
+    public OAuth2LoginSuccessHandler(UserService userService, OAuthOTUCache oauthOTUCache, JwtTokenizer jwtTokenizer, RedisTemplate<String, String> redisTemplate) {
         this.userService = userService;
         this.oauthOTUCache = oauthOTUCache;
         this.jwtTokenizer = jwtTokenizer;
+        this.redisTemplate = redisTemplate;
     }
 
     @Override
@@ -53,7 +57,10 @@ public class OAuth2LoginSuccessHandler extends SimpleUrlAuthenticationSuccessHan
 
         // 응답 헤더에 Token 추가
         response.addHeader("Authorization", "Bearer " + accessToken);
-        response.addHeader("Refresh-Token", refreshToken);
+
+        // Redis에 RefreshToken 저장 (user:{id} 형식)
+        String redisKey = "user:" + user.getId();
+        redisTemplate.opsForValue().set(redisKey, refreshToken, jwtTokenizer.getRefreshTokenExpireTime(), TimeUnit.MINUTES);
 
         String verificationCode = oauthOTUCache.putVerificationCodeInCache(user.getId());
         String uri = createURI(verificationCode).toString();
@@ -66,6 +73,8 @@ public class OAuth2LoginSuccessHandler extends SimpleUrlAuthenticationSuccessHan
         MultiValueMap<String, String> queryParams = new LinkedMultiValueMap<>();
         queryParams.add("code", verificationCode);
 
+        // 프론트 화면 나오면 포트 번호도 변경해야 함
+        // https 설정하면 scheme도 수정 필요
         return UriComponentsBuilder
                 .newInstance()
                 .scheme("http")

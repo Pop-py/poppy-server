@@ -4,7 +4,6 @@ import com.poppy.common.auth.dto.TokenRspDto;
 import com.poppy.domain.user.entity.Role;
 import com.poppy.domain.user.entity.User;
 import io.jsonwebtoken.Claims;
-import io.jsonwebtoken.Jws;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
 import lombok.Getter;
@@ -81,7 +80,6 @@ public class JwtTokenizer {
 
     // 토큰 파싱 및 검증
     private Claims parseToken(String token) {
-        log.info("토큰 파싱");
         return Jwts.parserBuilder()
                 .setSigningKey(createHmacShaKeyFromSecretKey(secretKey))
                 .build()
@@ -98,7 +96,7 @@ public class JwtTokenizer {
     }
 
     // 만료 시간 계산 (밀리초 단위)
-    private Date getTokenExpiration(int expirationMillis) {
+    public Date getTokenExpiration(int expirationMillis) {
         return new Date(System.currentTimeMillis() + expirationMillis);
     }
 
@@ -108,14 +106,15 @@ public class JwtTokenizer {
         return Keys.hmacShaKeyFor(keyBytes);
     }
 
-    public Jws<Claims> getClaims(String jws, String secretKey) {
-        Key key = createHmacShaKeyFromSecretKey(secretKey);
-
-        return Jwts.parserBuilder()
-                .setSigningKey(key)
-                .build()
-                .parseClaimsJws(jws);
-    }
+    // 사용하지 않으므로 일단 주석 처리 (추후 삭제 또는 이용)
+//    public Jws<Claims> getClaims(String jws, String secretKey) {
+//        Key key = createHmacShaKeyFromSecretKey(secretKey);
+//
+//        return Jwts.parserBuilder()
+//                .setSigningKey(key)
+//                .build()
+//                .parseClaimsJws(jws);
+//    }
 
     // claims에서 권한 목록 가져오기
     public List<GrantedAuthority> getAuthoritiesFromClaims(Claims claims) {
