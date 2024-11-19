@@ -1,6 +1,7 @@
 package com.poppy.domain.popupStore.controller;
 
 import com.poppy.common.api.RspTemplate;
+import com.poppy.domain.popupStore.dto.response.PopupStoreCalenderDTO;
 import com.poppy.domain.popupStore.dto.response.PopupStoreResponseDto;
 import com.poppy.domain.popupStore.service.PopupStoreService;
 import lombok.RequiredArgsConstructor;
@@ -90,5 +91,20 @@ public class PopupStoreController {
                 "신규 팝업스토어 조회 성공",
                 popupStoreService.getNewStores()
         );
+    }
+
+    @GetMapping("/{id}/calender")
+    public RspTemplate<PopupStoreCalenderDTO> getCalender(@PathVariable Long id){ //팝업스토어의 예약 가능일 조회
+        return new RspTemplate<>(
+                HttpStatus.OK,
+                "캘린더 조회 성공",
+                popupStoreService.getCalender(id)
+        );
+    }
+
+    @GetMapping("/")
+    public RspTemplate<?> getAvailableSlots(Long StoreId, LocalDate date){
+
+        return null;
     }
 }
