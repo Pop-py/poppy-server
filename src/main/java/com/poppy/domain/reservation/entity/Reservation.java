@@ -4,13 +4,18 @@ import com.poppy.common.entity.BaseTimeEntity;
 import com.poppy.domain.popupStore.entity.PopupStore;
 import com.poppy.domain.user.entity.User;
 import jakarta.persistence.*;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "reservations")
-public class Reservation {
+@NoArgsConstructor
+@Getter
+public class Reservation extends BaseTimeEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -32,6 +37,12 @@ public class Reservation {
     @JoinColumn(name = "popup_store_id", nullable = false)
     private PopupStore popupStore;
 
-    @Embedded
-    private BaseTimeEntity baseTime;
+    @Builder
+    public Reservation(PopupStore popupStore, User user, ReservationStatus status, LocalDateTime time, LocalDate date) {
+        this.popupStore = popupStore;
+        this.user = user;
+        this.status = status;
+        this.time = time;
+        this.date = date;
+    }
 }

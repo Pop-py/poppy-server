@@ -2,13 +2,13 @@ package com.poppy.domain.popupStore.entity;
 
 import com.poppy.common.entity.BaseTimeEntity;
 import com.poppy.common.entity.Images;
-import com.poppy.domain.reservation.entity.ReservationAvailableSlot;
 import com.poppy.domain.storeCategory.entity.StoreCategory;
 import com.poppy.domain.wishList.entity.WishList;
 import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
-import lombok.Setter;
-import org.springframework.data.jpa.domain.support.AuditingEntityListener;
+import lombok.NoArgsConstructor;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
@@ -18,10 +18,10 @@ import java.util.List;
 @Entity
 @Table(name = "popup_stores")
 @Getter
-@Setter
-@EntityListeners(AuditingEntityListener.class)
-public class PopupStore {
-
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
+public class PopupStore extends BaseTimeEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -75,17 +75,6 @@ public class PopupStore {
     @JoinColumn(name = "image_id")
     private Images image;  // 상세 페이지에서 보여줄 이미지
 
-    @Embedded
-    private BaseTimeEntity baseTime;
-
     @OneToMany(mappedBy = "popupStore", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<WishList> wishLists = new ArrayList<>();
-
-    @OneToMany(mappedBy = "popupStore", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<Holiday> holidays = new ArrayList<>(); //휴무일을 Entity 로 관리
-
-
-//    @OneToMany(mappedBy = "popupStore", cascade = CascadeType.ALL, orphanRemoval = true)
-//    private List<ReservationAvailableSlot> reservationSlots = new ArrayList<>();
-
 }

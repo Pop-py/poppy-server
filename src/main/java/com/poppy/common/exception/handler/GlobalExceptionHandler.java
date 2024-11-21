@@ -3,7 +3,7 @@ package com.poppy.common.exception.handler;
 import com.poppy.common.exception.ApplicationException;
 import com.poppy.common.exception.BusinessException;
 import com.poppy.common.exception.ErrorCode;
-import com.poppy.common.exception.dto.ErrorResponseDto;
+import com.poppy.common.exception.dto.ErrorRspDto;
 import com.poppy.common.util.LoggingUtil;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
@@ -25,7 +25,7 @@ import java.util.NoSuchElementException;
 public class GlobalExceptionHandler {
     // BingException 발생 시 (유효성 검사)
     @ExceptionHandler(BindException.class)
-    public ResponseEntity<ErrorResponseDto<Map<String, String>>> handleBindException(BindException e, HttpServletRequest request) {
+    public ResponseEntity<ErrorRspDto<Map<String, String>>> handleBindException(BindException e, HttpServletRequest request) {
         printLog(e, request);
 
         List<FieldError> fieldErrors = e.getBindingResult().getFieldErrors();   // 오류 목록 가져오기
@@ -52,7 +52,7 @@ public class GlobalExceptionHandler {
 
     // @RequestParam 파라미터 누락
     @ExceptionHandler(MissingServletRequestParameterException.class)
-    public ResponseEntity<ErrorResponseDto<String>> handleMissingServletRequestParameterException(MissingServletRequestParameterException e, HttpServletRequest request) {
+    public ResponseEntity<ErrorRspDto<String>> handleMissingServletRequestParameterException(MissingServletRequestParameterException e, HttpServletRequest request) {
         printLog(e, request);
         String message = "파라미터 '" + e.getParameterName() + "'이(가) 누락되었습니다.";
         return createErrorResponse(HttpStatus.BAD_REQUEST.value(), HttpStatus.BAD_REQUEST, message);
@@ -60,28 +60,28 @@ public class GlobalExceptionHandler {
 
     // 일반적인 런타임 예외 처리
     @ExceptionHandler({IllegalArgumentException.class, IllegalStateException.class, NoSuchElementException.class})
-    public ResponseEntity<ErrorResponseDto<String>> handleBusinessException(RuntimeException e, HttpServletRequest request){
+    public ResponseEntity<ErrorRspDto<String>> handleBusinessException(RuntimeException e, HttpServletRequest request){
         printLog(e, request);
         return createErrorResponse(HttpStatus.BAD_REQUEST.value(), HttpStatus.BAD_REQUEST, e.getMessage());
     }
 
     // BusinessException을 상속한 다른 CustomException에도 적용
     @ExceptionHandler({BusinessException.class})
-    public ResponseEntity<ErrorResponseDto<String>> handleBusinessException(BusinessException e, HttpServletRequest request){
+    public ResponseEntity<ErrorRspDto<String>> handleBusinessException(BusinessException e, HttpServletRequest request){
         printLog(e, request);
         return createErrorResponse(e.getCode(), e.getHttpStatus(), e.getMessage());
     }
 
     // 비즈니스 로직이 아닌 애플리케이션 서비스 로직상 예외
     @ExceptionHandler({ApplicationException.class})
-    public ResponseEntity<ErrorResponseDto<String>> handleAppServiceException(ApplicationException e, HttpServletRequest request){
+    public ResponseEntity<ErrorRspDto<String>> handleAppServiceException(ApplicationException e, HttpServletRequest request){
         printLog(e, request);
         return createErrorResponse(e.getCode(), e.getHttpStatus(), e.getMessage());
     }
 
     // 예상하지 못한 예외 발생 시 500 에러와 함께 기본 에러 메시지 넘기기
     @ExceptionHandler(Exception.class)
-    public ResponseEntity<ErrorResponseDto<String>> handleException(Exception e, HttpServletRequest request){
+    public ResponseEntity<ErrorRspDto<String>> handleException(Exception e, HttpServletRequest request){
         HttpStatus httpStatus = HttpStatus.INTERNAL_SERVER_ERROR;
         log.error("예외 처리 범위 외의 오류 발생");
         printLog(e, request);
@@ -91,17 +91,17 @@ public class GlobalExceptionHandler {
     }
 
     // 응답 생성 메소드
-    private <T> ResponseEntity<ErrorResponseDto<T>> createErrorResponse(int statusCode, HttpStatus httpStatus, T errorMessage) {
-        ErrorResponseDto<T> errDto = new ErrorResponseDto<>(statusCode, httpStatus, errorMessage);
+    private <T> ResponseEntity<ErrorRspDto<T>> createErrorResponse(int statusCode, HttpStatus httpStatus, T errorMessage) {
+        ErrorRspDto<T> errDto = new ErrorRspDto<>(statusCode, httpStatus, errorMessage);
         return ResponseEntity.status(httpStatus).body(errDto);
     }
 
     // ErrorCode를 받아서 상태 코드와 메시지를 사용해 응답을 생성
-    private ResponseEntity<ErrorResponseDto<String>> createErrorResponse(ErrorCode errorCode) {
+    private ResponseEntity<ErrorRspDto<String>> createErrorResponse(ErrorCode errorCode) {
         int statusCode = errorCode.getCode();
         HttpStatus httpStatus = HttpStatus.valueOf(statusCode);
 
-        ErrorResponseDto<String> errDto = new ErrorResponseDto<>(
+        ErrorRspDto<String> errDto = new ErrorRspDto<>(
                 statusCode, httpStatus, errorCode.getMessage());
         return ResponseEntity.status(httpStatus).body(errDto);
     }

@@ -1,25 +1,24 @@
 package com.poppy.domain.user.entity;
 
 import com.poppy.common.entity.BaseTimeEntity;
-import com.poppy.common.entity.Token;
 import com.poppy.domain.popupStore.entity.PopupStore;
 import com.poppy.domain.wishList.entity.WishList;
 import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
 @Entity
 @Table(name = "users")
 @Getter
+@Builder
 @NoArgsConstructor
-@EntityListeners(AuditingEntityListener.class)
-public class User {
+@AllArgsConstructor
+public class User extends BaseTimeEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -39,12 +38,6 @@ public class User {
     @Enumerated(EnumType.STRING)
     private Role role;  // ROLE_USER, ROLE_ADMIN
 
-    @Embedded
-    private BaseTimeEntity baseTime;
-
-    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<Token> tokens = new ArrayList<>();
-
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<WishList> wishLists = new ArrayList<>();
 
@@ -55,7 +48,6 @@ public class User {
         this.nickname = nickname;
         this.oauthProvider = oauthProvider;
         this.role = role;
-        this.baseTime = new BaseTimeEntity(LocalDateTime.now(), LocalDateTime.now());
     }
 
     // 로그인 시 네이버 정보를 바탕으로 업데이트

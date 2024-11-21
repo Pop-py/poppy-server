@@ -10,7 +10,7 @@ import jakarta.persistence.*;
         name = "likes",
         uniqueConstraints = @UniqueConstraint(columnNames = {"user_id", "review_id"})
 )
-public class Likes {
+public class Likes extends BaseTimeEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -22,7 +22,4 @@ public class Likes {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "review_id", nullable = false)
     private Review review;
-
-    @Embedded
-    private BaseTimeEntity baseTime;
 }

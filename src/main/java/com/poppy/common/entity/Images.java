@@ -4,7 +4,7 @@ import jakarta.persistence.*;
 
 @Entity
 @Table(name = "images")
-public class Images {
+public class Images extends BaseTimeEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -14,7 +14,4 @@ public class Images {
 
     @Column(name = "stored_name", unique = true, nullable = false)
     private String storedName;  // S3에 저장되는 이름
-
-    @Embedded
-    private BaseTimeEntity baseTime;
 }

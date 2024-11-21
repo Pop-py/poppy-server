@@ -47,6 +47,9 @@ dependencies {
 	// Gson
 	implementation 'com.google.code.gson:gson'
 
+	// Redission
+	implementation group: 'org.redisson', name: 'redisson', version: '3.39.0'
+
 	compileOnly 'org.projectlombok:lombok'
 	developmentOnly 'org.springframework.boot:spring-boot-devtools'
 	runtimeOnly 'com.mysql:mysql-connector-j'

@@ -7,7 +7,7 @@ import jakarta.persistence.*;
 
 @Entity
 @Table(name = "notifications")
-public class Notification {
+public class Notification extends BaseTimeEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -30,7 +30,4 @@ public class Notification {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "popup_store_id")
     private PopupStore popupStore;
-
-    @Embedded
-    private BaseTimeEntity baseTime;
 }

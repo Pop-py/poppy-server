@@ -6,6 +6,8 @@ import com.poppy.domain.user.entity.Role;
 import com.poppy.domain.user.entity.User;
 import com.poppy.domain.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -50,6 +52,21 @@ public class UserService {
 
     public User getById(Long id) {
         return userRepository.findById(id)
+                .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
+    }
+
+    // 로그인한 유저 확인
+    public User getLoggedInUser() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
+        if (authentication == null || !authentication.isAuthenticated()) {
+            throw new BusinessException(ErrorCode.UNAUTHORIZED);
+        }
+
+        String userIdStr = authentication.getName(); // Authentication의 Principal에서 사용자 ID 가져오기
+        System.out.println("로그인 유저 확인용" + userIdStr);
+
+        return userRepository.findById(Long.parseLong(userIdStr))
                 .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
     }
 }
