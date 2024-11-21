@@ -11,7 +11,7 @@ import jakarta.persistence.*;
         name = "reviews",
         uniqueConstraints = @UniqueConstraint(columnNames = {"user_id", "popup_store_id"})
 )
-public class Review {
+public class Review extends BaseTimeEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -34,7 +34,4 @@ public class Review {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "popup_store_id", nullable = false)
     private PopupStore popupStore;
-
-    @Embedded
-    private BaseTimeEntity baseTime;
 }

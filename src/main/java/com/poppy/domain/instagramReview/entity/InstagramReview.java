@@ -5,13 +5,10 @@ import jakarta.persistence.*;
 
 @Entity
 @Table(name = "instagram_reviews")
-public class InstagramReview {
+public class InstagramReview extends BaseTimeEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-
-    @Embedded
-    private BaseTimeEntity baseTime;
 
     // 추후 필드 추가
 }

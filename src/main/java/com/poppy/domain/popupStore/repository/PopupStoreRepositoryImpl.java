@@ -23,7 +23,7 @@ public class PopupStoreRepositoryImpl implements PopupStoreRepositoryCustom {
                 .where(
                         isEndFalse()
                 )
-                .orderBy(store.baseTime.createTime.desc())
+                .orderBy(store.createTime.desc())
                 .fetch();
     }
 
@@ -36,10 +36,9 @@ public class PopupStoreRepositoryImpl implements PopupStoreRepositoryCustom {
                         isEndFalse(),
                         store.storeCategory.id.eq(categoryId)
                 )
-                .orderBy(store.baseTime.createTime.desc())
+                .orderBy(store.createTime.desc())
                 .fetch();
     }
-
 
     // 위치별 조회
     @Override
@@ -50,7 +49,7 @@ public class PopupStoreRepositoryImpl implements PopupStoreRepositoryCustom {
                         isEndFalse(),
                         locationContains(location)
                 )
-                .orderBy(store.baseTime.createTime.desc())
+                .orderBy(store.createTime.desc())
                 .fetch();
     }
 
@@ -63,7 +62,7 @@ public class PopupStoreRepositoryImpl implements PopupStoreRepositoryCustom {
                         isEndFalse(),
                         dateBetween(startDate, endDate)
                 )
-                .orderBy(store.baseTime.createTime.desc())
+                .orderBy(store.createTime.desc())
                 .fetch();
     }
 
@@ -76,7 +75,7 @@ public class PopupStoreRepositoryImpl implements PopupStoreRepositoryCustom {
                         isEndFalse(),
                         nameContains(name)
                 )
-                .orderBy(store.baseTime.createTime.desc())
+                .orderBy(store.createTime.desc())
                 .fetch();
     }
 
@@ -89,7 +88,7 @@ public class PopupStoreRepositoryImpl implements PopupStoreRepositoryCustom {
                         isEndFalse(),
                         createTimeAfter(fromDate)
                 )
-                .orderBy(store.baseTime.createTime.desc())
+                .orderBy(store.createTime.desc())
                 .fetch();
     }
 
@@ -115,6 +114,6 @@ public class PopupStoreRepositoryImpl implements PopupStoreRepositoryCustom {
     }
 
     private BooleanExpression createTimeAfter(LocalDateTime fromDate) {
-        return store.baseTime.createTime.goe(fromDate);
+        return store.createTime.goe(fromDate);
     }
 }

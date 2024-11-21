@@ -5,11 +5,12 @@ import com.poppy.common.entity.Images;
 import com.poppy.domain.storeCategory.entity.StoreCategory;
 import com.poppy.domain.wishList.entity.WishList;
 import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
-import org.springframework.data.jpa.domain.support.AuditingEntityListener;
+import lombok.NoArgsConstructor;
 
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -17,8 +18,10 @@ import java.util.List;
 @Entity
 @Table(name = "popup_stores")
 @Getter
-@EntityListeners(AuditingEntityListener.class)
-public class PopupStore {
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
+public class PopupStore extends BaseTimeEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -46,9 +49,12 @@ public class PopupStore {
     @Column(name = "end_date", nullable = false)
     private LocalDate endDate;
 
-    private LocalTime time;  // 팝업 스토어 예약 가능 시간 (ex. 17:00)
+    @Column(name = "opening_time", nullable = false)
+    private LocalTime openingTime; // 팝업스토어 운영 시작 시간
 
-    // 현재 예약 인원은 Redis에서 처리
+    @Column(name = "closing_time", nullable = false)
+    private LocalTime closingTime; // 팝업스토어 운영 종료 시간
+
     @Column(name = "available_slot", nullable = false)
     private Integer availableSlot;  // 예약 가능한 총 인원
 
@@ -68,9 +74,6 @@ public class PopupStore {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "image_id")
     private Images image;  // 상세 페이지에서 보여줄 이미지
-
-    @Embedded
-    private BaseTimeEntity baseTime;
 
     @OneToMany(mappedBy = "popupStore", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<WishList> wishLists = new ArrayList<>();
