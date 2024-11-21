@@ -20,7 +20,7 @@ public class ReservationRspDto {
                 .popupStoreId(reservation.getPopupStore().getId())
                 .userId(reservation.getUser().getId())
                 .date(reservation.getDate())
-                .time(reservation.getTime().toLocalTime())
+                .time(reservation.getTime())
                 .build();
     }
 }

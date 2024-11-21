@@ -30,4 +30,10 @@ public class RedisSlotService {
         String slotKey = String.format("slot:%d:%s:%s", storeId, date, time);
         redisTemplate.opsForValue().decrement(slotKey);
     }
+
+    // Redis의 슬롯 증가
+    public void incrementSlot(Long storeId, LocalDate date, LocalTime time) {
+        String slotKey = String.format("slot:%d:%s:%s", storeId, date, time);
+        redisTemplate.opsForValue().increment(slotKey);
+    }
 }
