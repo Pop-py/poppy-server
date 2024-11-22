@@ -14,6 +14,7 @@ import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 
 import java.util.HashMap;
 import java.util.List;
@@ -56,6 +57,12 @@ public class GlobalExceptionHandler {
         printLog(e, request);
         String message = "파라미터 '" + e.getParameterName() + "'이(가) 누락되었습니다.";
         return createErrorResponse(HttpStatus.BAD_REQUEST.value(), HttpStatus.BAD_REQUEST, message);
+    }
+
+    // 날짜 형식이 잘못된 경우 (yyyy-MM-dd 형식 아님)
+    @ExceptionHandler(MethodArgumentTypeMismatchException.class)
+    public ResponseEntity<?> handleInvalidDateFormat() {
+        return createErrorResponse(ErrorCode.INVALID_DATE_FORMAT);
     }
 
     // 일반적인 런타임 예외 처리
