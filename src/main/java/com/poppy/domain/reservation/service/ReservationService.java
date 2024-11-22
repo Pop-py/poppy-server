@@ -19,8 +19,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
 @Service
@@ -39,6 +39,11 @@ public class ReservationService {
 
     // 어플에서 진행하는 예약 메서드
     public Reservation reservation(Long storeId, LocalDate date, LocalTime time) {
+        // 파라미터 중 하나가 null일 떄 처리
+        if(storeId == null || date == null || time == null) {
+            throw new BusinessException(ErrorCode.NOT_NULL_PARAMETER);
+        }
+
         String lockKey = LOCK_PREFIX + storeId + ":" + date + ":" + time;
         RLock lock = redissonClient.getLock(lockKey);
 
@@ -101,6 +106,10 @@ public class ReservationService {
         if (slot.getStatus() != PopupStoreStatus.AVAILABLE) {
             throw new BusinessException(ErrorCode.INVALID_RESERVATION_DATE);
         }
+
+        // 이미 해당 날짜에 예약한 기록이 있으면 예외
+        Optional<Reservation> optionalReservation = reservationRepository.findByUserIdAndPopupStoreIdAndDate(user.getId(), storeId, date);
+        if(optionalReservation.isPresent()) throw new BusinessException(ErrorCode.ALREADY_BOOKED);
 
         // 슬롯 업데이트
         slot.updateSlot();
