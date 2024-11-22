@@ -64,7 +64,6 @@ public class UserService {
         }
 
         String userIdStr = authentication.getName(); // Authentication의 Principal에서 사용자 ID 가져오기
-        System.out.println("로그인 유저 확인용" + userIdStr);
 
         return userRepository.findById(Long.parseLong(userIdStr))
                 .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));

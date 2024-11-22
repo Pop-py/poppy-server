@@ -43,8 +43,12 @@ public class ReservationAvailableSlot {
         return this.availableSlot > 0;
     }
 
-    public void updateSlot() {
+    public void decreaseSlot() {
         this.availableSlot -= 1;
+    }
+
+    public void increaseSlot() {
+        this.availableSlot += 1;
     }
 
     public void updatePopupStatus(PopupStoreStatus status) {

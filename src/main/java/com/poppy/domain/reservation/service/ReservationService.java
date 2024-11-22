@@ -89,7 +89,7 @@ public class ReservationService {
 
     // DB 작업 처리
     @Transactional
-    protected Reservation processReservation(Long storeId, LocalDate date, LocalTime time) {
+    public Reservation processReservation(Long storeId, LocalDate date, LocalTime time) {
         PopupStore popupStore = popupStoreRepository.findById(storeId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.STORE_NOT_FOUND));
 
@@ -112,7 +112,7 @@ public class ReservationService {
         if(optionalReservation.isPresent()) throw new BusinessException(ErrorCode.ALREADY_BOOKED);
 
         // 슬롯 업데이트
-        slot.updateSlot();
+        slot.decreaseSlot();
         if (slot.getAvailableSlot() == 0) {
             slot.updatePopupStatus(PopupStoreStatus.FULL);
         }
@@ -128,5 +128,71 @@ public class ReservationService {
                 .build();
 
         return reservationRepository.save(reservation);
+    }
+
+    // 예약 취소
+    @Transactional
+    public void cancelReservation(Long storeId, LocalDate date, LocalTime time) {
+        // 파라미터 null 체크
+        if(storeId == null || date == null || time == null) {
+            throw new BusinessException(ErrorCode.NOT_NULL_PARAMETER);
+        }
+
+        String lockKey = LOCK_PREFIX + storeId + ":" + date + ":" + time;
+        RLock lock = redissonClient.getLock(lockKey);
+
+        try {
+            boolean isLocked = lock.tryLock(WAIT_TIME, LEASE_TIME, TimeUnit.SECONDS);
+            if (!isLocked) {
+                throw new BusinessException(ErrorCode.RESERVATION_CONFLICT);
+            }
+
+            User user = userService.getLoggedInUser();
+
+            // Redis 슬롯 확인
+            Integer redisSlot = redisSlotService.getSlotFromRedis(storeId, date, time);
+            if (redisSlot == null) {
+                throw new BusinessException(ErrorCode.SLOT_NOT_FOUND);
+            }
+
+            try {
+                // Redis 슬롯 증가 먼저 시도
+                redisSlotService.incrementSlot(storeId, date, time);
+
+                // DB 작업
+                Reservation reservation = reservationRepository.findByUserIdAndPopupStoreIdAndDateAndTime(
+                                user.getId(), storeId, date, time)
+                        .orElseThrow(() -> new BusinessException(ErrorCode.RESERVATION_NOT_FOUND));
+
+                // 예약 삭제
+                reservationRepository.delete(reservation);
+
+                // slot 업데이트
+                ReservationAvailableSlot slot = reservationAvailableSlotRepository
+                        .findByPopupStoreIdAndDateAndTime(storeId, date, time)
+                        .orElseThrow(() -> new BusinessException(ErrorCode.SLOT_NOT_FOUND));
+
+                slot.increaseSlot();
+                if (slot.isAvailable() && slot.getStatus() == PopupStoreStatus.FULL) {
+                    slot.updatePopupStatus(PopupStoreStatus.AVAILABLE);
+                }
+                reservationAvailableSlotRepository.save(slot);
+
+            }
+            catch (Exception e) {
+                // DB 작업 실패시 Redis 롤백
+                redisSlotService.decrementSlot(storeId, date, time);
+                throw e;
+            }
+        }
+        catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new BusinessException(ErrorCode.CANCELLATION_FAILED);
+        }
+        finally {
+            if (lock.isHeldByCurrentThread()) {
+                lock.unlock();
+            }
+        }
     }
 }
