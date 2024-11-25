@@ -26,14 +26,20 @@ public class RedisSlotService {
     }
 
     // Redis의 슬롯 감소
-    public void decrementSlot(Long storeId, LocalDate date, LocalTime time) {
+    public void decrementSlot(Long storeId, LocalDate date, LocalTime time, int person) {
         String slotKey = String.format("slot:%d:%s:%s", storeId, date, time);
-        redisTemplate.opsForValue().decrement(slotKey);
+        Long result = redisTemplate.opsForValue().decrement(slotKey, person);
+
+        if (result != null && result < 0) {
+            // 슬롯이 음수가 되면 롤백
+            redisTemplate.opsForValue().increment(slotKey, person);
+            throw new IllegalStateException("Redis 슬롯이 음수가 될 수 없습니다.");
+        }
     }
 
     // Redis의 슬롯 증가
-    public void incrementSlot(Long storeId, LocalDate date, LocalTime time) {
+    public void incrementSlot(Long storeId, LocalDate date, LocalTime time, int person) {
         String slotKey = String.format("slot:%d:%s:%s", storeId, date, time);
-        redisTemplate.opsForValue().increment(slotKey);
+        redisTemplate.opsForValue().increment(slotKey, person);
     }
 }

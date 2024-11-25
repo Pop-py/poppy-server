@@ -2,21 +2,25 @@ package com.poppy.domain.user.service;
 
 import com.poppy.common.exception.BusinessException;
 import com.poppy.common.exception.ErrorCode;
+import com.poppy.domain.reservation.service.ReservationService;
+import com.poppy.domain.user.dto.UserReservationRspDto;
 import com.poppy.domain.user.entity.Role;
 import com.poppy.domain.user.entity.User;
+import com.poppy.domain.user.repository.LoginUserProvider;
 import com.poppy.domain.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
 import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
 public class UserService {
     private final UserRepository userRepository;
+    private final LoginUserProvider loginUserProvider;  // 로그인 유저 확인용
+    private final ReservationService reservationService;
 
     // 로그인/회원가입
     @Transactional
@@ -55,17 +59,26 @@ public class UserService {
                 .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
     }
 
-    // 로그인한 유저 확인
-    public User getLoggedInUser() {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+    // 유저의 예약 조회
+    @Transactional(readOnly = true)
+    public List<UserReservationRspDto> getReservations() {
+        User user = loginUserProvider.getLoggedInUser();
+        return reservationService.getReservations(user.getId());
+    }
 
-        if (authentication == null || !authentication.isAuthenticated()) {
-            throw new BusinessException(ErrorCode.UNAUTHORIZED);
-        }
+    // 유저의 예약 상세 조회
+    @Transactional(readOnly = true)
+    public UserReservationRspDto getReservationById(Long reservationId) {
+        User user = loginUserProvider.getLoggedInUser();
+        return reservationService.getReservationById(user.getId(), reservationId);
+    }
 
-        String userIdStr = authentication.getName(); // Authentication의 Principal에서 사용자 ID 가져오기
+    // 유저의 예약 취소
+    @Transactional
+    public void cancelUserReservation(Long reservationId) {
+        // 유저 확인
+        User user = loginUserProvider.getLoggedInUser();
 
-        return userRepository.findById(Long.parseLong(userIdStr))
-                .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
+        reservationService.cancelReservationByReservationId(user.getId(), reservationId);
     }
 }

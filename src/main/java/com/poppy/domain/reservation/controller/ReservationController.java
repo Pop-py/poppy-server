@@ -16,23 +16,15 @@ import org.springframework.web.bind.annotation.*;
 public class ReservationController {
     private final ReservationService reservationService;
 
+    // 에약
     @PostMapping
     public RspTemplate<ReservationRspDto> reservation(@Valid @RequestBody ReservationReqDto reservationReqDto) {
         Reservation reservation = reservationService.reservation(
                 reservationReqDto.getPopupStoreId(),
                 reservationReqDto.getDate(),
-                reservationReqDto.getTime()
+                reservationReqDto.getTime(),
+                reservationReqDto.getPerson()
         );
         return new RspTemplate<>(HttpStatus.OK, "예약 완료", ReservationRspDto.from(reservation));
-    }
-
-    @DeleteMapping
-    public RspTemplate<Void> deleteReservation(@Valid @RequestBody ReservationReqDto reservationReqDto) {
-        reservationService.cancelReservation(
-                reservationReqDto.getPopupStoreId(),
-                reservationReqDto.getDate(),
-                reservationReqDto.getTime()
-        );
-        return new RspTemplate<>(HttpStatus.OK, "예약 취소 완료");
     }
 }
