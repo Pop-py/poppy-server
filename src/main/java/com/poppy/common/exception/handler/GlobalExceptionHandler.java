@@ -63,13 +63,13 @@ public class GlobalExceptionHandler {
         return createErrorResponse(HttpStatus.BAD_REQUEST.value(), HttpStatus.BAD_REQUEST, message);
     }
 
-    // 날짜 형식이 잘못된 경우
+    // 형식이 잘못된 경우
     @ExceptionHandler({MethodArgumentTypeMismatchException.class, DateTimeParseException.class})
     public ResponseEntity<ErrorRspDto<String>> handleInvalidDateFormat(Exception e) {
         if(e.getCause() instanceof DateTimeParseException) {
             return createErrorResponse(ErrorCode.INVALID_DATE);
         }
-        return createErrorResponse(ErrorCode.INVALID_DATE_FORMAT);
+        return createErrorResponse(ErrorCode.INVALID_FORMAT);
     }
 
     @ExceptionHandler(HttpMessageNotReadableException.class)
@@ -86,7 +86,7 @@ public class GlobalExceptionHandler {
         }
 
         // 기본 파싱 에러 처리
-        return createErrorResponse(ErrorCode.INVALID_DATE_FORMAT);
+        return createErrorResponse(ErrorCode.INVALID_FORMAT);
     }
 
     // 일반적인 런타임 예외 처리
