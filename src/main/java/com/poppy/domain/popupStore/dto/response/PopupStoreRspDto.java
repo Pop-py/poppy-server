@@ -14,8 +14,6 @@ public class PopupStoreRspDto {
     private final String name;
     private final String location;        // 상세 위치 설명
     private final String address;         // 실제 도로명 주소
-    private final Double latitude;        // 위도
-    private final Double longitude;       // 경도
     private final LocalDate startDate;
     private final LocalDate endDate;
     private final LocalTime openingTime;  // 운영 시작 시간
@@ -25,6 +23,7 @@ public class PopupStoreRspDto {
     private final Boolean isEnd;
     private final Double rating;
     private final String categoryName;
+    private final String reservationType;
     private final String thumbnail;
 
     // Entity to DTO
@@ -34,8 +33,6 @@ public class PopupStoreRspDto {
                 .name(store.getName())
                 .location(store.getLocation())
                 .address(store.getAddress())
-                .latitude(store.getLatitude())
-                .longitude(store.getLongitude())
                 .startDate(store.getStartDate())
                 .endDate(store.getEndDate())
                 .openingTime(store.getOpeningTime())
@@ -46,6 +43,7 @@ public class PopupStoreRspDto {
                 .rating(store.getRating())
                 .categoryName(store.getStoreCategory().getName())
                 .thumbnail(store.getThumbnail())
+                .reservationType(store.getReservationType().toString())
                 .build();
     }
 }

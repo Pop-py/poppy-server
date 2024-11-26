@@ -41,6 +41,10 @@ public class User extends BaseTimeEntity {
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<WishList> wishLists = new ArrayList<>();
 
+
+    @OneToMany(mappedBy = "masterUser",cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<PopupStore> masterPopupStore = new ArrayList<>();
+
     public User(Long id) {
         this.id = id;
     }
@@ -72,4 +76,8 @@ public class User extends BaseTimeEntity {
 //    public void removeWish(PopupStore popupStore) {
 //        wishLists.removeIf(wish -> wish.getPopupStore().equals(popupStore));
 //    }
+
+    public void upgradeToMaster(){
+        this.role = Role.ROLE_MASTER;
+    }
 }
