@@ -1,5 +1,6 @@
 package com.poppy.domain.popupStore.dto.request;
 
+import com.poppy.domain.popupStore.entity.ReservationType;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import lombok.Builder;
@@ -47,7 +48,7 @@ public class PopupStoreReqDto {
     private Long masterUserId; // 관리자 유저 ID
 
     @NotNull
-    private boolean reservationAvailable;
+    private ReservationType reservationType;
 
     private String thumbnail; // 썸네일 URL (옵션)
 
@@ -55,7 +56,7 @@ public class PopupStoreReqDto {
     @Builder
     public PopupStoreReqDto(String name, String location, String address, LocalDate startDate, LocalDate endDate,
                             LocalTime openingTime, LocalTime closingTime, Integer availableSlot, String categoryName,
-                            Long masterUserId, String thumbnail ,boolean reservationAvailable) {
+                            Long masterUserId, String thumbnail ,ReservationType reservationType) {
         this.name = name;
         this.location = location;
         this.address = address;
@@ -67,6 +68,6 @@ public class PopupStoreReqDto {
         this.categoryName = categoryName;
         this.masterUserId = masterUserId;
         this.thumbnail = thumbnail;
-        this.reservationAvailable = reservationAvailable;
+        this.reservationType = reservationType;
     }
 }

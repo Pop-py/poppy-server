@@ -5,6 +5,7 @@ import com.poppy.common.exception.ErrorCode;
 import com.poppy.domain.popupStore.dto.request.PopupStoreReqDto;
 import com.poppy.domain.popupStore.dto.response.PopupStoreRspDto;
 import com.poppy.domain.popupStore.entity.PopupStore;
+import com.poppy.domain.popupStore.entity.ReservationType;
 import com.poppy.domain.popupStore.repository.PopupStoreRepository;
 import com.poppy.domain.popupStore.service.PopupStoreService;
 import com.poppy.domain.storeCategory.repository.StoreCategoryRepository;
@@ -54,13 +55,13 @@ public class AdminService {
                 .isEnd(false)
                 .rating(0.0)
                 .masterUser(masterUser)
+                .reservationType(reqDto.getReservationType())
                 .thumbnail(reqDto.getThumbnail())
-                .reservationAvailable(reqDto.isReservationAvailable())
                 .build();
 
         PopupStore savedPopupStore = popupStoreRepository.save(popupStore);
 
-        if(savedPopupStore.getReservationAvailable()){ // 예약이 가능한 팝업스토어의 경우에만
+        if(savedPopupStore.getReservationType() == ReservationType.ONLINE){ // 예약이 가능한 팝업스토어의 경우에만
             popupStoreService.initializeSlots(savedPopupStore.getId());
         }
 

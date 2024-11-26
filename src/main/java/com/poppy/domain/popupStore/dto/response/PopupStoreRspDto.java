@@ -23,6 +23,7 @@ public class PopupStoreRspDto {
     private final Boolean isEnd;
     private final Double rating;
     private final String categoryName;
+    private final String reservationType;
     private final String thumbnail;
     private boolean reservationAvailable; // 예약인지 선착순 줄서기인지
 
@@ -43,7 +44,7 @@ public class PopupStoreRspDto {
                 .rating(store.getRating())
                 .categoryName(store.getStoreCategory().getName())
                 .thumbnail(store.getThumbnail())
-                .reservationAvailable(store.getReservationAvailable())
+                .reservationType(store.getReservationType().toString())
                 .build();
     }
 }

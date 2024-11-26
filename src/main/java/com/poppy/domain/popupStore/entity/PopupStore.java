@@ -67,9 +67,6 @@ public class PopupStore extends BaseTimeEntity {
     @Column(nullable = false, name = "reservation_type")
     private ReservationType reservationType;    // 팝업 스토어 예약 유형
 
-    @Column(name = "reservation_available")
-    private Boolean reservationAvailable;
-
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "category_id", nullable = false)
     private StoreCategory storeCategory;
