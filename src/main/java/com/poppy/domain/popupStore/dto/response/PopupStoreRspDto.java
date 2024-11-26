@@ -25,7 +25,7 @@ public class PopupStoreRspDto {
     private final String categoryName;
     private final String reservationType;
     private final String thumbnail;
-    private boolean reservationAvailable; // 예약인지 선착순 줄서기인지
+
 
     // Entity to DTO
     public static PopupStoreRspDto from(PopupStore store) {
