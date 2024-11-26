@@ -65,11 +65,9 @@ public class AdminService {
             popupStoreService.initializeSlots(savedPopupStore.getId());
         }
 
-
         // 5. 응답 DTO 변환 및 반환
         return PopupStoreRspDto.from(savedPopupStore);
     }
-
 
     private void validateDateAndTime(PopupStoreReqDto reqDto) {
         LocalDate currentDate = LocalDate.now();

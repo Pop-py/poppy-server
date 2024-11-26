@@ -20,17 +20,12 @@ public class AdminController {
     @PostMapping("/popup-stores")
     public RspTemplate<PopupStoreRspDto> registerPopUpStore(@RequestBody @Valid PopupStoreReqDto reqDto){
         PopupStoreRspDto popupStoreRspDto = adminService.savePopupStore(reqDto);
-        return new RspTemplate<>(HttpStatus.OK,"팝업스토어 등록 완료",popupStoreRspDto);
+        return new RspTemplate<>(HttpStatus.OK, "팝업스토어 등록 완료", popupStoreRspDto);
     }
-
 
     @DeleteMapping("/popup-stores/{id}")
     public RspTemplate<Void> deletePopUpStore(@PathVariable Long id) {
         adminService.deletePopupStore(id);
         return new RspTemplate<>(HttpStatus.OK, "팝업스토어 삭제 완료", null);
     }
-
-
-
-
 }

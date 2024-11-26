@@ -26,7 +26,6 @@ public class PopupStoreRspDto {
     private final String reservationType;
     private final String thumbnail;
 
-
     // Entity to DTO
     public static PopupStoreRspDto from(PopupStore store) {
         return PopupStoreRspDto.builder()
