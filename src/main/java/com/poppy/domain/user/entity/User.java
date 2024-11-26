@@ -41,6 +41,10 @@ public class User extends BaseTimeEntity {
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<WishList> wishLists = new ArrayList<>();
 
+    public User(Long id) {
+        this.id = id;
+    }
+
     @Builder
     public User(String email, String phoneNumber, String nickname, String oauthProvider, Role role) {
         this.email = email;
@@ -65,7 +69,7 @@ public class User extends BaseTimeEntity {
 //    }
 
     // 위시 삭제
-    public void removeWish(PopupStore popupStore) {
-        wishLists.removeIf(wish -> wish.getPopupStore().equals(popupStore));
-    }
+//    public void removeWish(PopupStore popupStore) {
+//        wishLists.removeIf(wish -> wish.getPopupStore().equals(popupStore));
+//    }
 }

@@ -14,6 +14,7 @@ public class ReservationRspDto {
     private Long userId;
     private LocalDate date;
     private LocalTime time;
+    private Integer person;
 
     public static ReservationRspDto from(Reservation reservation) {
         return ReservationRspDto.builder()
@@ -21,6 +22,7 @@ public class ReservationRspDto {
                 .userId(reservation.getUser().getId())
                 .date(reservation.getDate())
                 .time(reservation.getTime())
+                .person(reservation.getPerson())
                 .build();
     }
 }

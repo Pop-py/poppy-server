@@ -9,7 +9,6 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.time.LocalTime;
 
 @Entity
@@ -27,6 +26,9 @@ public class Reservation extends BaseTimeEntity {
     @Column(nullable = false)
     private LocalTime time;  // 예약한 팝업 스토어 시간
 
+    @Column(nullable = false)
+    private Integer person;  // 예약 인원
+
     @Enumerated(EnumType.STRING)
     private ReservationStatus status;  // STAND_BY, CHECKED, CANCELED (예약 상태: 대기/확인/취소)
 
@@ -39,11 +41,12 @@ public class Reservation extends BaseTimeEntity {
     private PopupStore popupStore;
 
     @Builder
-    public Reservation(PopupStore popupStore, User user, ReservationStatus status, LocalTime time, LocalDate date) {
+    public Reservation(PopupStore popupStore, User user, ReservationStatus status, LocalTime time, LocalDate date, Integer person) {
         this.popupStore = popupStore;
         this.user = user;
         this.status = status;
         this.time = time;
         this.date = date;
+        this.person = person;
     }
 }

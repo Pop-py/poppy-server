@@ -8,10 +8,7 @@ import com.poppy.domain.reservation.service.ReservationService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/reservation")
@@ -19,12 +16,14 @@ import org.springframework.web.bind.annotation.RestController;
 public class ReservationController {
     private final ReservationService reservationService;
 
+    // 에약
     @PostMapping
     public RspTemplate<ReservationRspDto> reservation(@Valid @RequestBody ReservationReqDto reservationReqDto) {
         Reservation reservation = reservationService.reservation(
                 reservationReqDto.getPopupStoreId(),
                 reservationReqDto.getDate(),
-                reservationReqDto.getTime()
+                reservationReqDto.getTime(),
+                reservationReqDto.getPerson()
         );
         return new RspTemplate<>(HttpStatus.OK, "예약 완료", ReservationRspDto.from(reservation));
     }

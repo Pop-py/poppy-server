@@ -19,4 +19,7 @@ public class ReservationReqDto {
     @NotNull(message = "시간을 입력해주세요.")
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "HH:mm:ss")
     LocalTime time;
+
+    @NotNull(message = "인원을 입력해주세요.")
+    Integer person;
 }
