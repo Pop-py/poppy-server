@@ -4,7 +4,6 @@ import com.poppy.admin.service.AdminService;
 import com.poppy.common.api.RspTemplate;
 import com.poppy.domain.popupStore.dto.request.PopupStoreReqDto;
 import com.poppy.domain.popupStore.dto.response.PopupStoreRspDto;
-import com.poppy.domain.storeCategory.entity.StoreCategory;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -14,7 +13,6 @@ import org.springframework.web.bind.annotation.*;
 @RequiredArgsConstructor
 @RequestMapping("/admin")
 public class AdminController {
-
     private final AdminService adminService;
 
     @PostMapping("/popup-stores")
@@ -26,6 +24,6 @@ public class AdminController {
     @DeleteMapping("/popup-stores/{id}")
     public RspTemplate<Void> deletePopUpStore(@PathVariable Long id) {
         adminService.deletePopupStore(id);
-        return new RspTemplate<>(HttpStatus.OK, "팝업스토어 삭제 완료", null);
+        return new RspTemplate<>(HttpStatus.OK, "팝업스토어 삭제 완료");
     }
 }

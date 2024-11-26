@@ -177,6 +177,13 @@ public class PopupStoreService {
         PopupStore popupStore = popupStoreRepository.findById(storeId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.STORE_NOT_FOUND));
 
+        // 휴무일 목록 조회
+        Set<LocalDate> holidays = reservationAvailableSlotRepository
+                .findByPopupStoreIdAndStatus(storeId, PopupStoreStatus.HOLIDAY)
+                .stream()
+                .map(ReservationAvailableSlot::getDate)
+                .collect(Collectors.toSet());
+
         // 전체 슬롯 수
         int totalAvailableSlot = popupStore.getAvailableSlot();
 
@@ -185,27 +192,36 @@ public class PopupStoreService {
         LocalDate currentDate = popupStore.getStartDate();
         LocalDate endDate = popupStore.getEndDate();
 
-        // 모든 슬롯 시간을 리스트에 추가
+        // 모든 슬롯 시간을 리스트에 추가 (휴무일 제외)
         while (!currentDate.isAfter(endDate)) {
-            LocalTime currentTime = popupStore.getOpeningTime();
-            LocalTime closingTime = popupStore.getClosingTime();
+            // 휴무일이 아닌 경우에만 슬롯 추가
+            if (!holidays.contains(currentDate)) {
+                LocalTime currentTime = popupStore.getOpeningTime();
+                LocalTime closingTime = popupStore.getClosingTime();
 
-            while (currentTime.isBefore(closingTime)) {
-                slotDateTimeList.add(LocalDateTime.of(currentDate, currentTime));
-                currentTime = currentTime.plusHours(1); // 1시간 단위
+                while (currentTime.isBefore(closingTime)) {
+                    slotDateTimeList.add(LocalDateTime.of(currentDate, currentTime));
+                    currentTime = currentTime.plusHours(1); // 1시간 단위
+                }
             }
             currentDate = currentDate.plusDays(1);
         }
 
+        // 운영 가능한 슬롯이 없는 경우
+        if (slotDateTimeList.isEmpty()) return;
+
         // 슬롯 리스트를 가까운 날짜, 시간 순으로 정렬
         slotDateTimeList.sort(Comparator.naturalOrder());
 
-        int totalSlots = slotDateTimeList.size();   // 한 팝업 스토어의 총 슬롯 수
+        // 휴무일을 제외한 실제 운영 슬롯 수로 계산
+        int totalSlots = slotDateTimeList.size();   // 휴무일을 제외한 한 팝업 스토어의 총 슬롯 수
         int slotCapacity = totalAvailableSlot / totalSlots;     // 슬롯당 인원
         int remainingSlots = totalAvailableSlot % totalSlots;   // 나머지 (배분할 잉여 인원)
 
         // 정렬된 슬롯 리스트 DB에 저장
         LocalDateTime now = LocalDateTime.now();
+        List<ReservationAvailableSlot> slotsToSave = new ArrayList<>();
+
         for (LocalDateTime slotDateTime: slotDateTimeList) {
             // 이미 지난 시간은 저장하지 않음
             if (slotDateTime.isBefore(now)) continue;
@@ -219,7 +235,7 @@ public class PopupStoreService {
                 remainingSlots -= 1;
             }
 
-            // DB에 저장
+            // 슬롯 객체 생성
             ReservationAvailableSlot slot = ReservationAvailableSlot.builder()
                     .popupStore(popupStore)
                     .date(slotDateTime.toLocalDate())
@@ -229,8 +245,11 @@ public class PopupStoreService {
                     .status(PopupStoreStatus.AVAILABLE)
                     .build();
 
-            reservationAvailableSlotRepository.save(slot);
+            slotsToSave.add(slot);
         }
+
+        // 한 번에 저장
+        if(!slotsToSave.isEmpty()) reservationAvailableSlotRepository.saveAll(slotsToSave);
     }
 
     // 특정 날짜의 예약 가능 시간대 조회
@@ -260,16 +279,4 @@ public class PopupStoreService {
                 )
                 .collect(Collectors.toList());
     }
-
-    // 휴무일 설정 메서드 (추후 관리자 서비스로 이동 필요)
-//    @Transactional
-//    public void setHoliday(Long storeId, LocalDate date) {
-//        List<ReservationAvailableSlot> slots =
-//                reservationAvailableSlotRepository.findByPopupStoreIdAndDate(storeId, date);
-//
-//        for (ReservationAvailableSlot slot: slots) {
-//            slot.updateHoliday();
-//        }
-//        reservationAvailableSlotRepository.saveAll(slots);
-//    }
 }

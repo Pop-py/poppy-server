@@ -3,17 +3,20 @@ package com.poppy.domain.popupStore.dto.request;
 import com.poppy.domain.popupStore.entity.ReservationType;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
+import java.util.Set;
 
 @Getter
 @NoArgsConstructor
+@AllArgsConstructor
+@Builder
 public class PopupStoreReqDto {
-
     @NotNull
     @Size(min = 1, max = 255)
     private String name; // 팝업스토어 이름
@@ -50,24 +53,7 @@ public class PopupStoreReqDto {
     @NotNull
     private ReservationType reservationType;
 
-    private String thumbnail; // 썸네일 URL (옵션)
+    private Set<LocalDate> holidays;
 
-    // 생성자 또는 Builder를 통한 생성
-    @Builder
-    public PopupStoreReqDto(String name, String location, String address, LocalDate startDate, LocalDate endDate,
-                            LocalTime openingTime, LocalTime closingTime, Integer availableSlot, String categoryName,
-                            Long masterUserId, String thumbnail ,ReservationType reservationType) {
-        this.name = name;
-        this.location = location;
-        this.address = address;
-        this.startDate = startDate;
-        this.endDate = endDate;
-        this.openingTime = openingTime;
-        this.closingTime = closingTime;
-        this.availableSlot = availableSlot;
-        this.categoryName = categoryName;
-        this.masterUserId = masterUserId;
-        this.thumbnail = thumbnail;
-        this.reservationType = reservationType;
-    }
+    private String thumbnail; // 썸네일 URL
 }
