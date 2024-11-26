@@ -18,7 +18,7 @@ public enum ErrorCode {
     STORE_NOT_FOUND(404, "해당 팝업스토어를 찾을 수 없습니다."),
     INVALID_DATE_RANGE(400, "시작일이 종료일보다 늦을 수 없습니다."),
     SLOT_NOT_FOUND(404, "해당 팝업스토어의 슬롯을 찾을 수 없습니다."),
-    INVALID_DATE_FORMAT(400, "잘못된 날짜 형식입니다."),
+    INVALID_FORMAT(400, "잘못된 요청 형식입니다."),
     NOT_NULL_PARAMETER(400, "스토어, 날짜, 시간, 인원을 입력해주세요."),
 
     // 팝업스토어 등록 관련
