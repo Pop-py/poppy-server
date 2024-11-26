@@ -41,6 +41,7 @@ public class SecurityConfig {
                         .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()   // Swagger API
                         .requestMatchers("/popup-stores/**").permitAll()
                         .requestMatchers("/api/**").permitAll()
+                        .requestMatchers("/admin/**").hasRole("ADMIN")
                         .anyRequest().authenticated()
                 )
                 .formLogin(form -> form.disable())  // form 로그인 비활성화

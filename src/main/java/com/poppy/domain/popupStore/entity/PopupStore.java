@@ -2,7 +2,9 @@ package com.poppy.domain.popupStore.entity;
 
 import com.poppy.common.entity.BaseTimeEntity;
 import com.poppy.common.entity.Images;
+import com.poppy.domain.reservation.entity.ReservationAvailableSlot;
 import com.poppy.domain.storeCategory.entity.StoreCategory;
+import com.poppy.domain.user.entity.User;
 import com.poppy.domain.wishList.entity.WishList;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -37,12 +39,6 @@ public class PopupStore extends BaseTimeEntity {
     @Column(nullable = false)
     private String address; // 실제 도로명 주소
 
-    @Column(nullable = false)
-    private Double latitude; // 위도
-
-    @Column(nullable = false)
-    private Double longitude; // 경도
-
     @Column(name = "start_date", nullable = false)
     private LocalDate startDate;
 
@@ -71,6 +67,9 @@ public class PopupStore extends BaseTimeEntity {
     @Column(nullable = false, name = "reservation_type")
     private ReservationType reservationType;    // 팝업 스토어 예약 유형
 
+    @Column(name = "reservation_available")
+    private Boolean reservationAvailable;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "category_id", nullable = false)
     private StoreCategory storeCategory;
@@ -79,6 +78,13 @@ public class PopupStore extends BaseTimeEntity {
     @JoinColumn(name = "image_id")
     private Images image;  // 상세 페이지에서 보여줄 이미지
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name ="user_id",nullable = false)
+    private User masterUser;
+
     @OneToMany(mappedBy = "popupStore", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<WishList> wishLists = new ArrayList<>();
+
+    @OneToMany(mappedBy = "popupStore",cascade = CascadeType.ALL,orphanRemoval = true)
+    private List<ReservationAvailableSlot> reservationAvailableSlots;
 }
