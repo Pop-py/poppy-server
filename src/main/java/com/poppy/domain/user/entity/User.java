@@ -36,11 +36,10 @@ public class User extends BaseTimeEntity {
     private String oauthProvider;
 
     @Enumerated(EnumType.STRING)
-    private Role role;  // ROLE_USER, ROLE_ADMIN
+    private Role role;
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<WishList> wishLists = new ArrayList<>();
-
 
     @OneToMany(mappedBy = "masterUser",cascade = CascadeType.ALL, orphanRemoval = true)
     private List<PopupStore> masterPopupStore = new ArrayList<>();
@@ -65,6 +64,10 @@ public class User extends BaseTimeEntity {
         this.role = role;
     }
 
+    public void upgradeToMaster(){
+        this.role = Role.ROLE_MASTER;
+    }
+
     // 위시 추가
 //    public void addWish(PopupStore popupStore) {
 //        WishList wishList = new WishList(this, popupStore);
@@ -76,8 +79,4 @@ public class User extends BaseTimeEntity {
 //    public void removeWish(PopupStore popupStore) {
 //        wishLists.removeIf(wish -> wish.getPopupStore().equals(popupStore));
 //    }
-
-    public void upgradeToMaster(){
-        this.role = Role.ROLE_MASTER;
-    }
 }

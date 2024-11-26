@@ -45,6 +45,16 @@ public class ReservationAvailableSlotCustomRepositoryImpl implements Reservation
     }
 
     @Override
+    public List<ReservationAvailableSlot> findByPopupStoreIdAndStatus(Long popupStoreId, PopupStoreStatus status) {
+        QReservationAvailableSlot slot = QReservationAvailableSlot.reservationAvailableSlot;
+
+        return queryFactory.selectFrom(slot)
+                .where(slot.popupStore.id.eq(popupStoreId)
+                        .and(slot.status.eq(status)))
+                .fetch();
+    }
+
+    @Override
     public Optional<ReservationAvailableSlot> findByPopupStoreIdAndDateAndTime(Long popupStoreId, LocalDate date, LocalTime time) {
         QReservationAvailableSlot slot = QReservationAvailableSlot.reservationAvailableSlot;
 

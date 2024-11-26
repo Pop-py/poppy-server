@@ -76,7 +76,7 @@ public class PopupStore extends BaseTimeEntity {
     private Images image;  // 상세 페이지에서 보여줄 이미지
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name ="user_id",nullable = false)
+    @JoinColumn(name ="matser_user_id",nullable = false)
     private User masterUser;
 
     @OneToMany(mappedBy = "popupStore", cascade = CascadeType.ALL, orphanRemoval = true)

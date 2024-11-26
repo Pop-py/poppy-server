@@ -21,6 +21,9 @@ public enum ErrorCode {
     INVALID_DATE_FORMAT(400, "잘못된 날짜 형식입니다."),
     NOT_NULL_PARAMETER(400, "스토어, 날짜, 시간, 인원을 입력해주세요."),
 
+    // 팝업스토어 등록 관련
+    INVALID_DATE(500, "존재하는 날짜를 입력해주세요."),
+
     // 예약 관련
     RESERVATION_NOT_FOUND(404, "예약 정보를 찾을 수 없습니다."),
     RESERVATION_CONFLICT(403, "이미 예약이 진행 중입니다."),
@@ -32,8 +35,8 @@ public enum ErrorCode {
     INVALID_RESERVATION(500, "예약이 불가한 팝업스토어입니다."),
 
     // 카테고리 관련
-    CATEGORY_NOT_FOUND(400, "카테고리를 찾을 수 없습니다");
-
+    CATEGORY_NOT_FOUND(400, "카테고리를 찾을 수 없습니다.")
+    ;
 
     private final int code;
     private final String message;

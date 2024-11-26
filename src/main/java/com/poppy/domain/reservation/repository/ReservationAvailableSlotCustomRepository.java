@@ -14,4 +14,5 @@ public interface ReservationAvailableSlotCustomRepository {
     List<ReservationAvailableSlot> findByPopupStoreIdAndDateBetween(Long popupStoreId, LocalDate startDate, LocalDate endDate);
     List<ReservationAvailableSlot> findByDateGreaterThanEqualAndPopupStoreStatusEquals(LocalDate date, PopupStoreStatus status);
     Optional<ReservationAvailableSlot> findByPopupStoreIdAndDateAndTime(Long popupStoreId, LocalDate date, LocalTime time);
+    List<ReservationAvailableSlot> findByPopupStoreIdAndStatus(Long popupStoreId, PopupStoreStatus status);
 }
