@@ -62,6 +62,7 @@ public class AdminService {
                 .isActive(true)
                 .isEnd(false)
                 .rating(0.0)
+                .price(reqDto.getPrice())
                 .masterUser(masterUser)
                 .reservationType(reqDto.getReservationType())
                 .thumbnail(reqDto.getThumbnail())

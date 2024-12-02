@@ -37,12 +37,18 @@ public enum ErrorCode {
     // 카테고리 관련
     CATEGORY_NOT_FOUND(400, "카테고리를 찾을 수 없습니다."),
 
-    //리뷰 관련
+    // 결제 관련
+    PAYMENT_FAILED(500, "결제에 실패하였습니다."),
+    PAYMENT_NOT_FOUND(404, "결제 정보를 찾을 수 없습니다."),
+    INVALID_PAYMENT_AMOUNT(500, "결제 금액을 확인해주세요."),
+    PAYMENT_CANCEL_FAILED(500, "결제 취소에 실패하였습니다."),
+
+    // 리뷰 관련
     REVIEW_ALREADY_EXISTS(403, "이미 작성한 리뷰가 있습니다."),
     REVIEW_NOT_FOUND(404,"리뷰를 찾을 수 없습니다."),
     NOT_REVIEW_AUTHOR(403,"리뷰 작성자만 삭제/수정이 가능합니다."),
 
-    //좋아요 관련
+    // 좋아요 관련
     LIKE_NOT_FOUND(404,"좋아요를 찾을 수 없습니다.")
     ;
 

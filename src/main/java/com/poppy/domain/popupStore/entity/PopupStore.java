@@ -63,6 +63,9 @@ public class PopupStore extends BaseTimeEntity {
     @Column(nullable = false)
     private Double rating = 0.0;  // 5점 만점 (기본 0점, 리뷰 개수에 따라 점수 변동)
 
+    @Column
+    private Long price;
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, name = "reservation_type")
     private ReservationType reservationType;    // 팝업 스토어 예약 유형

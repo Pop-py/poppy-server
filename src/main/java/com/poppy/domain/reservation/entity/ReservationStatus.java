@@ -1,7 +1,7 @@
 package com.poppy.domain.reservation.entity;
 
 public enum ReservationStatus {
-    STAND_BY,
+    PENDING,
     CHECKED,
     CANCELED
 }
