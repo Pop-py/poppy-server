@@ -35,7 +35,15 @@ public enum ErrorCode {
     INVALID_RESERVATION(500, "예약이 불가한 팝업스토어입니다."),
 
     // 카테고리 관련
-    CATEGORY_NOT_FOUND(400, "카테고리를 찾을 수 없습니다.")
+    CATEGORY_NOT_FOUND(400, "카테고리를 찾을 수 없습니다."),
+
+    //리뷰 관련
+    REVIEW_ALREADY_EXISTS(403, "이미 작성한 리뷰가 있습니다."),
+    REVIEW_NOT_FOUND(404,"리뷰를 찾을 수 없습니다."),
+    NOT_REVIEW_AUTHOR(403,"리뷰 작성자만 삭제/수정이 가능합니다."),
+
+    //좋아요 관련
+    LIKE_NOT_FOUND(404,"좋아요를 찾을 수 없습니다.")
     ;
 
     private final int code;
