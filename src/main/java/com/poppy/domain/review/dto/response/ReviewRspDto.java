@@ -2,16 +2,16 @@ package com.poppy.domain.review.dto.response;
 
 import com.poppy.domain.review.entity.Review;
 import lombok.Builder;
-import lombok.Getter;  // 추가
-import lombok.NoArgsConstructor; // 추가
-import lombok.AllArgsConstructor; // 추가
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.AllArgsConstructor;
 
 import java.time.LocalDateTime;
 
-@Getter  // JSON 직렬화를 위해 필요
+@Getter
 @Builder
-@NoArgsConstructor  // Jackson이 직렬화/역직렬화시 필요
-@AllArgsConstructor // Builder 패턴을 위해 필요
+@NoArgsConstructor
+@AllArgsConstructor
 public class ReviewRspDto {
     private Long id;
     private String title;

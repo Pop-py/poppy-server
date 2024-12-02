@@ -89,8 +89,7 @@ class ReviewServiceTest {
         }
 
         @Test
-        @DisplayName("리뷰 생성 성공")
-        void createReview_Success() {
+        void 리뷰_생성_성공() {
             // given
             given(loginUserProvider.getLoggedInUser()).willReturn(testUser);
             given(popupStoreRepository.findById(1L)).willReturn(Optional.of(testStore));
@@ -107,8 +106,7 @@ class ReviewServiceTest {
         }
 
         @Test
-        @DisplayName("이미 존재하는 리뷰 생성 시도 실패")
-        void createReview_AlreadyExists() {
+        void 이미_존재하는_리뷰_생성_시도_실패() {
             // given
             given(loginUserProvider.getLoggedInUser()).willReturn(testUser);
             given(popupStoreRepository.findById(1L)).willReturn(Optional.of(testStore));
@@ -138,8 +136,7 @@ class ReviewServiceTest {
         }
 
         @Test
-        @DisplayName("리뷰 수정 성공")
-        void updateReview_Success() {
+        void 리뷰_수정_성공() {
             // given
             given(loginUserProvider.getLoggedInUser()).willReturn(testUser);
             given(reviewRepository.findById(1L)).willReturn(Optional.of(testReview));
@@ -154,8 +151,7 @@ class ReviewServiceTest {
         }
 
         @Test
-        @DisplayName("권한 없는 사용자의 리뷰 수정 실패")
-        void updateReview_Unauthorized() {
+        void 권한_없는_사용자의_리뷰_수정_실패() {
             // given
             User unauthorizedUser = User.builder()
                     .id(2L)
@@ -177,8 +173,7 @@ class ReviewServiceTest {
     class ToggleLike {
 
         @Test
-        @DisplayName("좋아요 추가 성공")
-        void toggleLike_Add() {
+        void 좋아요_추가_성공() {
             // given
             given(reviewRepository.findById(1L)).willReturn(Optional.of(testReview));
             given(loginUserProvider.getLoggedInUser()).willReturn(testUser);
@@ -193,8 +188,7 @@ class ReviewServiceTest {
         }
 
         @Test
-        @DisplayName("좋아요 제거 성공")
-        void toggleLike_Remove() {
+        void 좋아요_제거_성공() {
             // given
             ReviewLike reviewLike = ReviewLike.builder()
                     .id(1L)
@@ -222,8 +216,7 @@ class ReviewServiceTest {
     class DeleteReview {
 
         @Test
-        @DisplayName("리뷰 삭제 성공")
-        void deleteReview_Success() {
+        void 리뷰_삭제_성공() {
             // given
             given(loginUserProvider.getLoggedInUser()).willReturn(testUser);
             given(reviewRepository.findById(1L)).willReturn(Optional.of(testReview));
@@ -236,8 +229,7 @@ class ReviewServiceTest {
         }
 
         @Test
-        @DisplayName("권한 없는 사용자의 리뷰 삭제 실패")
-        void deleteReview_Unauthorized() {
+        void 권한_없는_사용자의_리뷰_삭제_실패() {
             // given
             User unauthorizedUser = User.builder()
                     .id(2L)
