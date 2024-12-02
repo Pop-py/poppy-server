@@ -4,13 +4,19 @@ import com.poppy.common.entity.BaseTimeEntity;
 import com.poppy.domain.review.entity.Review;
 import com.poppy.domain.user.entity.User;
 import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.NoArgsConstructor;
 
 @Entity
+@NoArgsConstructor
+@Builder
+@AllArgsConstructor
 @Table(
-        name = "likes",
+        name = "review_likes",
         uniqueConstraints = @UniqueConstraint(columnNames = {"user_id", "review_id"})
 )
-public class Likes extends BaseTimeEntity {
+public class ReviewLike extends BaseTimeEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -22,4 +28,10 @@ public class Likes extends BaseTimeEntity {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "review_id", nullable = false)
     private Review review;
+
+    @Builder
+    private ReviewLike(User user, Review review) {
+        this.user = user;
+        this.review = review;
+    }
 }

@@ -1,6 +1,7 @@
 package com.poppy.domain.user.entity;
 
 import com.poppy.common.entity.BaseTimeEntity;
+import com.poppy.domain.likes.entity.ReviewLike;
 import com.poppy.domain.popupStore.entity.PopupStore;
 import com.poppy.domain.wishList.entity.WishList;
 import jakarta.persistence.*;
@@ -43,6 +44,9 @@ public class User extends BaseTimeEntity {
 
     @OneToMany(mappedBy = "masterUser",cascade = CascadeType.ALL, orphanRemoval = true)
     private List<PopupStore> masterPopupStore = new ArrayList<>();
+
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<ReviewLike> likedReviews = new ArrayList<>();
 
     public User(Long id) {
         this.id = id;
