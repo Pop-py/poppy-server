@@ -3,6 +3,8 @@ package com.poppy.domain.review.repository;
 import com.poppy.domain.popupStore.entity.PopupStore;
 import com.poppy.domain.review.entity.Review;
 import com.poppy.domain.user.entity.User;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -23,4 +25,20 @@ public interface ReviewRepository extends JpaRepository<Review,Long> {
             "LEFT JOIN FETCH r.reviewLikes " +
             "WHERE r.id = :reviewId")
     Optional<Review> refresh(@Param("reviewId") Long reviewId);
+
+    @Query("SELECT r FROM Review r WHERE r.popupStore.id = :popupStoreId ORDER BY r.createTime DESC")
+    Page<Review> findByPopupStoreIdOrderByCreatedAtDesc(Long popupStoreId, Pageable pageable);
+
+    @Query("""
+       SELECT r FROM Review r
+       WHERE r.popupStore.id = :popupStoreId
+       ORDER BY SIZE(r.reviewLikes) desc
+       """)
+    Page<Review> findByPopupStoreIdOrderByLikeCountDesc(Long popupStoreId, Pageable pageable);
+
+    @Query("SELECT r FROM Review r WHERE r.popupStore.id = :popupStoreId ORDER BY r.rating DESC")
+    Page<Review> findByPopupStoreIdOrderByRatingDesc(Long popupStoreId, Pageable pageable);
+
+    @Query("SELECT r FROM Review r WHERE r.popupStore.id = :popupStoreId ORDER BY r.rating ASC")
+    Page<Review> findByPopupStoreIdOrderByRatingAsc(Long popupStoreId, Pageable pageable);
 }

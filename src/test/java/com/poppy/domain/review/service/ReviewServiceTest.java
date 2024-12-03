@@ -5,6 +5,7 @@ import com.poppy.domain.likes.entity.ReviewLike;
 import com.poppy.domain.likes.repository.ReviewLikeRepository;
 import com.poppy.domain.popupStore.entity.PopupStore;
 import com.poppy.domain.popupStore.repository.PopupStoreRepository;
+import com.poppy.domain.review.ReviewSortType;
 import com.poppy.domain.review.dto.request.ReviewReqDto;
 import com.poppy.domain.review.dto.response.ReviewLikeRspDto;
 import com.poppy.domain.review.dto.response.ReviewRspDto;
@@ -20,7 +21,12 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
 
+import java.util.Arrays;
+import java.util.List;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -243,6 +249,112 @@ class ReviewServiceTest {
             assertThatThrownBy(() -> reviewService.deleteReview(1L))
                     .isInstanceOf(BusinessException.class)
                     .hasMessageContaining("리뷰 작성자만 삭제/수정이 가능합니다.");
+        }
+    }
+
+    @Nested
+    class GetReviews {
+
+        private List<Review> sampleReviews;
+        private PageRequest pageRequest;
+
+        @BeforeEach
+        void setUp() {
+            pageRequest = PageRequest.of(0, 10);
+
+            sampleReviews = Arrays.asList(
+                    Review.builder()
+                            .id(1L)
+                            .title("Great Store!")
+                            .content("정말 좋은 팝업스토어였습니다.")
+                            .thumbnail("thumbnail1.jpg")
+                            .rating(5.0)
+                            .user(testUser)
+                            .popupStore(testStore)
+                            .build(),
+                    Review.builder()
+                            .id(2L)
+                            .title("Good Experience")
+                            .content("괜찮은 경험이었습니다.")
+                            .thumbnail("thumbnail2.jpg")
+                            .rating(3.0)
+                            .user(testUser)
+                            .popupStore(testStore)
+                            .build(),
+                    Review.builder()
+                            .id(3L)
+                            .title("Nice Place")
+                            .content("분위기가 좋았어요")
+                            .thumbnail("thumbnail3.jpg")
+                            .rating(4.0)
+                            .user(testUser)
+                            .popupStore(testStore)
+                            .build()
+            );
+        }
+
+        @Test
+        void 최신순_조회_성공() {
+            // given
+            Page<Review> reviewPage = new PageImpl<>(sampleReviews);
+            given(reviewRepository.findByPopupStoreIdOrderByCreatedAtDesc(1L, pageRequest))
+                    .willReturn(reviewPage);
+
+            // when
+            Page<ReviewRspDto> result = reviewService.getReviews(1L, ReviewSortType.RECENT, pageRequest);
+
+            // then
+            assertThat(result).isNotNull();
+            assertThat(result.getContent()).hasSize(3);
+            verify(reviewRepository).findByPopupStoreIdOrderByCreatedAtDesc(1L, pageRequest);
+        }
+
+        @Test
+        void 좋아요순_조회_성공() {
+            // given
+            Page<Review> reviewPage = new PageImpl<>(sampleReviews);
+            given(reviewRepository.findByPopupStoreIdOrderByLikeCountDesc(1L, pageRequest))
+                    .willReturn(reviewPage);
+
+            // when
+            Page<ReviewRspDto> result = reviewService.getReviews(1L, ReviewSortType.LIKES, pageRequest);
+
+            // then
+            assertThat(result).isNotNull();
+            assertThat(result.getContent()).hasSize(3);
+            verify(reviewRepository).findByPopupStoreIdOrderByLikeCountDesc(1L, pageRequest);
+        }
+
+        @Test
+        void 높은평점순_조회_성공() {
+            // given
+            Page<Review> reviewPage = new PageImpl<>(sampleReviews);
+            given(reviewRepository.findByPopupStoreIdOrderByRatingDesc(1L, pageRequest))
+                    .willReturn(reviewPage);
+
+            // when
+            Page<ReviewRspDto> result = reviewService.getReviews(1L, ReviewSortType.RATING_HIGH, pageRequest);
+
+            // then
+            assertThat(result).isNotNull();
+            assertThat(result.getContent()).hasSize(3);
+            verify(reviewRepository).findByPopupStoreIdOrderByRatingDesc(1L, pageRequest);
+        }
+
+        @Test
+        void 낮은평점순_조회_성공() {
+            // given
+            Page<Review> reviewPage = new PageImpl<>(sampleReviews);
+            given(reviewRepository.findByPopupStoreIdOrderByRatingAsc(1L, pageRequest))
+                    .willReturn(reviewPage);
+
+            // when
+            Page<ReviewRspDto> result = reviewService.getReviews(1L, ReviewSortType.RATING_LOW, pageRequest);
+
+            // then
+            assertThat(result).isNotNull();
+            assertThat(result.getContent()).hasSize(3);
+            verify(reviewRepository).findByPopupStoreIdOrderByRatingAsc(1L, pageRequest);
         }
     }
 }
