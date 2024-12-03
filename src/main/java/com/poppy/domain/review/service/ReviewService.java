@@ -6,6 +6,7 @@ import com.poppy.domain.likes.repository.ReviewLikeRepository;
 import com.poppy.domain.likes.entity.ReviewLike;
 import com.poppy.domain.popupStore.entity.PopupStore;
 import com.poppy.domain.popupStore.repository.PopupStoreRepository;
+import com.poppy.domain.review.ReviewSortType;
 import com.poppy.domain.review.dto.request.ReviewReqDto;
 import com.poppy.domain.review.dto.response.ReviewLikeRspDto;
 import com.poppy.domain.review.dto.response.ReviewRspDto;
@@ -15,6 +16,8 @@ import com.poppy.domain.user.entity.User;
 
 import com.poppy.domain.user.repository.LoginUserProviderImpl;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -127,5 +130,16 @@ public class ReviewService {
                 .liked(!hasLiked)
                 .likeCount(review.getReviewLikes().size())
                 .build();
+    }
+
+    public Page<ReviewRspDto> getReviews(Long popupStoreId, ReviewSortType sortType, PageRequest pageRequest) {
+        Page<Review> reviews = switch (sortType) {
+            case RECENT -> reviewRepository.findByPopupStoreIdOrderByCreatedAtDesc(popupStoreId, pageRequest);
+            case LIKES -> reviewRepository.findByPopupStoreIdOrderByLikeCountDesc(popupStoreId, pageRequest);
+            case RATING_HIGH -> reviewRepository.findByPopupStoreIdOrderByRatingDesc(popupStoreId, pageRequest);
+            case RATING_LOW -> reviewRepository.findByPopupStoreIdOrderByRatingAsc(popupStoreId, pageRequest);
+        };
+
+        return reviews.map(ReviewRspDto::from);
     }
 }

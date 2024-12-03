@@ -1,14 +1,19 @@
 package com.poppy.domain.review.controller;
 
 import com.poppy.common.api.RspTemplate;
+import com.poppy.domain.review.ReviewSortType;
 import com.poppy.domain.review.dto.request.ReviewReqDto;
 import com.poppy.domain.review.dto.response.ReviewLikeRspDto;
 import com.poppy.domain.review.dto.response.ReviewRspDto;
 import com.poppy.domain.review.service.ReviewService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
@@ -49,5 +54,23 @@ public class ReviewController {
         return new RspTemplate<>(HttpStatus.OK,
                 response.isLiked() ? "좋아요 완료" : "좋아요 취소",
                 response);
+    }
+
+    //최근 등록순, 좋아요 많은순, 별점 높은순, 별점 낮은순
+    @GetMapping("/{popupStoreId}/list")
+    public RspTemplate<Page<ReviewRspDto>> getReviews(
+            @PathVariable Long popupStoreId,
+            @RequestParam(defaultValue = "RECENT") ReviewSortType sortType,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+
+        PageRequest pageRequest = PageRequest.of(page, size);
+        Page<ReviewRspDto> reviews = reviewService.getReviews(popupStoreId, sortType, pageRequest);
+
+        return new RspTemplate<>(
+                HttpStatus.OK,
+                "리뷰 조회 완료",
+                reviews
+        );
     }
 }
