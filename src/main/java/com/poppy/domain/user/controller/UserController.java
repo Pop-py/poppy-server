@@ -33,7 +33,7 @@ public class UserController {
 
     // 예약 취소
     @DeleteMapping("/{id}/reservations/{reservationId}")
-    public RspTemplate<?> cancelReservation(@PathVariable Long id, @PathVariable Long reservationId) {
+    public RspTemplate<Void> cancelReservation(@PathVariable Long id, @PathVariable Long reservationId) {
         userService.cancelUserReservation(reservationId);
         return new RspTemplate<>(HttpStatus.OK, "예약이 취소되었습니다.");
     }

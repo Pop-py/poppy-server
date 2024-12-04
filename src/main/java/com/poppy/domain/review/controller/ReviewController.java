@@ -1,7 +1,7 @@
 package com.poppy.domain.review.controller;
 
 import com.poppy.common.api.RspTemplate;
-import com.poppy.domain.review.ReviewSortType;
+import com.poppy.domain.review.entity.ReviewSortType;
 import com.poppy.domain.review.dto.request.ReviewReqDto;
 import com.poppy.domain.review.dto.response.ReviewLikeRspDto;
 import com.poppy.domain.review.dto.response.ReviewRspDto;
@@ -12,8 +12,6 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
 
 @RestController
 @RequiredArgsConstructor

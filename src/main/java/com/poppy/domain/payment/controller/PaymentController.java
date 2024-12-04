@@ -36,6 +36,7 @@ public class PaymentController {
             @RequestParam String code,
             @RequestParam String message,
             @RequestParam String orderId) {
+        paymentService.handlePaymentFailure(orderId);
         return new RspTemplate<>(HttpStatus.BAD_REQUEST, "결제에 실패했습니다: " + message);
     }
 }

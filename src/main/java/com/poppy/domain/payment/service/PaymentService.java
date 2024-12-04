@@ -39,6 +39,15 @@ public class PaymentService {
     }
 
     @Transactional
+    public void handlePaymentFailure(String orderId) {
+        Payment payment = paymentRepository.findByOrderId(orderId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.PAYMENT_NOT_FOUND));
+
+        // 결제 상태 업데이트
+        payment.updateStatus(PaymentStatus.FAILED);
+    }
+
+    @Transactional
     public void cancelPayment(String orderId, String cancelReason) {
         Payment payment = paymentRepository.findByOrderId(orderId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.PAYMENT_NOT_FOUND));

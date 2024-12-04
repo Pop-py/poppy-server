@@ -1,4 +1,4 @@
-package com.poppy.domain.review;
+package com.poppy.domain.review.entity;
 
 public enum ReviewSortType {
     RECENT("최근 등록순"),

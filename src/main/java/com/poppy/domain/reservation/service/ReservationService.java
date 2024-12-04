@@ -22,7 +22,6 @@ import com.poppy.domain.user.repository.LoginUserProvider;
 import lombok.RequiredArgsConstructor;
 import org.redisson.api.RLock;
 import org.redisson.api.RedissonClient;
-import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -103,35 +102,28 @@ public class ReservationService {
                     .build()
             );
 
-            try {
-                String orderId = UUID.randomUUID().toString();
-                Long amount = popupStore.getPrice() * person;
+            String orderId = UUID.randomUUID().toString();
+            Long amount = popupStore.getPrice() * person;
 
-                // 결제 생성
-                Payment payment = Payment.builder()
-                        .orderId(orderId)
-                        .amount(amount)
-                        .status(PaymentStatus.PENDING)  // 결제 진행 전
-                        .user(user)
-                        .reservation(tempReservation)
-                        .build();
-                paymentRepository.save(payment);
+            // 결제 생성
+            Payment payment = Payment.builder()
+                    .orderId(orderId)
+                    .amount(amount)
+                    .status(PaymentStatus.PENDING)  // 결제 진행 전
+                    .user(user)
+                    .reservation(tempReservation)
+                    .build();
+            paymentRepository.save(payment);
 
-                // 임시 예약 객체 반환
-                return ReservationPaymentRspDto.builder()
-                        .orderId(orderId)
-                        .amount(amount)
-                        .storeName(tempReservation.getPopupStore().getName())
-                        .date(date)
-                        .time(time)
-                        .person(person)
-                        .build();
-            }
-            // 결제 실패 시 임시 예약 삭제
-            catch (BusinessException e) {
-                reservationRepository.delete(tempReservation);
-                throw e;
-            }
+            // 임시 예약 객체 반환
+            return ReservationPaymentRspDto.builder()
+                    .orderId(orderId)
+                    .amount(amount)
+                    .storeName(tempReservation.getPopupStore().getName())
+                    .date(date)
+                    .time(time)
+                    .person(person)
+                    .build();
         }
         catch (InterruptedException e) {
             Thread.currentThread().interrupt();
@@ -173,18 +165,18 @@ public class ReservationService {
         }
 
         // 예약 확정 (DB 업데이트)
-        return processReservation(
-                tempReservation.getUser().getId(),
-                tempReservation.getPopupStore().getId(),
-                tempReservation.getDate(),
-                tempReservation.getTime(),
-                tempReservation.getPerson()
-        );
+        return processReservation(tempReservation);
     }
 
     // 결제 후 예약 작업 DB 처리
     @Transactional
-    public Reservation processReservation(Long userId, Long storeId, LocalDate date, LocalTime time, int person) {
+    public Reservation processReservation(Reservation tempReservation) {
+        Long userId = tempReservation.getUser().getId();
+        Long storeId = tempReservation.getPopupStore().getId();
+        LocalDate date = tempReservation.getDate();
+        LocalTime time = tempReservation.getTime();
+        int person = tempReservation.getPerson();
+
         popupStoreRepository.findById(storeId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.STORE_NOT_FOUND));
 
@@ -195,19 +187,13 @@ public class ReservationService {
         // 예약 가능한 슬롯 없음
         if (slot.getAvailableSlot() < person || !slot.isAvailable()) throw new BusinessException(ErrorCode.NO_AVAILABLE_SLOT);
 
-        if (slot.getStatus() != PopupStoreStatus.AVAILABLE) {
+        if (slot.getStatus() != PopupStoreStatus.AVAILABLE)
             throw new BusinessException(ErrorCode.INVALID_RESERVATION_DATE);
-        }
 
         // 같은 날짜에 CHECKED 상태의 예약이 있는지 확인
         Optional<Reservation> existingReservation = reservationRepository
                 .findByUserIdAndPopupStoreIdAndDateAndStatus(userId, storeId, date, ReservationStatus.CHECKED);
         if (existingReservation.isPresent()) throw new BusinessException(ErrorCode.ALREADY_BOOKED);
-
-        // 임시 예약 찾기
-        Reservation pendingReservation = reservationRepository
-                .findByUserIdAndPopupStoreIdAndDateAndStatus(userId, storeId, date, ReservationStatus.PENDING)
-                .orElseThrow(() -> new BusinessException(ErrorCode.RESERVATION_NOT_FOUND));
 
         // 슬롯 업데이트
         slot.decreaseSlot(person);
@@ -215,8 +201,8 @@ public class ReservationService {
         reservationAvailableSlotRepository.save(slot);
 
         // 예약 상태 업데이트
-        pendingReservation.updateStatus(ReservationStatus.CHECKED);
-        return reservationRepository.save(pendingReservation);
+        tempReservation.updateStatus(ReservationStatus.CHECKED);
+        return reservationRepository.save(tempReservation);
     }
 
     // 예약 취소

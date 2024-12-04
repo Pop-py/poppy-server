@@ -5,7 +5,7 @@ import com.poppy.domain.likes.entity.ReviewLike;
 import com.poppy.domain.likes.repository.ReviewLikeRepository;
 import com.poppy.domain.popupStore.entity.PopupStore;
 import com.poppy.domain.popupStore.repository.PopupStoreRepository;
-import com.poppy.domain.review.ReviewSortType;
+import com.poppy.domain.review.entity.ReviewSortType;
 import com.poppy.domain.review.dto.request.ReviewReqDto;
 import com.poppy.domain.review.dto.response.ReviewLikeRspDto;
 import com.poppy.domain.review.dto.response.ReviewRspDto;
