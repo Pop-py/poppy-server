@@ -1,9 +1,8 @@
 package com.poppy.domain.reservation.controller;
 
 import com.poppy.common.api.RspTemplate;
+import com.poppy.domain.payment.dto.ReservationPaymentRspDto;
 import com.poppy.domain.reservation.dto.ReservationReqDto;
-import com.poppy.domain.reservation.dto.ReservationRspDto;
-import com.poppy.domain.reservation.entity.Reservation;
 import com.poppy.domain.reservation.service.ReservationService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -16,15 +15,15 @@ import org.springframework.web.bind.annotation.*;
 public class ReservationController {
     private final ReservationService reservationService;
 
-    // 에약
+    // 예약 요청 시 결제
     @PostMapping
-    public RspTemplate<ReservationRspDto> reservation(@Valid @RequestBody ReservationReqDto reservationReqDto) {
-        Reservation reservation = reservationService.reservation(
+    public RspTemplate<ReservationPaymentRspDto> reservation(@Valid @RequestBody ReservationReqDto reservationReqDto) {
+        ReservationPaymentRspDto paymentInfo = reservationService.reservation(
                 reservationReqDto.getPopupStoreId(),
                 reservationReqDto.getDate(),
                 reservationReqDto.getTime(),
                 reservationReqDto.getPerson()
         );
-        return new RspTemplate<>(HttpStatus.OK, "예약 완료", ReservationRspDto.from(reservation));
+        return new RspTemplate<>(HttpStatus.OK, "결제를 진행해주세요.", paymentInfo);
     }
 }

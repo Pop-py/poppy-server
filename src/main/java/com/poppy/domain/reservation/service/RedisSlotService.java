@@ -25,6 +25,12 @@ public class RedisSlotService {
         return redisTemplate.opsForValue().get(slotKey);
     }
 
+    // Redis 슬롯 삭제
+    public void deleteSlot(Long storeId, LocalDate date, LocalTime time) {
+        String key = generateKey(storeId, date, time);
+        redisTemplate.delete(key);
+    }
+
     // Redis의 슬롯 감소
     public void decrementSlot(Long storeId, LocalDate date, LocalTime time, int person) {
         String slotKey = String.format("slot:%d:%s:%s", storeId, date, time);
@@ -41,5 +47,9 @@ public class RedisSlotService {
     public void incrementSlot(Long storeId, LocalDate date, LocalTime time, int person) {
         String slotKey = String.format("slot:%d:%s:%s", storeId, date, time);
         redisTemplate.opsForValue().increment(slotKey, person);
+    }
+
+    private String generateKey(Long storeId, LocalDate date, LocalTime time) {
+        return String.format("reservation:slot:%d:%s:%s", storeId, date, time);
     }
 }

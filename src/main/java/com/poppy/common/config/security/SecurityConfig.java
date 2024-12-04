@@ -72,7 +72,7 @@ public class SecurityConfig {
     public CorsConfigurationSource configurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
         configuration.setAllowCredentials(true);    // 인증 정보 포함 가능
-        configuration.setAllowedOriginPatterns(Arrays.asList("http://localhost:*"));
+        configuration.setAllowedOriginPatterns(Arrays.asList("*"));
         configuration.setAllowedHeaders(Arrays.asList("*"));    // 헤더 허용
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         configuration.addExposedHeader("Authorization");

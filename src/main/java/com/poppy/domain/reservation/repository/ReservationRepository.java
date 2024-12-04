@@ -1,6 +1,7 @@
 package com.poppy.domain.reservation.repository;
 
 import com.poppy.domain.reservation.entity.Reservation;
+import com.poppy.domain.reservation.entity.ReservationStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
@@ -15,4 +16,5 @@ public interface ReservationRepository extends JpaRepository<Reservation, Long> 
     Optional<Reservation> findByUserIdAndPopupStoreIdAndDateAndTime(Long userId, Long popupStoreId, LocalDate date, LocalTime time);
     List<Reservation> findAllByUserId(Long userId);
     Optional<Reservation> findByIdAndUserId(Long id, Long userId);
+    Optional<Reservation> findByUserIdAndPopupStoreIdAndDateAndStatus(Long userId, Long storeId, LocalDate date, ReservationStatus status);
 }

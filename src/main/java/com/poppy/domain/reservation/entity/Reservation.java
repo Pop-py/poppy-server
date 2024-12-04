@@ -30,7 +30,7 @@ public class Reservation extends BaseTimeEntity {
     private Integer person;  // 예약 인원
 
     @Enumerated(EnumType.STRING)
-    private ReservationStatus status;  // STAND_BY, CHECKED, CANCELED (예약 상태: 대기/확인/취소)
+    private ReservationStatus status;  // 예약 상태
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
@@ -48,5 +48,9 @@ public class Reservation extends BaseTimeEntity {
         this.time = time;
         this.date = date;
         this.person = person;
+    }
+
+    public void updateStatus(ReservationStatus status) {
+        this.status = status;
     }
 }

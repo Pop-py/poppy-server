@@ -44,6 +44,8 @@ public class PopupStoreReqDto {
     @NotNull
     private Integer availableSlot; // 예약 가능한 총 인원
 
+    private Long price;
+
     @NotNull
     private String categoryName; // 카테고리 ID
 
