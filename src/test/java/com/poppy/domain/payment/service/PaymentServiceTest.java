@@ -7,9 +7,10 @@ import com.poppy.domain.payment.entity.PaymentStatus;
 import com.poppy.domain.payment.repository.PaymentRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
-import org.springframework.boot.test.context.SpringBootTest;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.Optional;
 
@@ -17,7 +18,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.*;
 
-@SpringBootTest
+@ExtendWith(MockitoExtension.class)
 class PaymentServiceTest {
     @Mock
     private PaymentRepository paymentRepository;

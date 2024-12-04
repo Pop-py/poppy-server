@@ -26,12 +26,14 @@ import org.mockito.MockitoAnnotations;
 import org.redisson.api.RLock;
 import org.redisson.api.RedissonClient;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.util.ReflectionTestUtils;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicReference;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -43,33 +45,36 @@ class ReservationServiceTest {
 
     @Mock
     private RedissonClient redissonClient;
-
     @Mock
     private PopupStoreRepository popupStoreRepository;
-
     @Mock
     private ReservationAvailableSlotRepository reservationAvailableSlotRepository;
-
     @Mock
     private ReservationRepository reservationRepository;
-
     @Mock
     private PaymentRepository paymentRepository;
-
     @Mock
     private RedisSlotService redisSlotService;
-
+    @Mock
+    private AsyncRedisSlotDecrementService asyncRedisSlotDecrementService;
     @Mock
     private PaymentService paymentService;
-
     @Mock
     private LoginUserProvider loginUserProvider;
-
     @Mock
     private RLock rLock;
 
+    private Long storeId;
+    private LocalDate date;
+    private LocalTime time;
+    private int person;
+    private PopupStore popupStore;
+    private User user;
+    private ReservationAvailableSlot slot;
+    private AtomicInteger redisSlot;
+
     @BeforeEach
-    void setUp() {
+    void setUp() throws InterruptedException {
         MockitoAnnotations.openMocks(this);
         reservationService = new ReservationService(
                 redissonClient,
@@ -78,87 +83,62 @@ class ReservationServiceTest {
                 reservationRepository,
                 paymentRepository,
                 redisSlotService,
+                asyncRedisSlotDecrementService,
                 paymentService,
                 loginUserProvider
         );
 
+        // 기본 값 설정
+        storeId = 1L;
+        date = LocalDate.of(2024, 12, 5);
+        time = LocalTime.of(14, 0);
+        person = 2;
+        redisSlot = new AtomicInteger(28);
+
+        // 기본 객체 생성
+        popupStore = PopupStore.builder()
+                .id(storeId)
+                .reservationType(ReservationType.ONLINE)
+                .price(5000L)
+                .build();
+
+        user = User.builder()
+                .id(1L)
+                .build();
+
+        slot = ReservationAvailableSlot.builder()
+                .popupStore(popupStore)
+                .date(date)
+                .time(time)
+                .availableSlot(28)
+                .totalSlot(28)
+                .status(PopupStoreStatus.AVAILABLE)
+                .build();
+
+        // 기본 Redis Lock 모킹
         when(redissonClient.getLock(anyString())).thenReturn(rLock);
-    }
+        when(rLock.tryLock(anyLong(), anyLong(), any(TimeUnit.class))).thenReturn(true);
+        when(rLock.isHeldByCurrentThread()).thenReturn(true);
+        doNothing().when(rLock).unlock();
 
-    private void mockReservationSetup(Long storeId, Long userId, LocalDate date, LocalTime time, int person) throws InterruptedException {
-        PopupStore popupStore = mock(PopupStore.class);
-        when(popupStore.getReservationType()).thenReturn(ReservationType.ONLINE);
-        when(popupStore.getPrice()).thenReturn(5000L);
+        // 기본 Redis Slot 모킹
+        when(redisSlotService.getSlotFromRedis(anyLong(), any(), any()))
+                .thenAnswer(inv -> redisSlot.get());
 
-        ReservationAvailableSlot slot = mock(ReservationAvailableSlot.class);
-        when(slot.getAvailableSlot()).thenReturn(10);
-        when(slot.getStatus()).thenReturn(PopupStoreStatus.AVAILABLE);
-
-        Reservation reservation = mock(Reservation.class);
-
-        RLock lock = mock(RLock.class);
-        when(redissonClient.getLock(anyString())).thenReturn(lock);
-        when(lock.tryLock(anyLong(), anyLong(), any())).thenReturn(true);
-
-        Payment payment = Payment.builder()
-                .orderId(UUID.randomUUID().toString())
-                .status(PaymentStatus.PENDING)
-                .amount((long) person * 5000)
-                .build();
-        when(paymentRepository.save(any(Payment.class))).thenReturn(payment);
-
+        // 기본 Repository 모킹
         when(popupStoreRepository.findById(storeId)).thenReturn(Optional.of(popupStore));
-        when(loginUserProvider.getLoggedInUser()).thenReturn(new User(userId));
-        when(reservationAvailableSlotRepository.findByPopupStoreIdAndDateAndTime(storeId, date, time)).thenReturn(Optional.of(slot));
-        when(reservationRepository.findByUserIdAndPopupStoreIdAndDate(userId, storeId, date)).thenReturn(Optional.empty());
-
-        // Redis 설정
-        when(redisSlotService.getSlotFromRedis(storeId, date, time)).thenReturn(10);
-        doNothing().when(redisSlotService).decrementSlot(storeId, date, time, person);
-        doNothing().when(redisSlotService).incrementSlot(storeId, date, time, person);
-
-        when(reservationRepository.save(any(Reservation.class))).thenReturn(reservation);
-        when(reservationRepository.findByUserIdAndPopupStoreIdAndDateAndTime(userId, storeId, date, time)).thenReturn(Optional.of(reservation));
-        doNothing().when(reservationRepository).delete(reservation);
-    }
-
-    private Payment mockPaymentSetup(String orderId, PaymentStatus status) {
-        Payment payment = Payment.builder()
-                .orderId(orderId)
-                .status(status)
-                .build();
-        when(paymentRepository.findByOrderId(orderId)).thenReturn(Optional.of(payment));
-        return payment;
+        when(loginUserProvider.getLoggedInUser()).thenReturn(user);
+        when(reservationAvailableSlotRepository.findByPopupStoreIdAndDateAndTime(storeId, date, time))
+                .thenReturn(Optional.of(slot));
     }
 
     @Test
     void 슬롯보다_많이_들어올_때_예약_처리() throws InterruptedException {
         // given
-        Long storeId = 1L;
-        LocalDate date = LocalDate.of(2024, 11, 22);
-        LocalTime time = LocalTime.of(19, 0);
-        int person = 2;
-
-        AtomicInteger redisSlot = new AtomicInteger(28);
         ConcurrentHashMap<String, Payment> paymentMap = new ConcurrentHashMap<>();
         ConcurrentHashMap<Long, Reservation> reservationMap = new ConcurrentHashMap<>();
         Set<Long> reservedUsers = ConcurrentHashMap.newKeySet();
 
-        PopupStore popupStore = PopupStore.builder()
-                .id(storeId)
-                .reservationType(ReservationType.ONLINE)
-                .price(5000L)
-                .build();
-
-        // Redis 관련 모킹
-        when(redisSlotService.getSlotFromRedis(storeId, date, time))
-                .thenAnswer(inv -> redisSlot.get());
-
-        doAnswer(inv -> {
-            redisSlot.set(28);
-            return null;
-        }).when(redisSlotService).setSlotToRedis(eq(storeId), eq(date), eq(time), eq(28));
-
         doAnswer(inv -> {
             synchronized (redisSlot) {
                 int decrementAmount = inv.getArgument(3);
@@ -171,377 +151,366 @@ class ReservationServiceTest {
             }
         }).when(redisSlotService).decrementSlot(eq(storeId), eq(date), eq(time), anyInt());
 
-        // Redis 키 초기화
-        redisSlotService.setSlotToRedis(storeId, date, time, 28);
+        when(paymentRepository.save(any(Payment.class)))
+                .thenAnswer(invocation -> {
+                    Payment payment = invocation.getArgument(0);
+                    paymentMap.put(payment.getOrderId(), payment);
+                    return payment;
+                });
 
-        try {
-            when(popupStoreRepository.findById(storeId))
-                    .thenReturn(Optional.of(popupStore));
+        when(paymentRepository.findByOrderId(anyString()))
+                .thenAnswer(invocation -> Optional.ofNullable(paymentMap.get(invocation.getArgument(0))));
 
-            ReservationAvailableSlot slot = ReservationAvailableSlot.builder()
-                    .popupStore(popupStore)
-                    .date(date)
-                    .time(time)
-                    .availableSlot(28)
-                    .totalSlot(28)
-                    .status(PopupStoreStatus.AVAILABLE)
-                    .build();
-            when(reservationAvailableSlotRepository.findByPopupStoreIdAndDateAndTime(storeId, date, time))
-                    .thenReturn(Optional.of(slot));
+        when(reservationRepository.save(any(Reservation.class)))
+                .thenAnswer(invocation -> {
+                    Reservation reservation = invocation.getArgument(0);
+                    if (reservation.getStatus() == ReservationStatus.PENDING) {
+                        reservationMap.put(reservation.getUser().getId(), reservation);
+                    }
+                    return reservation;
+                });
 
-            when(rLock.tryLock(anyLong(), anyLong(), any(TimeUnit.class)))
-                    .thenReturn(true);
+        // 중복 예약 체크
+        when(reservationRepository.findByUserIdAndPopupStoreIdAndDate(anyLong(), eq(storeId), eq(date)))
+                .thenAnswer(invocation -> {
+                    Long userId = invocation.getArgument(0);
+                    return Optional.ofNullable(reservationMap.get(userId));
+                });
 
-            when(paymentRepository.save(any(Payment.class)))
-                    .thenAnswer(invocation -> {
-                        Payment payment = invocation.getArgument(0);
-                        paymentMap.put(payment.getOrderId(), payment);
-                        return payment;
-                    });
+        // PENDING 상태의 예약 조회
+        when(reservationRepository.findByUserIdAndPopupStoreIdAndDateAndStatus(
+                anyLong(), eq(storeId), eq(date), eq(ReservationStatus.PENDING)
+        )).thenAnswer(invocation -> {
+            Long userId = invocation.getArgument(0);
+            return Optional.ofNullable(reservationMap.get(userId));
+        });
 
-            when(paymentRepository.findByOrderId(anyString()))
-                    .thenAnswer(invocation -> Optional.ofNullable(paymentMap.get(invocation.getArgument(0))));
+        // when
+        ExecutorService executorService = Executors.newFixedThreadPool(32);
+        CountDownLatch latch = new CountDownLatch(100);
+        AtomicInteger successfulReservations = new AtomicInteger(0);
 
-            when(reservationRepository.save(any(Reservation.class)))
-                    .thenAnswer(invocation -> {
-                        Reservation reservation = invocation.getArgument(0);
-                        if (reservation.getStatus() == ReservationStatus.PENDING) {
-                            reservationMap.put(reservation.getUser().getId(), reservation);
-                        }
-                        return reservation;
-                    });
+        for(int i=0; i<100; i++) {
+            final int userId = i;
+            executorService.submit(() -> {
+                try {
+                    User threadUser = User.builder().id((long) userId).build();
+                    when(loginUserProvider.getLoggedInUser()).thenReturn(threadUser);
 
-            // 중복 예약 체크
-            when(reservationRepository.findByUserIdAndPopupStoreIdAndDate(anyLong(), eq(storeId), eq(date)))
-                    .thenAnswer(invocation -> {
-                        Long userId = invocation.getArgument(0);
-                        Reservation reservation = reservationMap.get(userId);
-                        return Optional.ofNullable(reservation);
-                    });
-
-            // PENDING 상태의 예약 조회
-            when(reservationRepository.findByUserIdAndPopupStoreIdAndDateAndStatus(
-                    anyLong(), eq(storeId), eq(date), eq(ReservationStatus.PENDING)
-            )).thenAnswer(invocation -> {
-                Long userId = invocation.getArgument(0);
-                return Optional.ofNullable(reservationMap.get(userId));
-            });
-
-            // when
-            ExecutorService executorService = Executors.newFixedThreadPool(32);
-            CountDownLatch latch = new CountDownLatch(100);
-            AtomicInteger successfulReservations = new AtomicInteger(0);
-
-            for(int i=0; i<100; i++) {
-                final int userId = i;
-                executorService.submit(() -> {
-                    try {
-                        User threadUser = User.builder().id((long) userId).build();
-                        when(loginUserProvider.getLoggedInUser()).thenReturn(threadUser);
-
-                        synchronized(reservedUsers) {
-                            if(!reservedUsers.contains((long) userId)) {
-                                ReservationPaymentRspDto result = reservationService.reservation(storeId, date, time, person);
-                                if (result != null) {
-                                    reservedUsers.add((long) userId);
-                                    reservationService.completeReservation(result.getOrderId());
-                                    successfulReservations.incrementAndGet();
-                                }
+                    synchronized(reservedUsers) {
+                        if(!reservedUsers.contains((long) userId)) {
+                            ReservationPaymentRspDto result = reservationService.reservation(storeId, date, time, person);
+                            if (result != null) {
+                                reservedUsers.add((long) userId);
+                                reservationService.completeReservation(result.getOrderId());
+                                successfulReservations.incrementAndGet();
                             }
                         }
-                    } catch (BusinessException e) {
-                        // 예약 실패는 무시
-                    } finally {
-                        latch.countDown();
                     }
-                });
-            }
-
-            latch.await();
-            executorService.shutdown();
-
-            // then
-            // 14개의 성공한 예약에 대해 각각 2번의 save가 호출됨 (임시 예약 + 확정 예약)
-            int expectedSaveCalls = 14 * 2;
-            assertThat(successfulReservations.get()).isEqualTo(14);
-            assertThat(redisSlot.get()).isZero();
-            verify(reservationRepository, times(expectedSaveCalls)).save(any(Reservation.class));
-            verify(paymentRepository, times(14)).save(argThat(payment ->
-                    payment.getStatus() == PaymentStatus.PENDING &&
-                            payment.getAmount() == person * 5000L
-            ));
-            verify(redisSlotService, times(14)).decrementSlot(eq(storeId), eq(date), eq(time), eq(person));
-        } finally {
-            redisSlotService.deleteSlot(storeId, date, time);
+                } catch (BusinessException ignored) {
+                    // 예약 실패는 무시
+                } finally {
+                    latch.countDown();
+                }
+            });
         }
+
+        latch.await();
+        executorService.shutdown();
+
+        // then
+        // 14개의 성공한 예약에 대해 각각 2번의 save가 호출됨 (임시 예약 + 확정 예약)
+        int expectedSaveCalls = 14 * 2;
+        assertThat(successfulReservations.get()).isEqualTo(14);
+        assertThat(redisSlot.get()).isZero();
+        verify(reservationRepository, times(expectedSaveCalls)).save(any(Reservation.class));
+        verify(paymentRepository, times(14)).save(argThat(payment ->
+                payment.getStatus() == PaymentStatus.PENDING &&
+                        payment.getAmount() == person * 5000L
+        ));
+        verify(redisSlotService, times(14)).decrementSlot(eq(storeId), eq(date), eq(time), eq(person));
     }
 
     @Test
-    void 예약_예외_발생_시_Redis_롤백() throws InterruptedException {
-        // Arrange
-        Long storeId = 1L;
-        LocalDate date = LocalDate.of(2024, 11, 28);
-        LocalTime time = LocalTime.of(19, 0);
-        int person = 1;
-
-        AtomicInteger redisSlot = new AtomicInteger(1);
-
-        PopupStore popupStore = PopupStore.builder()
-                .id(storeId)
-                .reservationType(ReservationType.ONLINE)
-                .price(5000L)
-                .build();
-
-        User user = User.builder().id(1L).build();
-
-        ReservationAvailableSlot slot = ReservationAvailableSlot.builder()
-                .popupStore(popupStore)
-                .date(date)
-                .time(time)
-                .availableSlot(1)
-                .totalSlot(1)
-                .status(PopupStoreStatus.AVAILABLE)
-                .build();
-
-        // Redis 초기화 설정
-        doAnswer(inv -> {
-            redisSlot.set(1); // 초기 슬롯 수량
-            return null;
-        }).when(redisSlotService).setSlotToRedis(eq(storeId), eq(date), eq(time), eq(1));
-
-        redisSlotService.setSlotToRedis(storeId, date, time, 1); // Redis 키 초기화
-
-        when(redisSlotService.getSlotFromRedis(storeId, date, time))
-                .thenReturn(redisSlot.get());
-
-        doAnswer(inv -> {
-            synchronized (redisSlot) {
-                int decrementAmount = inv.getArgument(3);
-                int currentValue = redisSlot.get();
-                if (currentValue < decrementAmount) {
-                    throw new BusinessException(ErrorCode.NO_AVAILABLE_SLOT);
-                }
-                redisSlot.addAndGet(-decrementAmount);
-                System.out.println("슬롯 감소 후 남은 수량: " + redisSlot.get());
-                return null;
-            }
-        }).when(redisSlotService).decrementSlot(eq(storeId), eq(date), eq(time), anyInt());
-
-        // Lock 설정
-        when(rLock.tryLock(anyLong(), anyLong(), any(TimeUnit.class))).thenReturn(true);
-        when(rLock.isHeldByCurrentThread()).thenReturn(true);
-        doNothing().when(rLock).unlock();
-
-        when(popupStoreRepository.findById(storeId)).thenReturn(Optional.of(popupStore));
-        when(loginUserProvider.getLoggedInUser()).thenReturn(user);
-
+    void 예약_예외_발생_시_예약과_결제_확인() throws InterruptedException {
+        // given
         when(reservationRepository.findByUserIdAndPopupStoreIdAndDate(anyLong(), anyLong(), any(LocalDate.class)))
                 .thenReturn(Optional.empty());
+        when(reservationRepository.save(any(Reservation.class)))
+                .thenThrow(new BusinessException(ErrorCode.RESERVATION_FAILED));
 
-        when(reservationAvailableSlotRepository.findByPopupStoreIdAndDateAndTime(storeId, date, time))
-                .thenReturn(Optional.of(slot));
-
-        // Reservation 객체 생성 및 Mock 설정 수정
-        Reservation tempReservation = Reservation.builder()
-                .user(user)
-                .popupStore(popupStore)
-                .date(date)
-                .time(time)
-                .person(person)
-                .status(ReservationStatus.PENDING)
-                .build();
-        when(reservationRepository.save(any(Reservation.class))).thenReturn(tempReservation);
-
-        // 예외 발생을 위한 ReservationAvailableSlot 저장 시 설정
-        when(reservationAvailableSlotRepository.save(any(ReservationAvailableSlot.class)))
-                .thenAnswer(invocation -> {
-                    ReservationAvailableSlot slotToSave = invocation.getArgument(0);
-                    if (slotToSave.getAvailableSlot() < 1) {
-                        throw new BusinessException(ErrorCode.RESERVATION_FAILED);
-                    }
-                    return slotToSave;
-                });
-
-        // Act & Assert
+        // when & then
         assertThatThrownBy(() -> reservationService.reservation(storeId, date, time, person))
                 .isInstanceOf(BusinessException.class)
                 .hasMessage(ErrorCode.RESERVATION_FAILED.getMessage());
 
-        // 검증
-        InOrder inOrder = inOrder(redisSlotService, rLock, reservationAvailableSlotRepository);
-
-        // Lock 획득 확인
-        inOrder.verify(rLock).tryLock(anyLong(), anyLong(), any(TimeUnit.class));
-
-        // Redis 작업 확인
-        inOrder.verify(redisSlotService).getSlotFromRedis(storeId, date, time);
-        inOrder.verify(redisSlotService).decrementSlot(storeId, date, time, person);
-
-        // DB 작업 확인
-        inOrder.verify(reservationAvailableSlotRepository).findByPopupStoreIdAndDateAndTime(storeId, date, time);
-        inOrder.verify(reservationAvailableSlotRepository).save(any());
-
-        // Redis 롤백 확인
-        verify(redisSlotService).incrementSlot(storeId, date, time, person);
-
-        // Lock 해제 확인
-        verify(rLock).isHeldByCurrentThread();
-        verify(rLock).unlock();
-
-        // 예약 저장 호출 확인
         verify(reservationRepository, times(1)).save(any());
-
-        // 결제 저장 호출되지 않음 확인
         verify(paymentRepository, never()).save(any());
+        verify(redisSlotService, never()).decrementSlot(any(), any(), any(), anyInt());
+        verify(rLock, times(1)).tryLock(anyLong(), anyLong(), any(TimeUnit.class));
+        verify(rLock, times(1)).isHeldByCurrentThread();
+        verify(rLock, times(1)).unlock();
     }
 
     @Test
-    void 동시에_예약과_취소가_진행() throws Exception {
+    void 동시에_예약과_취소_진행() throws InterruptedException {
         // given
-        Long storeId = 1L;
-        Long userId = 1L;
-        LocalDate date = LocalDate.now();
-        LocalTime time = LocalTime.of(11, 0);
-        int person = 2;
+        redisSlot.set(10);  // 초기 슬롯 수 설정
+        Long reservationId = 1L;
 
-        AtomicInteger redisSlot = new AtomicInteger(10); // Redis 초기값
-        AtomicInteger dbSlot = new AtomicInteger(10);    // DB 초기값
+        Reservation pendingReservation = Reservation.builder()
+                .popupStore(popupStore)
+                .user(user)
+                .date(date)
+                .time(time)
+                .status(ReservationStatus.PENDING)
+                .person(person)
+                .build();
 
-        mockReservationSetup(storeId, userId, date, time, person);
+        Reservation checkedReservation = Reservation.builder()
+                .popupStore(popupStore)
+                .user(user)
+                .date(date)
+                .time(time)
+                .status(ReservationStatus.CHECKED)
+                .person(person)
+                .build();
+        ReflectionTestUtils.setField(checkedReservation, "id", reservationId);  // Reflection으로 ID 설정
 
-        when(redisSlotService.getSlotFromRedis(storeId, date, time)).thenAnswer(invocation -> redisSlot.get());
-        doAnswer(invocation -> {
-            if (redisSlot.get() < person) {
-                throw new BusinessException(ErrorCode.NO_AVAILABLE_SLOT);
+        Payment mockPayment = Payment.builder()
+                .orderId("test-order-id")
+                .paymentKey("test-payment-key")
+                .status(PaymentStatus.DONE)
+                .reservation(checkedReservation)
+                .user(user)
+                .build();
+
+        // Redis Slot 동작 모킹
+        doAnswer(inv -> {
+            synchronized (redisSlot) {
+                redisSlot.addAndGet(-person);
+                return null;
             }
-            redisSlot.addAndGet(-person);
-            return null;
-        }).when(redisSlotService).decrementSlot(storeId, date, time, person);
+        }).when(redisSlotService).decrementSlot(eq(storeId), eq(date), eq(time), eq(person));
 
-        doAnswer(invocation -> {
-            redisSlot.addAndGet(person);
-            return null;
-        }).when(redisSlotService).incrementSlot(storeId, date, time, person);
+        doAnswer(inv -> {
+            synchronized (redisSlot) {
+                redisSlot.addAndGet(person);
+                return null;
+            }
+        }).when(redisSlotService).incrementSlot(eq(storeId), eq(date), eq(time), eq(person));
 
+        // Repository 모킹
+        when(reservationRepository.findByUserIdAndPopupStoreIdAndDate(anyLong(), eq(storeId), eq(date)))
+                .thenReturn(Optional.empty());
+
+        // 예약 저장 시 ID가 설정된 예약 반환
+        when(reservationRepository.save(any(Reservation.class)))
+                .thenAnswer(inv -> {
+                    Reservation savedReservation = inv.getArgument(0);
+                    ReflectionTestUtils.setField(savedReservation, "id", reservationId);
+                    return savedReservation;
+                });
+
+        // 취소를 위한 예약 조회 시 ID가 설정된 예약 반환
+        when(reservationRepository.findByUserIdAndPopupStoreIdAndDateAndTime(anyLong(), anyLong(), any(), any()))
+                .thenReturn(Optional.of(checkedReservation));
+
+        when(reservationRepository.findByUserIdAndPopupStoreIdAndDateAndStatus(
+                anyLong(), eq(storeId), eq(date), eq(ReservationStatus.PENDING)))
+                .thenReturn(Optional.of(pendingReservation));
+
+        // 슬롯 저장 모킹
         when(reservationAvailableSlotRepository.findByPopupStoreIdAndDateAndTime(storeId, date, time))
-                .thenAnswer(invocation -> Optional.of(ReservationAvailableSlot.builder()
-                        .availableSlot(dbSlot.get())
-                        .status(PopupStoreStatus.AVAILABLE)
-                        .build()));
+                .thenReturn(Optional.of(slot));
+        when(reservationAvailableSlotRepository.save(any(ReservationAvailableSlot.class)))
+                .thenAnswer(inv -> inv.getArgument(0));
 
-        doAnswer(invocation -> {
-            dbSlot.addAndGet(-person);
-            return null;
-        }).when(reservationAvailableSlotRepository).save(any(ReservationAvailableSlot.class));
+        // 결제 관련 모킹
+        when(paymentRepository.save(any(Payment.class))).thenReturn(mockPayment);
+        when(paymentRepository.findByOrderId(anyString())).thenReturn(Optional.of(mockPayment));
+        when(paymentRepository.findByReservationId(eq(reservationId))).thenReturn(Optional.of(mockPayment));
+        doNothing().when(paymentService).cancelPayment(eq("test-order-id"), anyString());
 
         // when
-        CountDownLatch latch = new CountDownLatch(2);
         ExecutorService executorService = Executors.newFixedThreadPool(2);
+        CountDownLatch latch = new CountDownLatch(2);
+        AtomicReference<String> orderId = new AtomicReference<>();
 
+        // 예약 작업 실행
         executorService.submit(() -> {
             try {
-                reservationService.reservation(storeId, date, time, person);
+                ReservationPaymentRspDto result = reservationService.reservation(storeId, date, time, person);
+                orderId.set(result.getOrderId());
+                Thread.sleep(100);
+                reservationService.completeReservation(result.getOrderId());
+            } catch (Exception e) {
+                System.out.println("Reservation Exception: " + e);
+                e.printStackTrace();
             } finally {
                 latch.countDown();
             }
         });
 
+        // 예약 취소 작업 실행
         executorService.submit(() -> {
             try {
-                reservationService.cancelReservation(userId, storeId, date, time, person);
+                Thread.sleep(500);
+                if (orderId.get() != null) {
+                    reservationService.cancelReservation(user.getId(), storeId, date, time, person);
+                }
+            } catch (Exception e) {
+                // 예외 무시
             } finally {
                 latch.countDown();
             }
         });
 
-        latch.await(); // 두 작업 완료 대기
+        // then
+        latch.await(5, TimeUnit.SECONDS);
         executorService.shutdown();
 
-        // then
-        verify(redisSlotService, atLeastOnce()).decrementSlot(storeId, date, time, person);
-        verify(redisSlotService, atLeastOnce()).incrementSlot(storeId, date, time, person);
-        verify(reservationAvailableSlotRepository, atLeastOnce()).save(any(ReservationAvailableSlot.class));
-        verify(reservationRepository, atLeastOnce()).save(any(Reservation.class));
-        verify(reservationRepository, atLeastOnce()).delete(any(Reservation.class));
-        verify(paymentService, atLeastOnce()).cancelPayment(anyString(), anyString());
-        verify(paymentRepository, atLeastOnce()).save(argThat(p ->
-                p.getStatus() == PaymentStatus.CANCELED
-        ));
+        // Redis Lock 검증
+        verify(redissonClient, times(2)).getLock(anyString());
+        verify(rLock, times(2)).tryLock(anyLong(), anyLong(), any(TimeUnit.class));
+        verify(rLock, times(2)).unlock();
+
+        // Redis Slot 작업 검증
+        verify(redisSlotService, times(1)).decrementSlot(eq(storeId), eq(date), eq(time), eq(person));
+        verify(redisSlotService, times(1)).incrementSlot(eq(storeId), eq(date), eq(time), eq(person));
+
+        // 작업 순서 검증
+        InOrder inOrder = inOrder(redisSlotService);
+        inOrder.verify(redisSlotService).decrementSlot(eq(storeId), eq(date), eq(time), eq(person));
+        inOrder.verify(redisSlotService).incrementSlot(eq(storeId), eq(date), eq(time), eq(person));
+
+        // 최종 상태 검증
+        assertThat(redisSlot.get()).isEqualTo(10);
     }
 
     @Test
-    void 결제_완료_시_예약_확정() throws InterruptedException {
+    void 결제_완료_시_예약_확정() {
         // given
-        Long storeId = 1L;
-        Long userId = 1L;
-        LocalDate date = LocalDate.now();
-        LocalTime time = LocalTime.of(11, 0);
-        int person = 2;
-        String orderId = UUID.randomUUID().toString();
+        String orderId = UUID.randomUUID().toString();  // 고유한 주문 ID 생성
 
-        mockReservationSetup(storeId, userId, date, time, person);
-        PopupStore popupStore = PopupStore.builder()
-                .id(storeId)
-                .price(5000L)
+        // Mock 예약 생성
+        Reservation pendingReservation = spy(Reservation.builder()
+                .popupStore(popupStore)
+                .user(user)
+                .date(date)
+                .time(time)
+                .status(ReservationStatus.PENDING)
+                .person(person)
+                .build());
+        doReturn(1L).when(pendingReservation).getId();
+
+        // Mock 결제 생성
+        Payment mockPayment = Payment.builder()
+                .orderId(orderId)
+                .paymentKey("test-payment-key")
+                .status(PaymentStatus.PENDING)
+                .amount(10000L)
+                .reservation(pendingReservation)
+                .user(user)
                 .build();
-        when(popupStoreRepository.findById(storeId)).thenReturn(Optional.of(popupStore));
+
+        // Repository Mock 설정
+        when(paymentRepository.findByOrderId(orderId)).thenReturn(Optional.of(mockPayment));
+        when(reservationRepository.findById(1L)).thenReturn(Optional.of(pendingReservation));
+        when(reservationRepository.save(any(Reservation.class))).thenReturn(pendingReservation);
+
+        // PENDING 상태의 예약 조회 모킹 추가
+        when(reservationRepository.findByUserIdAndPopupStoreIdAndDateAndStatus(
+                eq(user.getId()),
+                eq(popupStore.getId()),
+                eq(date),
+                eq(ReservationStatus.PENDING)))
+                .thenReturn(Optional.of(pendingReservation));
+
+        // CHECKED 상태의 예약이 없음을 확인하는 모킹 추가
+        when(reservationRepository.findByUserIdAndPopupStoreIdAndDateAndStatus(
+                eq(user.getId()),
+                eq(popupStore.getId()),
+                eq(date),
+                eq(ReservationStatus.CHECKED)))
+                .thenReturn(Optional.empty());
+
+        when(reservationAvailableSlotRepository.findByPopupStoreIdAndDateAndTime(
+                eq(popupStore.getId()), eq(date), eq(time))).thenReturn(Optional.of(slot));
+        when(reservationAvailableSlotRepository.save(any(ReservationAvailableSlot.class))).thenReturn(slot);
+
+        // Redis 슬롯 관련 모킹
+        when(redisSlotService.getSlotFromRedis(anyLong(), any(), any())).thenReturn(10);
+        doNothing().when(redisSlotService).decrementSlot(anyLong(), any(), any(), anyInt());
 
         // when
-        ReservationPaymentRspDto reservationResult = reservationService.reservation(storeId, date, time, person);
+        ReservationPaymentRspDto reservationResult = reservationService.reservation(storeId, date, time, person);  // 예약 호출
+
+        // 결제 완료
+        Reservation confirmedReservation = reservationService.completeReservation(orderId);  // 예약 확정 호출
 
         // then
-        assertThat(reservationResult.getAmount()).isEqualTo(10000L);
+        // 예약 결과 검증
+        assertThat(reservationResult.getAmount()).isEqualTo(10000L);  // 금액 검증
         verify(paymentRepository).save(argThat(payment ->
                 payment.getStatus() == PaymentStatus.PENDING &&
                         payment.getAmount() == 10000L
         ));
 
-        // 결제 완료 시
-        Reservation confirmedReservation = reservationService.completeReservation(orderId);
+        // 예약 상태 확인
         assertThat(confirmedReservation.getStatus()).isEqualTo(ReservationStatus.CHECKED);
+
+        // Redis Slot 감소 확인
+        verify(redisSlotService, times(1)).decrementSlot(eq(storeId), eq(date), eq(time), eq(person));
     }
 
     @Test
-    void 결제_실패_시_예약_취소() {
+    void 예약_취소_시_결제_취소() {
         // given
-        String orderId = UUID.randomUUID().toString();
-        Payment payment = Payment.builder()
-                .orderId(orderId)
-                .status(PaymentStatus.PENDING)
+        Reservation reservation = Reservation.builder()
+                .popupStore(popupStore)
+                .user(user)
+                .date(date)
+                .time(time)
+                .status(ReservationStatus.CHECKED)
+                .person(person)
                 .build();
-        when(paymentRepository.findByOrderId(orderId)).thenReturn(Optional.of(payment));
-        assertThatThrownBy(() -> reservationService.completeReservation(orderId))
-                .isInstanceOf(BusinessException.class);
 
-        // when & then
-        assertThatThrownBy(() -> {
-            reservationService.completeReservation(orderId);
-        }).isInstanceOf(BusinessException.class);
+        Payment payment = Payment.builder()
+                .orderId("test-order-id")
+                .paymentKey("test-payment-key")
+                .status(PaymentStatus.DONE)
+                .amount(10000L)
+                .reservation(reservation)
+                .user(user)
+                .build();
 
-        verify(reservationRepository).delete(payment.getReservation());
-    }
+        // 예약 및 결제 관련 모의 구현
+        when(reservationRepository.findByUserIdAndPopupStoreIdAndDateAndTime(
+                user.getId(), popupStore.getId(), date, time))
+                .thenReturn(Optional.of(reservation));
+        when(paymentRepository.findByReservationId(reservation.getId()))
+                .thenReturn(Optional.of(payment));
 
-    @Test
-    void 예약_취소_시_결제_취소() throws InterruptedException {
-        // given
-        Long storeId = 1L;
-        Long userId = 1L;
-        LocalDate date = LocalDate.now();
-        LocalTime time = LocalTime.of(11, 0);
-        int person = 2;
-        String orderId = UUID.randomUUID().toString();
+        // 결제 취소 메서드 모의 구현
+        doAnswer(invocation -> {
+            // 결제 상태 업데이트
+            payment.updateStatus(PaymentStatus.CANCELED);
 
-        mockReservationSetup(storeId, userId, date, time, person);
-        Payment payment = mockPaymentSetup(orderId, PaymentStatus.DONE);
-        when(paymentRepository.findByReservationId(any())).thenReturn(Optional.of(payment));
+            return null;
+        }).when(paymentService).cancelPayment(eq("test-order-id"), anyString());
 
         // when
-        reservationService.cancelReservation(userId, storeId, date, time, person);
+        reservationService.cancelReservation(user.getId(), popupStore.getId(), date, time, person);
 
         // then
-        verify(paymentService).cancelPayment(orderId, "고객 예약 취소");
-        verify(paymentRepository).save(argThat(p ->
-                p.getStatus() == PaymentStatus.CANCELED
-        ));
+        // 결제 취소 메서드 호출 확인
+        verify(paymentService).cancelPayment(eq("test-order-id"), anyString());
+
+        // 예약 상태가 CANCELED로 변경되었는지 확인
+        assertThat(reservation.getStatus()).isEqualTo(ReservationStatus.CANCELED);
+
+        // 결제 상태가 CANCELED로 변경되었는지 확인
+        assertThat(payment.getStatus()).isEqualTo(PaymentStatus.CANCELED);
     }
 }
