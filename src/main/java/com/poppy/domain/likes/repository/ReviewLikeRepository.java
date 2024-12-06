@@ -10,7 +10,6 @@ import org.springframework.data.repository.query.Param;
 import java.util.Optional;
 
 public interface ReviewLikeRepository extends JpaRepository<ReviewLike,Long> {
-
     @Query("SELECT CASE WHEN COUNT(rl) > 0 THEN true ELSE false END " +
             "FROM ReviewLike rl " +
             "WHERE rl.user.id = :userId " +
@@ -21,5 +20,4 @@ public interface ReviewLikeRepository extends JpaRepository<ReviewLike,Long> {
             "WHERE rl.user = :user " +
             "AND rl.review = :review")
     Optional<ReviewLike> findByUserAndReview(@Param("user") User user, @Param("review") Review review);
-
 }
