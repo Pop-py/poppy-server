@@ -20,6 +20,10 @@ public class PaymentService {
         Payment payment = paymentRepository.findByOrderId(orderId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.PAYMENT_NOT_FOUND));
 
+        // 중복 결제를 막기 위한 멱등성 검증
+        if (payment.getStatus() == PaymentStatus.DONE)
+            throw new BusinessException(ErrorCode.ALREADY_PROCESSED_PAYMENT);
+
         // 결제 금액 검증
         if (!amount.equals(payment.getAmount())) {
             payment.updateStatus(PaymentStatus.FAILED);
@@ -52,11 +56,17 @@ public class PaymentService {
         Payment payment = paymentRepository.findByOrderId(orderId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.PAYMENT_NOT_FOUND));
 
+        // 이미 취소된 결제인지 확인
+        if (payment.getStatus() == PaymentStatus.CANCELED)
+            throw new BusinessException(ErrorCode.ALREADY_CANCELED_PAYMENT);
+
+        // 결제가 완료된 상태인지 확인
+        if (payment.getStatus() != PaymentStatus.DONE)
+            throw new BusinessException(ErrorCode.INVALID_PAYMENT_STATUS);
+
         // 토스페이먼츠 결제 취소 요청
         boolean isCanceled = tossPaymentClient.cancelPayment(payment.getPaymentKey(), cancelReason);
-        if (!isCanceled) {
-            throw new BusinessException(ErrorCode.PAYMENT_CANCEL_FAILED);
-        }
+        if (!isCanceled) throw new BusinessException(ErrorCode.PAYMENT_CANCEL_FAILED);
 
         // 결제 상태 업데이트
         payment.updateStatus(PaymentStatus.CANCELED);
