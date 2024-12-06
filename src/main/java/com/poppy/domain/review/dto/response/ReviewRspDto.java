@@ -6,6 +6,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.AllArgsConstructor;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 @Getter
@@ -18,12 +19,10 @@ public class ReviewRspDto {
     private String content;
     private String thumbnail;
     private Double rating;
-    private Long userId;
+    private Integer likes;  // 좋아요 개수
     private String userName;
-    private Long popupStoreId;
     private String popupStoreName;
-    private LocalDateTime createdAt;
-    private LocalDateTime updatedAt;
+    private LocalDate date;    // 작성일 (수정 시 해당 날짜로 갱신됨)
 
     public static ReviewRspDto from(Review review) {
         return ReviewRspDto.builder()
@@ -32,12 +31,10 @@ public class ReviewRspDto {
                 .content(review.getContent())
                 .thumbnail(review.getThumbnail())
                 .rating(review.getRating())
-                .userId(review.getUser().getId())
+                .likes(review.getReviewLikes().size())
                 .userName(review.getUser().getNickname())
-                .popupStoreId(review.getPopupStore().getId())
                 .popupStoreName(review.getPopupStore().getName())
-                .createdAt(review.getCreateTime())
-                .updatedAt(review.getUpdateTime())
+                .date(review.getUpdateTime().toLocalDate())
                 .build();
     }
 }
