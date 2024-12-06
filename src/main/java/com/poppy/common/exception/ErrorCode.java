@@ -26,7 +26,7 @@ public enum ErrorCode {
 
     // 예약 관련
     RESERVATION_NOT_FOUND(404, "예약 정보를 찾을 수 없습니다."),
-    RESERVATION_CONFLICT(403, "이미 예약이 진행 중입니다."),
+    RESERVATION_CONFLICT(409, "이미 예약이 진행 중입니다."),
     NO_AVAILABLE_SLOT(400, "이미 예약이 찼습니다."),
     INVALID_RESERVATION_DATE(400, "예약이 불가능한 시간입니다."),
     RESERVATION_FAILED(500, "예약에 실패하였습니다."),
@@ -41,7 +41,10 @@ public enum ErrorCode {
     PAYMENT_FAILED(500, "결제에 실패하였습니다."),
     PAYMENT_NOT_FOUND(404, "결제 정보를 찾을 수 없습니다."),
     INVALID_PAYMENT_AMOUNT(500, "결제 금액을 확인해주세요."),
+    INVALID_PAYMENT_STATUS(500, "결제 상태를 확인해주세요."),
     PAYMENT_CANCEL_FAILED(500, "결제 취소에 실패하였습니다."),
+    ALREADY_PROCESSED_PAYMENT(500, "이미 완료된 결제입니다."),
+    ALREADY_CANCELED_PAYMENT(500, "이미 취소된 결제입니다."),
 
     // 리뷰 관련
     REVIEW_ALREADY_EXISTS(403, "이미 작성한 리뷰가 있습니다."),
