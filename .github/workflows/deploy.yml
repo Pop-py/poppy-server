@@ -88,16 +88,16 @@ jobs:
             ]" --output text
           
           aws ssm send-command \
-          --instance-ids i-011b5cadab57a636c \
-          --document-name "AWS-RunShellScript" \
-          --parameters "commands=[
-            'cd /home/ubuntu',
-            'aws s3 cp s3://poppy-server-bucket/docker-compose.yml .',
-            'sudo docker compose down',
-            'sudo docker rmi poppyserver/poppy:latest || true',
-            'sudo docker pull poppyserver/poppy:latest',
-            'sudo docker tag poppyserver/poppy:latest poppy',
-            'sudo docker compose up -d'
-          ]" --output text
+            --instance-ids i-06b3478042177ee5f \
+            --document-name "AWS-RunShellScript" \
+            --parameters "commands=[
+              'cd /home/ubuntu',
+              'aws s3 cp s3://poppy-server-bucket/docker-compose.yml .',
+              'sudo docker compose down',
+              'sudo docker rmi poppyserver/poppy:latest || true',
+              'sudo docker pull poppyserver/poppy:latest',
+              'sudo docker tag poppyserver/poppy:latest poppy',
+              'sudo docker compose up -d'
+            ]" --output text
         env:
           DOCKER_COMPOSE_YML: ${{ secrets.DOCKER_COMPOSE_YML }}
