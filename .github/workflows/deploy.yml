@@ -69,37 +69,35 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ap-northeast-2
 
-      - name: EC2에 Docker Compose 배포 (Blue/Green)
+      - name: EC2에 Docker Compose 배포
         run: |
-            echo "$DOCKER_COMPOSE_YML" > docker-compose.yml
-            aws s3 cp docker-compose.yml s3://poppy-server-bucket/docker-compose.yml
-            
-            # Blue 서버 배포
-            aws ssm send-command \
-              --instance-ids i-01991812d9b9ff3b2 \
-              --document-name "AWS-RunShellScript" \
-              --parameters "commands=[
-                'cd /home/ubuntu',
-                'aws s3 cp s3://poppy-server-bucket/docker-compose.yml .',
-                'sudo docker compose down',
-                'sudo docker rmi poppyserver/poppy:latest || true',
-                'sudo docker pull poppyserver/poppy:latest',
-                'sudo docker tag poppyserver/poppy:latest poppy',
-                'sudo docker compose up -d'
-              ]" --output text
-            
-            # Green 서버 배포
-            aws ssm send-command \
-              --instance-ids i-011b5cadab57a636c \
-              --document-name "AWS-RunShellScript" \
-              --parameters "commands=[
-                'cd /home/ubuntu',
-                'aws s3 cp s3://poppy-server-bucket/docker-compose.yml .',
-                'sudo docker compose down',
-                'sudo docker rmi poppyserver/poppy:latest || true',
-                'sudo docker pull poppyserver/poppy:latest',
-                'sudo docker tag poppyserver/poppy:latest poppy',
-                'sudo docker compose up -d'
-              ]" --output text
-          env:
-            DOCKER_COMPOSE_YML: ${{ secrets.DOCKER_COMPOSE_YML }}
+          echo "$DOCKER_COMPOSE_YML" > docker-compose.yml
+          aws s3 cp docker-compose.yml s3://poppy-server-bucket/docker-compose.yml
+          
+          aws ssm send-command \
+            --instance-ids i-01991812d9b9ff3b2 \
+            --document-name "AWS-RunShellScript" \
+            --parameters "commands=[
+              'cd /home/ubuntu',
+              'aws s3 cp s3://poppy-server-bucket/docker-compose.yml .',
+              'sudo docker compose down',
+              'sudo docker rmi poppyserver/poppy:latest || true',
+              'sudo docker pull poppyserver/poppy:latest',
+              'sudo docker tag poppyserver/poppy:latest poppy',
+              'sudo docker compose up -d'
+            ]" --output text
+          
+          aws ssm send-command \
+          --instance-ids i-011b5cadab57a636c \
+          --document-name "AWS-RunShellScript" \
+          --parameters "commands=[
+            'cd /home/ubuntu',
+            'aws s3 cp s3://poppy-server-bucket/docker-compose.yml .',
+            'sudo docker compose down',
+            'sudo docker rmi poppyserver/poppy:latest || true',
+            'sudo docker pull poppyserver/poppy:latest',
+            'sudo docker tag poppyserver/poppy:latest poppy',
+            'sudo docker compose up -d'
+          ]" --output text
+        env:
+          DOCKER_COMPOSE_YML: ${{ secrets.DOCKER_COMPOSE_YML }}
