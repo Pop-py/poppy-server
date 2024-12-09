@@ -32,14 +32,12 @@ public class ReviewService {
 
     @Transactional
     public ReviewRspDto createReview(Long popupStoreId, ReviewReqDto reviewCreateReqDto) {
-
         User user = loginUserProvider.getLoggedInUser();
         PopupStore popupStore = popupStoreRepository.findById(popupStoreId).orElseThrow(() -> new BusinessException(ErrorCode.STORE_NOT_FOUND));
 
         // 이미 유저가 리뷰를 작성한 경우
-        if (reviewRepository.existsByUserAndPopupStore(user, popupStore)) {
+        if (reviewRepository.existsByUserAndPopupStore(user, popupStore))
             throw new BusinessException(ErrorCode.REVIEW_ALREADY_EXISTS);
-        }
 
         Review review = Review.builder()
                 .title(reviewCreateReqDto.getTitle())
@@ -57,16 +55,14 @@ public class ReviewService {
 
     @Transactional
     public ReviewRspDto updateReview(Long reviewId, ReviewReqDto reviewUpdateReqDto) {
-
         User user = loginUserProvider.getLoggedInUser();
 
         Review review = reviewRepository.findById(reviewId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.REVIEW_NOT_FOUND));
 
         // 리뷰 작성자와 현재 사용자가 같은지 확인
-        if (!review.getUser().getId().equals(user.getId())) {
+        if (!review.getUser().getId().equals(user.getId()))
             throw new BusinessException(ErrorCode.NOT_REVIEW_AUTHOR);
-        }
 
         // 리뷰 수정
         review.update(
@@ -75,7 +71,6 @@ public class ReviewService {
                 reviewUpdateReqDto.getThumbnail(),
                 reviewUpdateReqDto.getRating()
         );
-
         reviewRepository.save(review);
 
         return ReviewRspDto.from(review);
@@ -84,15 +79,13 @@ public class ReviewService {
     // 리뷰 삭제
     @Transactional
     public void deleteReview(Long reviewId) {
-
         User user = loginUserProvider.getLoggedInUser();
 
         Review review = reviewRepository.findById(reviewId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.REVIEW_NOT_FOUND));
 
-        if (!review.getUser().getId().equals(user.getId())) {
+        if (!review.getUser().getId().equals(user.getId()))
             throw new BusinessException(ErrorCode.NOT_REVIEW_AUTHOR);
-        }
 
         // 리뷰 삭제
         reviewRepository.delete(review);
@@ -108,13 +101,13 @@ public class ReviewService {
         // 좋아요 여부 확인
         boolean hasLiked = reviewLikeRepository.existsByUserIdAndReviewId(user.getId(), reviewId);
 
-        if (hasLiked) {
-            // 좋아요가 있으면 삭제
+        // 좋아요가 있으면 삭제, 없으면 생성
+        if(hasLiked) {
             reviewLikeRepository.delete(reviewLikeRepository
                     .findByUserAndReview(user, review)
                     .orElseThrow(() -> new BusinessException(ErrorCode.LIKE_NOT_FOUND)));
-        } else {
-            // 좋아요가 없으면 생성
+        }
+        else {
             ReviewLike newLike = ReviewLike.builder()
                     .user(user)
                     .review(review)
@@ -132,6 +125,8 @@ public class ReviewService {
                 .build();
     }
 
+    // 팝업 스토어 리뷰 전체 조회
+    @Transactional(readOnly = true)
     public Page<ReviewRspDto> getReviews(Long popupStoreId, ReviewSortType sortType, PageRequest pageRequest) {
         Page<Review> reviews = switch (sortType) {
             case RECENT -> reviewRepository.findByPopupStoreIdOrderByCreatedAtDesc(popupStoreId, pageRequest);
@@ -141,5 +136,13 @@ public class ReviewService {
         };
 
         return reviews.map(ReviewRspDto::from);
+    }
+
+    // 팝업 스토어 리뷰 상세 조회
+    @Transactional(readOnly = true)
+    public ReviewRspDto getReview(Long reviewId) {
+        Review review = reviewRepository.findById(reviewId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.REVIEW_NOT_FOUND));
+        return ReviewRspDto.from(review);
     }
 }
