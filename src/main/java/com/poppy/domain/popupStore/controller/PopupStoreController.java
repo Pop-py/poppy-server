@@ -108,7 +108,8 @@ public class PopupStoreController {
     @GetMapping("/{storeId}/{date}")
     public RspTemplate<List<ReservationAvailableSlotRspDto>> getAvailable(
             @PathVariable Long storeId, @PathVariable @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate date){
+        PopupStoreRspDto popupStore = popupStoreService.getPopupStore(storeId);
         List<ReservationAvailableSlotRspDto> available = popupStoreService.getAvailableSlots(storeId, date);
-        return new RspTemplate<>(HttpStatus.OK, storeId + "의 예약 가능 시간 조회", available);
+        return new RspTemplate<>(HttpStatus.OK, popupStore.getName() + "의 예약 가능 시간 조회", available);
     }
 }
