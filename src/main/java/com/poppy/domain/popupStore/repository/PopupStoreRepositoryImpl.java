@@ -20,10 +20,12 @@ public class PopupStoreRepositoryImpl implements PopupStoreRepositoryCustom {
     public List<PopupStore> findAllActive() {
         return queryFactory
                 .selectFrom(store)
-                .where(
-                        isEndFalse()
-                )
+                // 모든 유형의 팝업 스토어를 가져오기 위해 left join 사용
+                .leftJoin(store.reservationAvailableSlots).fetchJoin()
+                .leftJoin(store.storeCategory).fetchJoin()
+                .where(isEndFalse())
                 .orderBy(store.createTime.desc())
+                .distinct() // 중복 제거
                 .fetch();
     }
 
