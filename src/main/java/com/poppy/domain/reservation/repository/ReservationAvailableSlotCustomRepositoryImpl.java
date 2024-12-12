@@ -36,15 +36,6 @@ public class ReservationAvailableSlotCustomRepositoryImpl implements Reservation
     }
 
     @Override
-    public List<ReservationAvailableSlot> findByDateGreaterThanEqualAndPopupStoreStatusEquals(LocalDate date, PopupStoreStatus status) {
-        QReservationAvailableSlot slot = QReservationAvailableSlot.reservationAvailableSlot;
-
-        return queryFactory.selectFrom(slot)
-                .where(slot.date.goe(date).and(slot.status.eq(status)))
-                .fetch();
-    }
-
-    @Override
     public List<ReservationAvailableSlot> findByPopupStoreIdAndStatus(Long popupStoreId, PopupStoreStatus status) {
         QReservationAvailableSlot slot = QReservationAvailableSlot.reservationAvailableSlot;
 
@@ -65,5 +56,16 @@ public class ReservationAvailableSlotCustomRepositoryImpl implements Reservation
                 .fetchOne();
 
         return Optional.ofNullable(result);
+    }
+
+    @Override
+    public List<ReservationAvailableSlot> findByPopupStoreIdAndDateGreaterThanEqualAndStatus(Long popupStoreId, LocalDate date, PopupStoreStatus status) {
+        QReservationAvailableSlot slot = QReservationAvailableSlot.reservationAvailableSlot;
+
+        return queryFactory.selectFrom(slot)
+                .where(slot.popupStore.id.eq(popupStoreId)
+                        .and(slot.date.goe(date))
+                        .and(slot.status.eq(status)))
+                .fetch();
     }
 }
