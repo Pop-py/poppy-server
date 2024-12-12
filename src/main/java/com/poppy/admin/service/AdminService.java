@@ -16,6 +16,7 @@ import com.poppy.domain.storeCategory.entity.StoreCategory;
 import com.poppy.domain.user.entity.User;
 import com.poppy.domain.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDate;
@@ -33,6 +34,7 @@ public class AdminService {
     private final UserRepository userRepository;
     private final ReservationAvailableSlotRepository reservationAvailableSlotRepository;
     private final PopupStoreService popupStoreService;
+    private final AsyncRedisSlotInitializationService asyncRedisSlotService;
 
     @Transactional
     public PopupStoreRspDto savePopupStore(PopupStoreReqDto reqDto) {
@@ -98,8 +100,9 @@ public class AdminService {
         }
 
         // 예약 슬롯 초기화 (이미 휴무일로 설정된 날짜는 제외됨)
-        if(savedPopupStore.getReservationType() == ReservationType.ONLINE){
+        if(savedPopupStore.getReservationType() == ReservationType.ONLINE) {
             popupStoreService.initializeSlots(savedPopupStore.getId());
+            asyncRedisSlotService.initializeRedisSlots(savedPopupStore.getId());
         }
 
         return PopupStoreRspDto.from(savedPopupStore);
@@ -113,30 +116,32 @@ public class AdminService {
             LocalDate startDate = reqDto.getStartDate();
             LocalDate endDate = reqDto.getEndDate();
 
-            if (startDate.isBefore(currentDate)) {
-                throw new IllegalArgumentException("시작일은 현재 날짜보다 이전일 수 없습니다.");
-            }
+            if (startDate.isBefore(currentDate))
+                throw new BusinessException(ErrorCode.INVALID_START_DATE);
 
-            if (endDate.isBefore(startDate)) {
-                throw new IllegalArgumentException("종료일은 시작일보다 이전일 수 없습니다.");
-            }
+            if (endDate.isBefore(startDate))
+                throw new BusinessException(ErrorCode.INVALID_DATE_RANGE);
 
             // 오픈 시간과 종료 시간 검증
-            if (reqDto.getClosingTime().isBefore(reqDto.getOpeningTime())) {
-                throw new IllegalArgumentException("종료 시간은 시작 시간보다 이전일 수 없습니다.");
-            }
+            if (reqDto.getClosingTime().isBefore(reqDto.getOpeningTime()))
+                throw new BusinessException(ErrorCode.INVALID_TIME_RANGE);
         }
         catch (DateTimeParseException e) {
             throw new BusinessException(ErrorCode.INVALID_DATE);
         }
     }
 
-    //팝업 스토어 삭제
+    // 팝업 스토어 삭제
     @Transactional
     public void deletePopupStore(Long id) {
         PopupStore popupStore = popupStoreRepository.findById(id)
-                .orElseThrow(()->new BusinessException(ErrorCode.STORE_NOT_FOUND));
+                .orElseThrow(() -> new BusinessException(ErrorCode.STORE_NOT_FOUND));
 
-        popupStoreRepository.delete(popupStore);
+        try {
+            asyncRedisSlotService.clearRedisData(popupStore.getId());
+            popupStoreRepository.delete(popupStore);
+        } catch (DataIntegrityViolationException e) {
+            throw new BusinessException(ErrorCode.STORE_HAS_REFERENCES);
+        }
     }
 }

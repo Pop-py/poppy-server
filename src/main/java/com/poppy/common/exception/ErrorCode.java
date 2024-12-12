@@ -21,8 +21,11 @@ public enum ErrorCode {
     INVALID_FORMAT(400, "잘못된 요청 형식입니다."),
     NOT_NULL_PARAMETER(400, "스토어, 날짜, 시간, 인원을 입력해주세요."),
 
-    // 팝업스토어 등록 관련
+    // 팝업스토어 등록 및 삭제 관련 (관리자)
     INVALID_DATE(500, "존재하는 날짜를 입력해주세요."),
+    INVALID_TIME_RANGE(400, "종료 시간은 시작 시간보다 이전일 수 없습니다."),
+    INVALID_START_DATE(400, "시작일은 현재 날짜보다 이전일 수 없습니다."),
+    STORE_HAS_REFERENCES(500, "예약이나 결제 내역이 존재하여 삭제할 수 없습니다."),
 
     // 예약 관련
     RESERVATION_NOT_FOUND(404, "예약 정보를 찾을 수 없습니다."),
