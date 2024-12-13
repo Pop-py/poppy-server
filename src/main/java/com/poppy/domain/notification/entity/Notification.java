@@ -4,9 +4,14 @@ import com.poppy.common.entity.BaseTimeEntity;
 import com.poppy.domain.popupStore.entity.PopupStore;
 import com.poppy.domain.user.entity.User;
 import jakarta.persistence.*;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 @Entity
 @Table(name = "notifications")
+@Getter
+@NoArgsConstructor
 public class Notification extends BaseTimeEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -16,8 +21,8 @@ public class Notification extends BaseTimeEntity {
     private String message;
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
-    private NotificationStatus type;  // 알림 유형 (예약, 대기 등)
+    @Column(nullable = false, length = 20)
+    private NotificationType type;  // 알림 유형
 
     @Column(name = "is_read")
     private boolean isRead = false;  // 알림 목록 창에서 확인했는지
@@ -30,4 +35,27 @@ public class Notification extends BaseTimeEntity {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "popup_store_id")
     private PopupStore popupStore;
+
+    @Column(name = "waiting_number")
+    private Integer waitingNumber;
+
+    @Column(name = "people_ahead")
+    private Integer peopleAhead;
+
+    @Column(name = "is_fcm")
+    private boolean isFcm;
+    @Builder
+    public Notification(String message, NotificationType type, User user,
+                        PopupStore popupStore, Integer waitingNumber, Integer peopleAhead, boolean isFcm) {
+        this.message = message;
+        this.type = type;
+        this.user = user;
+        this.popupStore = popupStore;
+        this.waitingNumber = waitingNumber;
+        this.peopleAhead = peopleAhead;
+    }
+
+    public void markAsRead() {
+        this.isRead = true;
+    }
 }

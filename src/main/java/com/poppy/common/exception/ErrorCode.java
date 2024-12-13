@@ -26,6 +26,7 @@ public enum ErrorCode {
     INVALID_TIME_RANGE(400, "종료 시간은 시작 시간보다 이전일 수 없습니다."),
     INVALID_START_DATE(400, "시작일은 현재 날짜보다 이전일 수 없습니다."),
     STORE_HAS_REFERENCES(500, "예약이나 결제 내역이 존재하여 삭제할 수 없습니다."),
+    UNAUTHORIZED_STORE_ACCESS(403, "해당 팝업스토어에 대한 접근 권한이 없습니다"),
 
     // 예약 관련
     RESERVATION_NOT_FOUND(404, "예약 정보를 찾을 수 없습니다."),
@@ -55,7 +56,25 @@ public enum ErrorCode {
     NOT_REVIEW_AUTHOR(403,"리뷰 작성자만 삭제/수정이 가능합니다."),
 
     // 좋아요 관련
-    LIKE_NOT_FOUND(404,"좋아요를 찾을 수 없습니다.")
+    LIKE_NOT_FOUND(404,"좋아요를 찾을 수 없습니다."),
+
+    // 대기 관련
+    WAITING_CONFLICT(409, "대기 등록 충돌이 발생했습니다. 다시 시도해주세요."),
+    WAITING_FAILED(500, "대기 등록에 실패했습니다."),
+    WAITING_NOT_FOUND(404, "해당 대기 정보를 찾을 수 없습니다"),
+    MAX_WAITING_EXCEEDED(400, "현재 대기 인원이 초과되었습니다"),
+    DUPLICATE_WAITING(400, "이미 대기 중인 사용자입니다"),
+    INVALID_WAITING_STATUS(400, "잘못된 대기 상태입니다"),
+    SETTINGS_NOT_FOUND(404, "대기 설정을 찾을 수 없습니다"),
+    CANNOT_CANCEL_CALLED_WAITING(400, "호출된 대기는 취소할 수 없습니다"),
+    UNAUTHORIZED_WAITING_ACCESS(403, "해당 대기에 대한 접근 권한이 없습니다"),
+
+    // FCM 토큰 관련
+    FCM_TOKEN_UPDATE_FORBIDDEN(403, "다른 사용자의 FCM 토큰을 업데이트할 수 없습니다."),
+
+    // 알림 관련
+    NOTIFICATION_NOT_FOUND(404, "해당 알림을 찾을 수 없습니다"),
+    UNAUTHORIZED_NOTIFICATION_ACCESS(403, "해당 알림에 대한 접근 권한이 없습니다")
     ;
 
     private final int code;

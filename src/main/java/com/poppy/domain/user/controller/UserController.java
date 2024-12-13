@@ -1,10 +1,12 @@
 package com.poppy.domain.user.controller;
 
 import com.poppy.common.api.RspTemplate;
+import com.poppy.domain.user.dto.UpdateFcmTokenReqDto;
 import com.poppy.domain.user.dto.UserReservationRspDto;
 import com.poppy.domain.user.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -36,5 +38,16 @@ public class UserController {
     public RspTemplate<Void> cancelReservation(@PathVariable Long id, @PathVariable Long reservationId) {
         userService.cancelUserReservation(reservationId);
         return new RspTemplate<>(HttpStatus.OK, "예약이 취소되었습니다.");
+    }
+
+    // FCM 토큰 저장
+    @PutMapping("/{id}/fcm-token")
+    public RspTemplate<?> updateFcmToken(
+            @PathVariable Long userId, @RequestBody UpdateFcmTokenReqDto request, @AuthenticationPrincipal Long authenticatedUserId) {
+        userService.updateFcmToken(userId, request.getFcmToken(), authenticatedUserId);
+        return new RspTemplate<>(
+                HttpStatus.OK,
+                "FCM 토큰이 업데이트되었습니다."
+        );
     }
 }
