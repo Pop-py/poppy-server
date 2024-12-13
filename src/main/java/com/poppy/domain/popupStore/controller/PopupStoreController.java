@@ -5,6 +5,7 @@ import com.poppy.domain.popupStore.dto.response.PopupStoreCalenderRspDto;
 import com.poppy.domain.popupStore.dto.response.PopupStoreRspDto;
 import com.poppy.domain.popupStore.dto.response.ReservationAvailableSlotRspDto;
 import com.poppy.domain.popupStore.service.PopupStoreService;
+import com.poppy.domain.search.service.StoreSearchService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
@@ -18,6 +19,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class PopupStoreController {
     private final PopupStoreService popupStoreService;
+    private final StoreSearchService storeSearchService;
 
     // 전체 목록 조회
     @GetMapping
@@ -79,8 +81,8 @@ public class PopupStoreController {
             @PathVariable String name) {
         return new RspTemplate<>(
                 HttpStatus.OK,
-                "팝업스토어 검색 성공",
-                popupStoreService.searchStoresByName(name)
+                "키워드 '" + name + "' 검색 성공",
+                storeSearchService.searchStoresAndSaveHistory(name)
         );
     }
 
