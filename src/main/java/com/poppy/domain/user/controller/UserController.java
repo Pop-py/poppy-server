@@ -41,7 +41,7 @@ public class UserController {
     }
 
     // FCM 토큰 저장
-    @PutMapping("/{id}/fcm-token")
+    @PatchMapping("/{id}/fcm-token")
     public RspTemplate<?> updateFcmToken(
             @PathVariable Long userId, @RequestBody UpdateFcmTokenReqDto request, @AuthenticationPrincipal Long authenticatedUserId) {
         userService.updateFcmToken(userId, request.getFcmToken(), authenticatedUserId);
