@@ -3,6 +3,7 @@ package com.poppy.domain.notification.service;
 import com.google.firebase.messaging.FirebaseMessaging;
 import com.google.firebase.messaging.FirebaseMessagingException;
 import com.google.firebase.messaging.Message;
+import com.poppy.common.config.redis.NotificationPublisher;
 import com.poppy.common.exception.BusinessException;
 import com.poppy.common.exception.ErrorCode;
 import com.poppy.domain.notification.dto.NotificationDto;
@@ -14,7 +15,6 @@ import com.poppy.domain.user.repository.LoginUserProvider;
 import com.poppy.domain.waiting.entity.Waiting;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -28,15 +28,16 @@ public class NotificationService {
     private final NotificationRepository notificationRepository;
     private final FirebaseMessaging firebaseMessaging;
     private final NotificationMessageGenerator messageGenerator;
+    private final NotificationPublisher notificationPublisher;
     private final LoginUserProvider loginUserProvider;
 
     @Transactional
     public void sendNotification(Waiting waiting, NotificationType type, Integer peopleAhead) {
-        log.info("Sending notification to userId: {}", waiting.getUser());
+        log.info("Sending notification.html to userId: {}", waiting.getUser());
 
         // FCM 알림 생성
         String fcmTitle = messageGenerator.generateFCMTitle(type, waiting.getPopupStore().getName());
-        String fcmBody = messageGenerator.generateFCMBody(type, waiting.getPopupStore().getName(), waiting.getWaitingNumber(), peopleAhead);
+        String fcmBody = messageGenerator.generateFCMBody(type, waiting.getWaitingNumber(), peopleAhead);
 
         NotificationDto fcmNotification = NotificationDto.from(
                 waiting,
@@ -64,22 +65,23 @@ public class NotificationService {
                 false
         );
 
-        // WebSocket 알림 저장
-        saveNotification(waiting, wsNotificationDto, false);
+        // WebSocket 알림 DB 저장
+        saveNotification(waiting, wsNotificationDto);
+
         // Redis로 WebSocket 알림 발행
-        //publishNotification(wsNotificationDto);
+        notificationPublisher.publish(wsNotificationDto);
     }
 
     // DB 저장
-    private Notification saveNotification(Waiting waiting, NotificationDto dto, boolean isFcm) {
-        return notificationRepository.save(Notification.builder()
+    private void saveNotification(Waiting waiting, NotificationDto dto) {
+        notificationRepository.save(Notification.builder()
                 .message(dto.getMessage())
                 .type(dto.getType())
                 .user(waiting.getUser())
                 .popupStore(waiting.getPopupStore())
                 .waitingNumber(dto.getWaitingNumber())
                 .peopleAhead(dto.getPeopleAhead())
-                .isFcm(isFcm)
+                .isFcm(false)
                 .build());
     }
 
@@ -101,18 +103,18 @@ public class NotificationService {
                 .putData("waitingNumber", dto.getWaitingNumber().toString());
 
         // peopleAhead가 null이 아닐 때만 추가
-        if (dto.getPeopleAhead() != null) {
+        if (dto.getPeopleAhead() != null)
             messageBuilder.putData("peopleAhead", dto.getPeopleAhead().toString());
-        }
 
         Message message = messageBuilder.build();
 
         try {
             firebaseMessaging.send(message);
-            log.info("FCM notification sent - type: {}, userId: {}",
+            log.info("FCM notification.html sent - type: {}, userId: {}",
                     dto.getType(), dto.getUserId());
-        } catch (FirebaseMessagingException e) {
-            log.error("Failed to send FCM notification", e);
+        }
+        catch (FirebaseMessagingException e) {
+            log.error("Failed to send FCM notification.html", e);
         }
     }
 
@@ -147,8 +149,7 @@ public class NotificationService {
     // 알림 소유자 검증
     private void validateNotificationOwner(Notification notification) {
         User loginUser = loginUserProvider.getLoggedInUser();
-        if (!notification.getUser().getId().equals(loginUser.getId())) {
+        if (!notification.getUser().getId().equals(loginUser.getId()))
             throw new BusinessException(ErrorCode.UNAUTHORIZED_NOTIFICATION_ACCESS);
-        }
     }
 }

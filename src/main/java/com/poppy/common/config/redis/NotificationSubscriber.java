@@ -13,7 +13,6 @@ import org.springframework.stereotype.Component;
 @RequiredArgsConstructor
 @Slf4j
 public class NotificationSubscriber implements MessageListener {
-
     private final ObjectMapper objectMapper;
     private final SimpMessageSendingOperations messagingTemplate;
 
@@ -36,9 +35,9 @@ public class NotificationSubscriber implements MessageListener {
         try {
             String destination = String.format("/user/%s/queue/notifications", notification.getUserId());
             messagingTemplate.convertAndSend(destination, notification);
-            log.info("WebSocket notification sent: {}", notification);
+            log.info("WebSocket notification.html sent: {}", notification);
         } catch (Exception e) {
-            log.error("Failed to send WebSocket notification: {}", e.getMessage(), e);
+            log.error("Failed to send WebSocket notification.html: {}", e.getMessage(), e);
         }
     }
 }

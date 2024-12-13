@@ -1,5 +1,7 @@
 package com.poppy.common.config.redis;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.json.JsonMapper;
 import org.redisson.Redisson;
 import org.redisson.api.RedissonClient;
 import org.redisson.config.Config;
@@ -10,11 +12,16 @@ import org.springframework.data.redis.connection.RedisConnectionFactory;
 import org.springframework.data.redis.connection.RedisStandaloneConfiguration;
 import org.springframework.data.redis.connection.lettuce.LettuceConnectionFactory;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.listener.ChannelTopic;
+import org.springframework.data.redis.listener.RedisMessageListenerContainer;
+import org.springframework.data.redis.serializer.GenericJackson2JsonRedisSerializer;
 import org.springframework.data.redis.serializer.GenericToStringSerializer;
 import org.springframework.data.redis.serializer.StringRedisSerializer;
 
 @Configuration
 public class RedisConfig {
+    public static final String NOTIFICATION_TOPIC = "notifications";
+
     @Value("${spring.data.redis.host}")
     private String host;
 
@@ -43,6 +50,13 @@ public class RedisConfig {
         return Redisson.create(config);
     }
 
+    @Bean
+    public ObjectMapper objectMapper() {
+        return JsonMapper.builder()
+                .findAndAddModules()
+                .build();
+    }
+
     // 직렬화 방식 지정
     @Bean
     public RedisTemplate<String, String> redisTemplate(RedisConnectionFactory connectionFactory) {
@@ -67,5 +81,43 @@ public class RedisConfig {
         template.setKeySerializer(new StringRedisSerializer());
         template.setValueSerializer(new GenericToStringSerializer<>(Integer.class));
         return template;
+    }
+
+    // 알림을 위한 RedisTemplate
+    @Bean
+    public RedisTemplate<String, Object> notificationRedisTemplate(
+            RedisConnectionFactory connectionFactory,
+            ObjectMapper objectMapper) {
+        RedisTemplate<String, Object> template = new RedisTemplate<>();
+        template.setConnectionFactory(connectionFactory);
+
+        GenericJackson2JsonRedisSerializer jsonSerializer =
+                new GenericJackson2JsonRedisSerializer(objectMapper);
+
+        template.setKeySerializer(new StringRedisSerializer());
+        template.setValueSerializer(jsonSerializer);
+        template.setHashKeySerializer(new StringRedisSerializer());
+        template.setHashValueSerializer(jsonSerializer);
+
+        template.afterPropertiesSet();
+        return template;
+    }
+
+    // Pub/Sub을 위한 Channel Topic
+    @Bean
+    public ChannelTopic notificationTopic() {
+        return new ChannelTopic(NOTIFICATION_TOPIC);
+    }
+
+    // Redis Message Listener Container
+    @Bean
+    public RedisMessageListenerContainer redisMessageListenerContainer(
+            RedisConnectionFactory connectionFactory,
+            NotificationSubscriber notificationSubscriber,
+            ChannelTopic notificationTopic) {
+        RedisMessageListenerContainer container = new RedisMessageListenerContainer();
+        container.setConnectionFactory(connectionFactory);
+        container.addMessageListener(notificationSubscriber, notificationTopic);
+        return container;
     }
 }

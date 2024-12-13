@@ -12,7 +12,6 @@ import java.io.IOException;
 
 @Configuration
 public class FCMConfig {
-
     @Bean
     public FirebaseMessaging firebaseMessaging() throws IOException {
         // 이미 초기화된 FirebaseApp이 있는지 확인

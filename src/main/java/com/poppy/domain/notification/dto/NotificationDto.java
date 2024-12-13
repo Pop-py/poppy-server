@@ -1,6 +1,5 @@
 package com.poppy.domain.notification.dto;
 
-import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.poppy.domain.notification.entity.Notification;
 import com.poppy.domain.notification.entity.NotificationType;
 import com.poppy.domain.waiting.entity.Waiting;
@@ -19,12 +18,8 @@ public class NotificationDto {
     private Integer peopleAhead;
     private Boolean isRead;
 
-    public static NotificationDto from(
-            Waiting waiting,
-            String message,
-            NotificationType type,
-            Integer peopleAhead,
-            boolean isFcm) {
+    // 알림 생성 시 사용
+    public static NotificationDto from(Waiting waiting, String message, NotificationType type, Integer peopleAhead, boolean isFcm) {
         return NotificationDto.builder()
                 .message(message)
                 .type(type)
@@ -37,6 +32,7 @@ public class NotificationDto {
                 .build();
     }
 
+    // 알림 조회 시 사용
     public static NotificationDto from(Notification notification) {
         return NotificationDto.builder()
                 .message(notification.getMessage())
