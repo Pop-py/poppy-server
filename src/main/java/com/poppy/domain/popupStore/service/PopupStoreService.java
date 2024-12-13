@@ -93,9 +93,8 @@ public class PopupStoreService {
     @Transactional(readOnly = true)
     public List<PopupStoreRspDto> searchStoresByName(String name) {
         List<PopupStore> stores = popupStoreRepository.findByKeyword(name);
-        if (stores.isEmpty()) {
-            throw new BusinessException(ErrorCode.STORE_NOT_FOUND);
-        }
+        if(stores.isEmpty()) throw new BusinessException(ErrorCode.STORE_NOT_FOUND);
+
         return stores.stream()
                 .map(PopupStoreRspDto::from)
                 .collect(Collectors.toList());
