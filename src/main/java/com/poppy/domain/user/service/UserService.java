@@ -24,7 +24,7 @@ public class UserService {
 
     // 로그인/회원가입
     @Transactional
-    public User login(String email, String nickname) {
+    public User login(String email, String nickname, String phoneNumber) {
         Optional<User> optionalUser = userRepository.findByEmail(email);
         User user;
 
@@ -37,7 +37,7 @@ public class UserService {
 
             user = User.builder()
                     .email(email)
-                    .phoneNumber("")
+                    .phoneNumber(phoneNumber)
                     .nickname(nickname)
                     .oauthProvider("naver")
                     .role(Role.ROLE_USER)
@@ -80,6 +80,15 @@ public class UserService {
         User user = loginUserProvider.getLoggedInUser();
 
         reservationService.cancelReservationByReservationId(user.getId(), reservationId);
+    }
+
+    // 닉네임 변경
+    @Transactional
+    public void updateNickname(String nickname) {
+        User loginUser = loginUserProvider.getLoggedInUser();
+        User user = userRepository.findById(loginUser.getId())
+                .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
+        user.updateNickname(nickname);
     }
 
     // FCM 토큰 저장

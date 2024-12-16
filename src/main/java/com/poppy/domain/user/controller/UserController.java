@@ -2,8 +2,10 @@ package com.poppy.domain.user.controller;
 
 import com.poppy.common.api.RspTemplate;
 import com.poppy.domain.user.dto.UpdateFcmTokenReqDto;
+import com.poppy.domain.user.dto.UpdateNicknameReqDto;
 import com.poppy.domain.user.dto.UserReservationRspDto;
 import com.poppy.domain.user.service.UserService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -38,6 +40,13 @@ public class UserController {
     public RspTemplate<Void> cancelReservation(@PathVariable Long id, @PathVariable Long reservationId) {
         userService.cancelUserReservation(reservationId);
         return new RspTemplate<>(HttpStatus.OK, "예약이 취소되었습니다.");
+    }
+
+    // 닉네임 변경
+    @PatchMapping("/{id}")
+    public RspTemplate<?> updateNickname(@PathVariable Long id, @Valid @RequestBody UpdateNicknameReqDto reqDto) {
+        userService.updateNickname(reqDto.getNickname());
+        return new RspTemplate<>(HttpStatus.OK, reqDto.getNickname() + "으로 변경되었습니다.");
     }
 
     // FCM 토큰 저장

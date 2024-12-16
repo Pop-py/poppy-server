@@ -41,10 +41,10 @@ public class TestUserController {   // 테스트용 인증 코드 발급
         String randomData = UUID.randomUUID().toString().substring(0, 6);
 
         // 첫 번째 유저 생성
-        User user1 = userService.login(randomData + "@example.com", randomData);
+        User user1 = userService.login(randomData + "@example.com", randomData, "01012345678");
 
         // 두 번째 유저 생성
-        User user2 = userService.login(randomData + "2@example.com", randomData + "2");
+        User user2 = userService.login(randomData + "2@example.com", randomData + "2", "01012345678");
 
         return new ResponseEntity<>(user1.getEmail() + " 유저와 & " + user2.getEmail() + " 유저가 생성되었습니다.", HttpStatus.CREATED);
     }

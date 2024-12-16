@@ -71,6 +71,11 @@ public class User extends BaseTimeEntity {
         this.role = role;
     }
 
+    // 닉네임 변경
+    public void updateNickname(String nickname) {
+        this.nickname = nickname;
+    }
+
     public void upgradeToMaster(){
         this.role = Role.ROLE_MASTER;
     }
