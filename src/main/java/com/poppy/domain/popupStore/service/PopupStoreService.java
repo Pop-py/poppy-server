@@ -5,12 +5,17 @@ import com.poppy.common.exception.ErrorCode;
 import com.poppy.domain.popupStore.dto.response.PopupStoreCalenderRspDto;
 import com.poppy.domain.popupStore.dto.response.PopupStoreRspDto;
 import com.poppy.domain.popupStore.entity.PopupStore;
+import com.poppy.domain.popupStore.entity.PopupStoreView;
 import com.poppy.domain.popupStore.repository.PopupStoreRepository;
 import com.poppy.domain.popupStore.dto.response.ReservationAvailableSlotRspDto;
+import com.poppy.domain.popupStore.repository.PopupStoreViewRepository;
 import com.poppy.domain.reservation.entity.PopupStoreStatus;
 import com.poppy.domain.reservation.entity.ReservationAvailableSlot;
 import com.poppy.domain.reservation.repository.ReservationAvailableSlotRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -25,6 +30,7 @@ import java.util.stream.Collectors;
 public class PopupStoreService {
     private final PopupStoreRepository popupStoreRepository;
     private final ReservationAvailableSlotRepository reservationAvailableSlotRepository;
+    private final PopupStoreViewRepository popupStoreViewRepository;
 
     // 전체 목록 조회
     @Transactional(readOnly = true)
@@ -36,13 +42,23 @@ public class PopupStoreService {
     }
 
     // 팝업 스토어 상세 조회
-    @Transactional(readOnly = true)
-    public PopupStoreRspDto getPopupStore(Long id){
-        PopupStore popupStore =  popupStoreRepository.findById(id)
+    @Transactional
+    public PopupStoreRspDto getPopupStore(Long id) {
+        // 1️⃣ PopupStore 조회
+        PopupStore popupStore = popupStoreRepository.findById(id)
                 .orElseThrow(() -> new BusinessException(ErrorCode.STORE_NOT_FOUND));
 
+        // 2️⃣ 조회 기록 추가 (PopupStoreView에 추가)
+        PopupStoreView view = PopupStoreView.builder()
+                .popupStore(popupStore)
+                .viewedAt(LocalDateTime.now())
+                .build();
+        popupStoreViewRepository.save(view);
+
+        // 3️⃣ 응답 DTO 반환
         return PopupStoreRspDto.from(popupStore);
     }
+
 
     // 카테고리별 조회
     @Transactional(readOnly = true)
@@ -112,6 +128,65 @@ public class PopupStoreService {
                 .map(PopupStoreRspDto::from)
                 .collect(Collectors.toList());
     }
+
+    // 오픈 예정 팝업스토어
+    @Transactional(readOnly = true)
+    public List<PopupStoreRspDto> getAllFuturePopupStores() {
+        LocalDate today = LocalDate.now();
+
+        List<PopupStore> stores = popupStoreRepository.findAllFuturePopupStores(today);
+
+        return stores.stream()
+                .map(PopupStoreRspDto::from)
+                .collect(Collectors.toList());
+    }
+
+    // 3시간 내 인기 팝업 스토어 조회
+    @Transactional(readOnly = true)
+    public List<PopupStoreRspDto> getPopularPopupStores() {
+
+        LocalDateTime startTime = LocalDateTime.now().minusHours(3);
+
+        Pageable pageable = PageRequest.of(0, 10);
+        Page<Object[]> results = popupStoreViewRepository.findPopularPopupStores(startTime, pageable);
+
+        List<Long> popupStoreIds = results.getContent().stream()
+                .map(result -> (Long) result[0])
+                .collect(Collectors.toList());
+
+        List<PopupStore> stores = popupStoreRepository.findAllById(popupStoreIds);
+
+        return stores.stream()
+                .map(PopupStoreRspDto::from)
+                .collect(Collectors.toList());
+    }
+    // 지금 주목해야할 (카테고리) 팝업
+    @Transactional(readOnly = true)
+    public List<PopupStoreRspDto> getPopularPopupStoresByCategory(Long categoryId) {
+        LocalDateTime startTime = LocalDateTime.now().minusHours(3);
+        Pageable pageable = PageRequest.of(0, 10); // 상위 10개 조회
+
+        Page<Object[]> results = popupStoreViewRepository.findPopularPopupStoresByCategory(
+                categoryId,
+                startTime,
+                pageable
+        );
+
+        if (results.isEmpty()) {
+            throw new BusinessException(ErrorCode.STORE_NOT_FOUND);
+        }
+
+        List<Long> popupStoreIds = results.getContent().stream()
+                .map(result -> (Long) result[0])
+                .collect(Collectors.toList());
+
+        List<PopupStore> stores = popupStoreRepository.findAllById(popupStoreIds);
+
+        return stores.stream()
+                .map(PopupStoreRspDto::from)
+                .collect(Collectors.toList());
+    }
+
 
     // 팝업스토어 캘린더 반환
     @Transactional(readOnly = true)
