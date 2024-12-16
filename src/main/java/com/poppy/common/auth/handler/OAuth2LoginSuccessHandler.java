@@ -44,8 +44,9 @@ public class OAuth2LoginSuccessHandler extends SimpleUrlAuthenticationSuccessHan
 
         String email = responseMap.get("email");
         String nickname = responseMap.get("nickname");
+        String phoneNumber = responseMap.get("mobile").replace("-", "");
 
-        User user = userService.login(email, nickname);     // 가입되어 있으면 로그인, 아닌 경우 회원가입
+        User user = userService.login(email, nickname, phoneNumber);     // 가입되어 있으면 로그인, 아닌 경우 회원가입
         redirect(request, response, user);
     }
 
