@@ -39,4 +39,6 @@ out/
 application.yml
 docker-compose.yml
 
+# 특정 파일 제외
 /src/main/generated/
+/src/main/resources/firebase-service-account.json

@@ -43,6 +43,15 @@ public class SecurityConfig {
                         .requestMatchers("/popup-stores/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/reviews/**").permitAll()
                         .requestMatchers("/admin/**").hasRole("ADMIN")
+                        // WebSocket 관련
+                        .requestMatchers("/ws/**", "/ws/notification/**").permitAll()
+                        .requestMatchers("/queue/**").permitAll()
+                        // 대기 관련
+                        .requestMatchers("/popup-stores/{storeId}/waiting/**").hasRole("MASTER")  // 관리자용 API
+                        .requestMatchers("/users/{id}/popup-stores/{storeId}/waiting/**").hasRole("USER")  // 사용자용 API
+                        // 알림 관련
+                        .requestMatchers("/users/{id}/notifications").hasRole("USER")
+                        .requestMatchers("/users/{id}/notification/{notificationId}").hasRole("USER")
                         .anyRequest().authenticated()
                 )
                 .formLogin(form -> form.disable())  // form 로그인 비활성화

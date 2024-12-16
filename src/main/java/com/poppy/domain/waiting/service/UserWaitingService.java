@@ -1,0 +1,168 @@
+package com.poppy.domain.waiting.service;
+
+import com.poppy.common.exception.BusinessException;
+import com.poppy.common.exception.ErrorCode;
+import com.poppy.domain.notification.entity.NotificationType;
+import com.poppy.domain.notification.service.NotificationService;
+import com.poppy.domain.popupStore.entity.PopupStore;
+import com.poppy.domain.popupStore.repository.PopupStoreRepository;
+import com.poppy.domain.user.entity.User;
+import com.poppy.domain.user.repository.LoginUserProvider;
+import com.poppy.domain.waiting.dto.response.UserWaitingHistoryRspDto;
+import com.poppy.domain.waiting.dto.response.WaitingRspDto;
+import com.poppy.domain.waiting.entity.Waiting;
+import com.poppy.domain.waiting.entity.WaitingStatus;
+import com.poppy.domain.waiting.repository.WaitingRepository;
+import lombok.RequiredArgsConstructor;
+import org.redisson.api.RLock;
+import org.redisson.api.RedissonClient;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
+import java.util.Set;
+import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
+
+@Service
+@RequiredArgsConstructor
+public class UserWaitingService {
+    private final WaitingRepository waitingRepository;
+    private final NotificationService notificationService;
+    private final PopupStoreRepository popupStoreRepository;
+    private final RedissonClient redissonClient;
+    private final WaitingUtils waitingUtils;
+    private final LoginUserProvider loginUserProvider;
+
+    public static final String LOCK_PREFIX = "waiting:lock:";
+    public static final long WAIT_TIME = 3L;
+    public static final long LEASE_TIME = 3L;
+    private static final int MAX_WAITING_COUNT = 50;  // 최대 대기 인원
+
+    // 선착순 대기 등록 (앱으로 사용자가 수행)
+    @Transactional
+    public WaitingRspDto registerWaiting(Long storeId, Long userId) {
+        String lockKey = LOCK_PREFIX + storeId;
+        RLock lock = redissonClient.getLock(lockKey);
+
+        try {
+            boolean isLocked = lock.tryLock(WAIT_TIME, LEASE_TIME, TimeUnit.SECONDS);
+            if (!isLocked) throw new BusinessException(ErrorCode.WAITING_CONFLICT);
+
+            PopupStore store = popupStoreRepository.findById(storeId)
+                    .orElseThrow(() -> new BusinessException(ErrorCode.STORE_NOT_FOUND));
+
+            User user = loginUserProvider.getLoggedInUser();
+
+            checkMaxWaitingCount(storeId);
+            checkDuplicateWaiting(storeId, userId);
+
+            // 대기번호 생성
+            Integer waitingNumber = getNextWaitingNumber(storeId);
+
+            Waiting waiting = waitingRepository.save(Waiting.builder()
+                    .popupStore(store)
+                    .user(user)
+                    .waitingNumber(waitingNumber)
+                    .build());
+
+            // 내 앞에 몇 팀 있는지 계산
+            int peopleAhead = waitingRepository.countPeopleAhead(
+                    storeId,
+                    waiting.getWaitingNumber(),
+                    Set.of(WaitingStatus.WAITING, WaitingStatus.CALLED)
+            );
+
+            notificationService.sendNotification(waiting, NotificationType.TEAMS_AHEAD, peopleAhead);
+
+            return WaitingRspDto.from(waiting);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new BusinessException(ErrorCode.WAITING_FAILED);
+        } finally {
+            if (lock.isHeldByCurrentThread()) {
+                lock.unlock();
+            }
+        }
+    }
+
+    // 웨이팅 내역 조회
+    @Transactional(readOnly = true)
+    public List<UserWaitingHistoryRspDto> getUserWaitingHistory() {
+        User user = loginUserProvider.getLoggedInUser();
+
+        return waitingRepository.findByUserIdOrderByCreateTimeDesc(user.getId())
+                .stream()
+                .map(UserWaitingHistoryRspDto::from)
+                .collect(Collectors.toList());
+    }
+
+    // 웨이팅 상세 조회
+    @Transactional(readOnly = true)
+    public UserWaitingHistoryRspDto getWaitingDetail(Long waitingId) {
+        User user = loginUserProvider.getLoggedInUser();
+
+        Waiting waiting = waitingRepository.findById(waitingId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.WAITING_NOT_FOUND));
+
+        // 본인의 웨이팅만 조회 가능하도록 체크
+        if (!waiting.getUser().getId().equals(user.getId())) {
+            throw new BusinessException(ErrorCode.UNAUTHORIZED_WAITING_ACCESS);
+        }
+
+        return UserWaitingHistoryRspDto.from(waiting);
+    }
+
+    // 대기 취소
+    @Transactional
+    public void cancelWaiting(Long storeId, Long waitingId) {
+        // 대기 정보 조회
+        Waiting waiting = waitingRepository.findById(waitingId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.WAITING_NOT_FOUND));
+
+        // 매장 권한 체크
+        if (!waiting.getPopupStore().getId().equals(storeId)) {
+            throw new BusinessException(ErrorCode.UNAUTHORIZED_WAITING_ACCESS);
+        }
+
+        // 호출된 상태의 대기는 취소 불가
+        if (waiting.getStatus() == WaitingStatus.CALLED) {
+            throw new BusinessException(ErrorCode.CANNOT_CANCEL_CALLED_WAITING);
+        }
+
+        // 상태 변경
+        waiting.updateStatus(WaitingStatus.CANCELED);
+
+        notificationService.sendNotification(waiting, NotificationType.WAITING_CANCEL, null);
+        waitingUtils.updateWaitingQueue(waiting.getPopupStore().getId(), waitingId);
+    }
+
+    // 최대 대기 인원 초과 여부 체크
+    public void checkMaxWaitingCount(Long storeId) {
+        long currentWaiting = waitingRepository.countByPopupStoreIdAndStatusIn(
+                storeId,
+                Set.of(WaitingStatus.WAITING, WaitingStatus.CALLED)
+        );
+
+        if (currentWaiting > MAX_WAITING_COUNT) {
+            throw new BusinessException(ErrorCode.MAX_WAITING_EXCEEDED);
+        }
+    }
+
+    // 중복 대기 체크
+    private void checkDuplicateWaiting(Long storeId, Long userId) {
+        boolean exists = waitingRepository.existsByPopupStoreIdAndUserIdAndStatusIn(
+                storeId, userId, Set.of(WaitingStatus.WAITING, WaitingStatus.CALLED)
+        );
+        if (exists) {
+            throw new BusinessException(ErrorCode.DUPLICATE_WAITING);
+        }
+    }
+
+    // 다음 대기번호 생성
+    private Integer getNextWaitingNumber(Long storeId) {
+        return waitingRepository.findMaxWaitingNumberByStoreId(storeId)
+                .map(num -> num + 1)
+                .orElse(1);
+    }
+}

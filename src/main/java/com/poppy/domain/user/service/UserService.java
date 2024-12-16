@@ -81,4 +81,17 @@ public class UserService {
 
         reservationService.cancelReservationByReservationId(user.getId(), reservationId);
     }
+
+    // FCM 토큰 저장
+    public void updateFcmToken(Long userId, String fcmToken, Long authenticatedUserId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
+
+        if (!userId.equals(authenticatedUserId)) {
+            throw new BusinessException(ErrorCode.FCM_TOKEN_UPDATE_FORBIDDEN);
+        }
+
+        user.updateFcmToken(fcmToken);
+        userRepository.save(user);
+    }
 }

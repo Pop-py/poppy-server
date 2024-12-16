@@ -36,6 +36,9 @@ public class User extends BaseTimeEntity {
     @Column(nullable = false)
     private String oauthProvider;
 
+    @Column(name = "fcm_token")
+    private String fcmToken;
+
     @Enumerated(EnumType.STRING)
     private Role role;
 
@@ -70,6 +73,14 @@ public class User extends BaseTimeEntity {
 
     public void upgradeToMaster(){
         this.role = Role.ROLE_MASTER;
+    }
+
+    public void updateFcmToken(String fcmToken) {
+        this.fcmToken = fcmToken;
+    }
+
+    public String getFcmToken() {
+        return fcmToken;
     }
 
     // 위시 추가

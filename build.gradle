@@ -50,6 +50,15 @@ dependencies {
 	// Redission
 	implementation group: 'org.redisson', name: 'redisson', version: '3.39.0'
 
+	// WebSocket
+	implementation 'org.springframework.boot:spring-boot-starter-websocket'
+
+	// FCM
+	implementation 'com.google.firebase:firebase-admin:9.2.0'
+
+	// JSON Serializer
+	implementation 'com.fasterxml.jackson.core:jackson-databind'
+
 	compileOnly 'org.projectlombok:lombok'
 	developmentOnly 'org.springframework.boot:spring-boot-devtools'
 	runtimeOnly 'com.mysql:mysql-connector-j'
