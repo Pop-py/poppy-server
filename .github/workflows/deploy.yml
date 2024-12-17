@@ -40,9 +40,12 @@ jobs:
           cd ./resources
           touch ./application.yml
           echo "$APPLICATION_YML" > ./application.yml
+          touch ./firebase-service-account.json
+          echo "${FIREBASE_YML}" > ./firebase-service-account.json
         env:
           APPLICATION_YML: ${{ secrets.APPLICATION_YML }}
           DOCKER_COMPOSE_YML: ${{ secrets.DOCKER_COMPOSE_YML }}
+          FIREBASE_YML: ${{ secrets.FIREBASE_JSON }}
         shell: bash
 
       - name: 빌드 실행
