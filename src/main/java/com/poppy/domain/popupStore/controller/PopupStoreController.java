@@ -41,6 +41,28 @@ public class PopupStoreController {
         );
     }
 
+    // 3시간 내 인기 팝업 스토어 조회
+    @GetMapping("/popular")
+    public RspTemplate<List<PopupStoreRspDto>> getPopularStores() {
+        return new RspTemplate<>(
+                HttpStatus.OK,
+                "3시간 내 인기 팝업스토어 조회 성공",
+                popupStoreService.getPopularPopupStores()
+        );
+    }
+
+    // 현재 많이 찾는 (카테고리 ) 팝업스토어 조회
+    @GetMapping("/popular/category/{categoryId}")
+    public RspTemplate<List<PopupStoreRspDto>> getPopularStoresByCategory(
+            @PathVariable Long categoryId
+    ) {
+        return new RspTemplate<>(
+                HttpStatus.OK,
+                "3시간 내 카테고리별 인기 팝업스토어 조회 성공",
+                popupStoreService.getPopularPopupStoresByCategory(categoryId)
+        );
+    }
+
     // 카테고리별 조회
     @GetMapping("/category/{categoryId}")
     public RspTemplate<List<PopupStoreRspDto>> getStoresByCategory(
@@ -49,6 +71,17 @@ public class PopupStoreController {
                 HttpStatus.OK,
                 "카테고리별 팝업스토어 조회 성공",
                 popupStoreService.getStoresByCategory(categoryId)
+        );
+    }
+
+
+    // 오픈 예정 팝업스토어
+    @GetMapping("/future")
+    public RspTemplate<List<PopupStoreRspDto>> getFutureStores() {
+        return new RspTemplate<>(
+                HttpStatus.OK,
+                "오픈 예정 팝업스토어 조회 성공",
+                popupStoreService.getAllFuturePopupStores()
         );
     }
 

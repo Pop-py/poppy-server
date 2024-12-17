@@ -33,6 +33,9 @@ public class PopupStore extends BaseTimeEntity {
 
     private String thumbnail;
 
+    @Column(columnDefinition = "LONGTEXT")
+    private String description;
+
     @Column(nullable = false)
     private String location; // 위치 설명용
 
