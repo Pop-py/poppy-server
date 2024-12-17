@@ -11,7 +11,9 @@ import java.util.Optional;
 
 public interface PopupStoreRepository extends JpaRepository<PopupStore, Long>, PopupStoreRepositoryCustom {
     Optional<PopupStore> findById(Long id);
-    List<PopupStore> findAllById(List<Long> ids);
+
+    @Query("SELECT p FROM PopupStore p WHERE p.id IN :ids")
+    List<PopupStore> findAllById(@Param("ids") List<Long> ids);
 
     @Query("SELECT p FROM PopupStore p " +
             "WHERE p.startDate > :today " +
