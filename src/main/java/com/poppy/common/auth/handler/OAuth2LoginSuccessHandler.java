@@ -79,9 +79,9 @@ public class OAuth2LoginSuccessHandler extends SimpleUrlAuthenticationSuccessHan
         return UriComponentsBuilder
                 .newInstance()
                 .scheme("http")
-//                .host("pop-py.duckdns.org")
-                .host("localhost")
-                .port(8080)
+                .host("pop-py.duckdns.org")
+//                .host("localhost")
+                .port(80)
                 .path("/token")
                 .queryParams(queryParams)
                 .build()
