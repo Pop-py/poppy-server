@@ -1,7 +1,7 @@
 package com.poppy.domain.notification.controller;
 
 import com.poppy.common.api.RspTemplate;
-import com.poppy.domain.notification.dto.NotificationDto;
+import com.poppy.domain.notification.dto.WaitingNotificationDto;
 import com.poppy.domain.notification.service.NotificationService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -16,7 +16,7 @@ public class NotificationController {
     private final NotificationService notificationService;
 
     @GetMapping("/notifications")
-    public RspTemplate<List<NotificationDto>> getNotifications(@PathVariable Long id) {
+    public RspTemplate<List<WaitingNotificationDto>> getNotifications(@PathVariable Long id) {
         return new RspTemplate<>(
                 HttpStatus.OK,
                 "알림 목록 조회 성공",

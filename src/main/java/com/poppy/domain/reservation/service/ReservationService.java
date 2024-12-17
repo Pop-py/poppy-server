@@ -2,6 +2,7 @@ package com.poppy.domain.reservation.service;
 
 import com.poppy.common.exception.BusinessException;
 import com.poppy.common.exception.ErrorCode;
+import com.poppy.domain.notification.service.NotificationService;
 import com.poppy.domain.payment.entity.Payment;
 import com.poppy.domain.payment.entity.PaymentStatus;
 import com.poppy.domain.payment.repository.PaymentRepository;
@@ -44,6 +45,7 @@ public class ReservationService {
     private final RedisSlotService redisSlotService;
     private final AsyncRedisSlotDecrementService asyncRedisSlotDecrementService;
     private final PaymentService paymentService;
+    private final NotificationService notificationService;
     private final LoginUserProvider loginUserProvider;  // 로그인 유저 확인용
 
     private static final String LOCK_PREFIX = "reservation:lock:";
@@ -165,7 +167,9 @@ public class ReservationService {
         }
 
         // 예약 확정 (DB 업데이트)
-        return processReservation(tempReservation);
+        Reservation reservation = processReservation(tempReservation);
+        notificationService.sendNotification(reservation, reservation.getStatus());     // 알림 전송
+        return reservation;
     }
 
     // 결제 후 예약 작업 DB 처리

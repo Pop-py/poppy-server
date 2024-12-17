@@ -44,6 +44,7 @@ public class Notification extends BaseTimeEntity {
 
     @Column(name = "is_fcm")
     private boolean isFcm;
+
     @Builder
     public Notification(String message, NotificationType type, User user,
                         PopupStore popupStore, Integer waitingNumber, Integer peopleAhead, boolean isFcm) {
@@ -53,6 +54,14 @@ public class Notification extends BaseTimeEntity {
         this.popupStore = popupStore;
         this.waitingNumber = waitingNumber;
         this.peopleAhead = peopleAhead;
+    }
+
+    public Notification(String message, NotificationType type, User user, PopupStore popupStore) {
+        this.message = message;
+        this.type = type;
+        this.user = user;
+        this.popupStore = popupStore;
+        this.isFcm = false;
     }
 
     public void markAsRead() {

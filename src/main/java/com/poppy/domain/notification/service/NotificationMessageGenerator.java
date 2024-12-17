@@ -1,6 +1,7 @@
 package com.poppy.domain.notification.service;
 
 import com.poppy.domain.notification.entity.NotificationType;
+import com.poppy.domain.reservation.entity.ReservationStatus;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -22,10 +23,11 @@ public class NotificationMessageGenerator {
             case WAITING_CANCEL -> String.format("%d번 대기가 취소되었습니다", waitingNumber);
             case TEAMS_AHEAD -> String.format("현재 %d번째 순서\n대기번호 %d번", peopleAhead, waitingNumber);
             case WAITING_TIMEOUT -> String.format("%d번 대기가 시간 초과로 취소되었습니다", waitingNumber);
+            case RESERVATION -> null;
         };
     }
 
-    // WebSocket 실시간 알림 메시지 생성
+    // 웨이팅 WebSocket 실시간 알림 메시지 생성
     public String generateWebSocketMessage(NotificationType type, String storeName, Integer waitingNumber, Integer peopleAhead) {
         return switch (type) {
             case WAITING_CALL -> String.format("%s\n고객님의 입장 순서입니다.\n%d번 고객님은 카운터로 와주세요.", storeName, waitingNumber);
@@ -36,6 +38,16 @@ public class NotificationMessageGenerator {
                 yield String.format("%s\n현재 %d번째 순서입니다.", storeName, peopleAhead);
             }
             case WAITING_TIMEOUT -> String.format("%s\n%d번 대기\n호출 시간 초과로 자동 취소되었습니다.", storeName, waitingNumber);
+            case RESERVATION -> null;
+        };
+    }
+
+    // 예약 WebSocket 실시간 알림 메시지 생성
+    public String generateWebSocketMessage(ReservationStatus status, String storeName) {
+        return switch (status) {
+            case PENDING, VISITED -> null;
+            case CHECKED -> String.format("%s의 예약이 완료되었습니다.", storeName);
+            case CANCELED -> String.format("%s의 예약이 취소되었습니다.", storeName);
         };
     }
 }
