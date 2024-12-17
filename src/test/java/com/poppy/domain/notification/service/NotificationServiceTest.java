@@ -3,7 +3,7 @@ package com.poppy.domain.notification.service;
 import com.google.firebase.messaging.FirebaseMessaging;
 import com.google.firebase.messaging.FirebaseMessagingException;
 import com.poppy.common.config.redis.NotificationPublisher;
-import com.poppy.domain.notification.dto.NotificationDto;
+import com.poppy.domain.notification.dto.WaitingNotificationDto;
 import com.poppy.domain.notification.entity.Notification;
 import com.poppy.domain.notification.entity.NotificationType;
 import com.poppy.domain.notification.repository.NotificationRepository;
@@ -82,7 +82,7 @@ class NotificationServiceTest {
 
         // then
         verify(firebaseMessaging).send(any());
-        verify(notificationPublisher).publish(any(NotificationDto.class));
+        verify(notificationPublisher).publish(any(WaitingNotificationDto.class));
         verify(notificationRepository).save(any(Notification.class));
     }
 
@@ -110,7 +110,7 @@ class NotificationServiceTest {
 
         // then
         verify(firebaseMessaging, never()).send(any());
-        verify(notificationPublisher).publish(any(NotificationDto.class));
+        verify(notificationPublisher).publish(any(WaitingNotificationDto.class));
         verify(notificationRepository).save(any(Notification.class));
     }
 

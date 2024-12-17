@@ -1,5 +1,6 @@
 package com.poppy.domain.reservation.dto;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.poppy.domain.reservation.entity.Reservation;
 import lombok.Builder;
 import lombok.Getter;
@@ -11,11 +12,19 @@ import java.time.LocalTime;
 @Builder
 public class ReservationRspDto {
     private Long popupStoreId;
+
     private String popupStoreName;
+
     private String address;
+
     private Long userId;
+
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd")
     private LocalDate date;
+
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "HH:mm:ss")
     private LocalTime time;
+
     private Integer person;
 
     public static ReservationRspDto from(Reservation reservation) {

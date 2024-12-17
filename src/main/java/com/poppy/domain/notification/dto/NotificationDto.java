@@ -1,48 +1,32 @@
 package com.poppy.domain.notification.dto;
 
-import com.poppy.domain.notification.entity.Notification;
+import com.fasterxml.jackson.annotation.JsonSubTypes;
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.poppy.domain.notification.entity.NotificationType;
-import com.poppy.domain.waiting.entity.Waiting;
-import lombok.Builder;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.experimental.SuperBuilder;
 
 @Getter
-@Builder
-public class NotificationDto {
+@SuperBuilder
+@NoArgsConstructor
+@JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "type")
+@JsonSubTypes({
+        @JsonSubTypes.Type(value = WaitingNotificationDto.class, name = "WAITING"),
+        @JsonSubTypes.Type(value = ReservationNotificationDto.class, name = "RESERVATION")
+})
+public abstract class NotificationDto {
     private String message;
     private NotificationType type;
     private Long userId;
-    private Long storeId;
     private String popupStoreName;
-    private Integer waitingNumber;
-    private Integer peopleAhead;
     private Boolean isRead;
 
-    // 알림 생성 시 사용
-    public static NotificationDto from(Waiting waiting, String message, NotificationType type, Integer peopleAhead, boolean isFcm) {
-        return NotificationDto.builder()
-                .message(message)
-                .type(type)
-                .userId(waiting.getUser().getId())
-                .storeId(waiting.getPopupStore().getId())
-                .popupStoreName(waiting.getPopupStore().getName())
-                .waitingNumber(waiting.getWaitingNumber())
-                .peopleAhead(peopleAhead)
-                .isRead(!isFcm)
-                .build();
-    }
-
-    // 알림 조회 시 사용
-    public static NotificationDto from(Notification notification) {
-        return NotificationDto.builder()
-                .message(notification.getMessage())
-                .type(notification.getType())
-                .userId(notification.getUser().getId())
-                .storeId(notification.getPopupStore().getId())
-                .popupStoreName(notification.getPopupStore().getName())
-                .waitingNumber(notification.getWaitingNumber())
-                .peopleAhead(notification.getPeopleAhead())
-                .isRead(notification.isRead())
-                .build();
+    protected NotificationDto(String message, NotificationType type, Long userId, String popupStoreName, Boolean isRead) {
+        this.message = message;
+        this.type = type;
+        this.userId = userId;
+        this.popupStoreName = popupStoreName;
+        this.isRead = isRead;
     }
 }

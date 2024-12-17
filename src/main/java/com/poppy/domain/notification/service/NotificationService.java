@@ -6,10 +6,13 @@ import com.google.firebase.messaging.Message;
 import com.poppy.common.config.redis.NotificationPublisher;
 import com.poppy.common.exception.BusinessException;
 import com.poppy.common.exception.ErrorCode;
-import com.poppy.domain.notification.dto.NotificationDto;
+import com.poppy.domain.notification.dto.ReservationNotificationDto;
+import com.poppy.domain.notification.dto.WaitingNotificationDto;
 import com.poppy.domain.notification.entity.Notification;
 import com.poppy.domain.notification.entity.NotificationType;
 import com.poppy.domain.notification.repository.NotificationRepository;
+import com.poppy.domain.reservation.entity.Reservation;
+import com.poppy.domain.reservation.entity.ReservationStatus;
 import com.poppy.domain.user.entity.User;
 import com.poppy.domain.user.repository.LoginUserProvider;
 import com.poppy.domain.waiting.entity.Waiting;
@@ -31,6 +34,7 @@ public class NotificationService {
     private final NotificationPublisher notificationPublisher;
     private final LoginUserProvider loginUserProvider;
 
+    // 웨이팅 알림 전송
     @Transactional
     public void sendNotification(Waiting waiting, NotificationType type, Integer peopleAhead) {
         log.info("Sending notification.html to userId: {}", waiting.getUser());
@@ -39,7 +43,7 @@ public class NotificationService {
         String fcmTitle = messageGenerator.generateFCMTitle(type, waiting.getPopupStore().getName());
         String fcmBody = messageGenerator.generateFCMBody(type, waiting.getWaitingNumber(), peopleAhead);
 
-        NotificationDto fcmNotification = NotificationDto.from(
+        WaitingNotificationDto fcmNotification = WaitingNotificationDto.from(
                 waiting,
                 fcmBody,
                 type,
@@ -57,7 +61,10 @@ public class NotificationService {
                 waiting.getWaitingNumber(),
                 peopleAhead);
 
-        NotificationDto wsNotificationDto = NotificationDto.from(
+        // wsMessage가 null이면 알림을 발송하지 않음
+        if (wsMessage == null) return;
+
+        WaitingNotificationDto wsWaitingNotificationDto = WaitingNotificationDto.from(
                 waiting,
                 wsMessage,
                 type,
@@ -66,14 +73,14 @@ public class NotificationService {
         );
 
         // WebSocket 알림 DB 저장
-        saveNotification(waiting, wsNotificationDto);
+        saveNotification(waiting, wsWaitingNotificationDto);
 
         // Redis로 WebSocket 알림 발행
-        notificationPublisher.publish(wsNotificationDto);
+        notificationPublisher.publish(wsWaitingNotificationDto);
     }
 
-    // DB 저장
-    private void saveNotification(Waiting waiting, NotificationDto dto) {
+    // 웨이팅 DB 저장
+    private void saveNotification(Waiting waiting, WaitingNotificationDto dto) {
         notificationRepository.save(Notification.builder()
                 .message(dto.getMessage())
                 .type(dto.getType())
@@ -85,8 +92,44 @@ public class NotificationService {
                 .build());
     }
 
+    // 예약 알림 전송
+    @Transactional
+    public void sendNotification(Reservation reservation, ReservationStatus status) {
+        // WebSocket 알림 생성
+        String wsMessage = messageGenerator.generateWebSocketMessage(
+                status,
+                reservation.getPopupStore().getName());
+
+        // wsMessage가 null이면 알림을 발송하지 않음
+        if (wsMessage == null) return;
+
+        ReservationNotificationDto reservationNotificationDto = ReservationNotificationDto.from(
+                wsMessage,
+                NotificationType.RESERVATION,
+                reservation.getUser().getId(),
+                reservation.getPopupStore().getName(),
+                false
+        );
+
+        // WebSocket 알림 DB 저장
+        saveNotification(reservation, reservationNotificationDto);
+
+        // Redis로 WebSocket 알림 발행
+        notificationPublisher.publish(reservationNotificationDto);
+    }
+
+    // 예약 알림 DB 저장
+    private void saveNotification(Reservation waiting, ReservationNotificationDto dto) {
+        notificationRepository.save(Notification.builder()
+                .message(dto.getMessage())
+                .type(NotificationType.RESERVATION)
+                .user(waiting.getUser())
+                .popupStore(waiting.getPopupStore())
+                .build());
+    }
+
     // FCM 푸시 알림 전송
-    private void sendFCMNotification(String fcmToken, String title, NotificationDto dto) {
+    private void sendFCMNotification(String fcmToken, String title, WaitingNotificationDto dto) {
         if (fcmToken == null) {
             log.warn("FCM token not found for user: {}", dto.getUserId());
             return;
@@ -120,9 +163,9 @@ public class NotificationService {
 
     // WebSocket 알림 최신순 30개 목록 조회
     @Transactional(readOnly = true)
-    public List<NotificationDto> getNotifications(Long userId) {
+    public List<WaitingNotificationDto> getNotifications(Long userId) {
         return notificationRepository.findTop30ByUserIdAndIsFcmFalseOrderByCreateTimeDesc(userId).stream()
-                .map(NotificationDto::from)
+                .map(WaitingNotificationDto::from)
                 .collect(Collectors.toList());
     }
 

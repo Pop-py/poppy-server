@@ -2,6 +2,7 @@ package com.poppy.domain.reservation.service;
 
 import com.poppy.common.exception.BusinessException;
 import com.poppy.common.exception.ErrorCode;
+import com.poppy.domain.notification.service.NotificationService;
 import com.poppy.domain.payment.dto.ReservationPaymentRspDto;
 import com.poppy.domain.payment.entity.Payment;
 import com.poppy.domain.payment.entity.PaymentStatus;
@@ -25,6 +26,7 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.redisson.api.RLock;
 import org.redisson.api.RedissonClient;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.util.ReflectionTestUtils;
 
@@ -60,6 +62,8 @@ class ReservationServiceTest {
     @Mock
     private PaymentService paymentService;
     @Mock
+    private NotificationService notificationService;
+    @Mock
     private LoginUserProvider loginUserProvider;
     @Mock
     private RLock rLock;
@@ -85,6 +89,7 @@ class ReservationServiceTest {
                 redisSlotService,
                 asyncRedisSlotDecrementService,
                 paymentService,
+                notificationService,
                 loginUserProvider
         );
 
