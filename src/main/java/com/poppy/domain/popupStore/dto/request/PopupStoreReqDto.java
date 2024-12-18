@@ -49,6 +49,12 @@ public class PopupStoreReqDto {
 
     private Long price;
 
+    private String homepageUrl;
+
+    private String instagramUrl;
+
+    private String blogUrl;
+
     @NotNull
     private String categoryName; // 카테고리 ID
 

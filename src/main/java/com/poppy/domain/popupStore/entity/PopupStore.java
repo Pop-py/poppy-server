@@ -69,6 +69,15 @@ public class PopupStore extends BaseTimeEntity {
     @Column
     private Long price;
 
+    @Column(name = "homepage_url")
+    private String homepageUrl;
+
+    @Column(name = "instagram_url")
+    private String instagramUrl;
+
+    @Column(name = "blog_url")
+    private String blogUrl;
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, name = "reservation_type")
     private ReservationType reservationType;    // 팝업 스토어 예약 유형
