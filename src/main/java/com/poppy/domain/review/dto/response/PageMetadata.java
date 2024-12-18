@@ -5,12 +5,12 @@ import org.springframework.data.domain.Page;
 
 @Getter
 public class PageMetadata {
-    private int page;
-    private int size;
-    private int totalPages;
-    private long totalElements;
-    private boolean first;
-    private boolean last;
+    private final int page;
+    private final int size;
+    private final int totalPages;
+    private final long totalElements;
+    private final boolean first;
+    private final boolean last;
 
     public PageMetadata(Page<?> page) {
         this.page = page.getNumber();

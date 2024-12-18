@@ -1,5 +1,6 @@
 package com.poppy.domain.popupStore.dto.response;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.poppy.domain.popupStore.entity.PopupStore;
 import com.poppy.domain.popupStore.entity.ReservationType;
 import com.poppy.domain.reservation.entity.PopupStoreStatus;
@@ -16,21 +17,41 @@ import java.util.List;
 @Builder
 public class PopupStoreRspDto {
     private final Long id;
+
     private final String name;
+
     private final String location;        // 상세 위치 설명
+
     private final String address;         // 실제 도로명 주소
+
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd")
     private final LocalDate startDate;
+
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd")
     private final LocalDate endDate;
+
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "HH:mm:ss")
     private final LocalTime openingTime;  // 운영 시작 시간
+
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "HH:mm:ss")
     private final LocalTime closingTime;  // 운영 종료 시간
+
     private final Integer availableSlot;  // 예약 가능한 총 인원
+
     private final Boolean isActive;
+
     private final Boolean isEnd;
+
     private final Double rating;
+
     private final String categoryName;
+
     private final String reservationType;
+
     private final String thumbnail;
+
     private final Long price;
+
     private Boolean isAlmostFull;   // 마감임박 여부
 
     // Entity to DTO

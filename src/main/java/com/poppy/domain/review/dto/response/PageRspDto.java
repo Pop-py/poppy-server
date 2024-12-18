@@ -7,8 +7,8 @@ import java.util.List;
 
 @Getter
 public class PageRspDto<T> {
-    private List<T> content;
-    private PageMetadata metadata;
+    private final List<T> content;
+    private final PageMetadata metadata;
 
     public PageRspDto(Page<T> page) {
         content = page.getContent();
