@@ -20,6 +20,8 @@ public class PopupStoreRspDto {
 
     private final String name;
 
+    private final String description;
+
     private final String location;        // 상세 위치 설명
 
     private final String address;         // 실제 도로명 주소
@@ -59,6 +61,7 @@ public class PopupStoreRspDto {
         return PopupStoreRspDto.builder()
                 .id(store.getId())
                 .name(store.getName())
+                .description(store.getDescription())
                 .location(store.getLocation())
                 .address(store.getAddress())
                 .startDate(store.getStartDate())

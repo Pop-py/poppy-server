@@ -22,6 +22,9 @@ public class PopupStoreReqDto {
     private String name; // 팝업스토어 이름
 
     @NotNull
+    private String description;     // 상세 설명
+
+    @NotNull
     @Size(min = 1, max = 255)
     private String location; // 상세 위치 설명
 
