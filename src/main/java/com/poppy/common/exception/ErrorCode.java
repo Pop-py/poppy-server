@@ -61,20 +61,20 @@ public enum ErrorCode {
     // 대기 관련
     WAITING_CONFLICT(409, "대기 등록 충돌이 발생했습니다. 다시 시도해주세요."),
     WAITING_FAILED(500, "대기 등록에 실패했습니다."),
-    WAITING_NOT_FOUND(404, "해당 대기 정보를 찾을 수 없습니다"),
-    MAX_WAITING_EXCEEDED(400, "현재 대기 인원이 초과되었습니다"),
-    DUPLICATE_WAITING(400, "이미 대기 중인 사용자입니다"),
-    INVALID_WAITING_STATUS(400, "잘못된 대기 상태입니다"),
-    SETTINGS_NOT_FOUND(404, "대기 설정을 찾을 수 없습니다"),
-    CANNOT_CANCEL_CALLED_WAITING(400, "호출된 대기는 취소할 수 없습니다"),
-    UNAUTHORIZED_WAITING_ACCESS(403, "해당 대기에 대한 접근 권한이 없습니다"),
+    WAITING_NOT_FOUND(404, "해당 대기 정보를 찾을 수 없습니다."),
+    MAX_WAITING_EXCEEDED(400, "현재 대기 인원이 초과되었습니다."),
+    DUPLICATE_WAITING(400, "이미 대기 중인 사용자입니다."),
+    INVALID_WAITING_STATUS(400, "잘못된 대기 상태입니다."),
+    SETTINGS_NOT_FOUND(404, "대기 설정을 찾을 수 없습니다."),
+    CANNOT_CANCEL_CALLED_WAITING(400, "호출된 대기는 취소할 수 없습니다."),
+    UNAUTHORIZED_WAITING_ACCESS(403, "해당 대기에 대한 접근 권한이 없습니다."),
 
     // FCM 토큰 관련
     FCM_TOKEN_UPDATE_FORBIDDEN(403, "다른 사용자의 FCM 토큰을 업데이트할 수 없습니다."),
 
     // 알림 관련
-    NOTIFICATION_NOT_FOUND(404, "해당 알림을 찾을 수 없습니다"),
-    UNAUTHORIZED_NOTIFICATION_ACCESS(403, "해당 알림에 대한 접근 권한이 없습니다")
+    NOTIFICATION_NOT_FOUND(404, "해당 알림을 찾을 수 없습니다."),
+    UNAUTHORIZED_NOTIFICATION_ACCESS(403, "해당 알림에 대한 접근 권한이 없습니다.")
     ;
 
     private final int code;
