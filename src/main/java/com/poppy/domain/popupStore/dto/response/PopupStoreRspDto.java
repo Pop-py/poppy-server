@@ -54,6 +54,12 @@ public class PopupStoreRspDto {
 
     private final Long price;
 
+    private final String homepageUrl;
+
+    private final String instagramUrl;
+
+    private final String blogUrl;
+
     private Boolean isAlmostFull;   // 마감임박 여부
 
     // Entity to DTO
@@ -76,6 +82,9 @@ public class PopupStoreRspDto {
                 .thumbnail(store.getThumbnail())
                 .reservationType(store.getReservationType().toString())
                 .price(store.getPrice())
+                .homepageUrl(store.getHomepageUrl())
+                .instagramUrl(store.getInstagramUrl())
+                .blogUrl(store.getBlogUrl())
                 .isAlmostFull(calculateAlmostFull(store.getReservationAvailableSlots(), store.getReservationType()))
                 .build();
     }
