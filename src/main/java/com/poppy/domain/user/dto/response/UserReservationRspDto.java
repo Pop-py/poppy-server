@@ -2,6 +2,7 @@ package com.poppy.domain.user.dto.response;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.poppy.domain.reservation.entity.Reservation;
+import com.poppy.domain.reservation.entity.ReservationStatus;
 import lombok.Builder;
 import lombok.Getter;
 
@@ -23,6 +24,10 @@ public class UserReservationRspDto {
 
     private String location;
 
+    private ReservationStatus status;
+
+    private String thumbnail;
+
     private Integer person;
 
     public static UserReservationRspDto from(Reservation reservation) {
@@ -32,6 +37,8 @@ public class UserReservationRspDto {
                 .reservationDate(reservation.getDate())
                 .reservationTime(reservation.getTime())
                 .location(reservation.getPopupStore().getLocation())
+                .status(reservation.getStatus())
+                .thumbnail(reservation.getPopupStore().getThumbnail())
                 .person(reservation.getPerson())
                 .build();
     }

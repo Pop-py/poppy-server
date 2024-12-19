@@ -1,4 +1,5 @@
-package com.poppy.domain.reservation.dto;
+package com.poppy.domain.user.dto.response;
+
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.poppy.domain.reservation.entity.Reservation;
@@ -11,8 +12,8 @@ import java.time.LocalTime;
 
 @Getter
 @Builder
-public class ReservationRspDto {
-    private Long popupStoreId;
+public class UserReservationDetailRspDto {
+    private Long storeId;
 
     private String popupStoreName;
 
@@ -26,24 +27,33 @@ public class ReservationRspDto {
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "HH:mm:ss")
     private LocalTime time;
 
-    private String thumbnail;
+    private String userNickname;
+
+    private String phoneNumber;
+
+    private Integer amount;
+
+    private String paymentMethod;
 
     private ReservationStatus status;
 
+    private Integer paidAmount;
+
     private Integer person;
 
-    private Integer price;
-
-    public static ReservationRspDto from(Reservation reservation) {
-        return ReservationRspDto.builder()
-                .popupStoreId(reservation.getPopupStore().getId())
+    public static UserReservationDetailRspDto from(Reservation reservation) {
+        return UserReservationDetailRspDto.builder()
                 .popupStoreName(reservation.getPopupStore().getName())
                 .address(reservation.getPopupStore().getAddress())
                 .userId(reservation.getUser().getId())
                 .date(reservation.getDate())
                 .time(reservation.getTime())
+                .userNickname(reservation.getUser().getNickname())
+                .phoneNumber(reservation.getUser().getPhoneNumber())
+                .paymentMethod("토스페이")
+                .amount((int)(reservation.getPerson() * reservation.getPopupStore().getPrice()))
+                .paidAmount((int)(reservation.getPerson() * reservation.getPopupStore().getPrice()))
                 .person(reservation.getPerson())
-                .price((int)(reservation.getPopupStore().getPrice() * reservation.getPerson()))
                 .build();
     }
 }

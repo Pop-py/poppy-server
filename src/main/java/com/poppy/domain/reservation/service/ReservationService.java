@@ -17,6 +17,7 @@ import com.poppy.domain.reservation.entity.ReservationAvailableSlot;
 import com.poppy.domain.reservation.entity.ReservationStatus;
 import com.poppy.domain.reservation.repository.ReservationAvailableSlotRepository;
 import com.poppy.domain.reservation.repository.ReservationRepository;
+import com.poppy.domain.user.dto.response.UserReservationDetailRspDto;
 import com.poppy.domain.user.dto.response.UserReservationRspDto;
 import com.poppy.domain.user.entity.User;
 import com.poppy.domain.user.repository.LoginUserProvider;
@@ -302,9 +303,9 @@ public class ReservationService {
 
     // 유저의 특정 예약 상세 조회
     @Transactional(readOnly = true)
-    public UserReservationRspDto getReservationById(Long userId, Long reservationId) {
+    public UserReservationDetailRspDto getReservationById(Long userId, Long reservationId) {
         Reservation reservation = reservationRepository.findByIdAndUserId(reservationId, userId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.RESERVATION_NOT_FOUND));
-        return UserReservationRspDto.from(reservation);
+        return UserReservationDetailRspDto.from(reservation);
     }
 }

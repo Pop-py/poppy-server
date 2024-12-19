@@ -4,6 +4,7 @@ import com.poppy.common.api.RspTemplate;
 import com.poppy.common.auth.dto.TokenRspDto;
 import com.poppy.domain.user.dto.request.UpdateFcmTokenReqDto;
 import com.poppy.domain.user.dto.request.UpdateNicknameReqDto;
+import com.poppy.domain.user.dto.response.UserReservationDetailRspDto;
 import com.poppy.domain.user.dto.response.UserReservationRspDto;
 import com.poppy.domain.user.service.UserService;
 import jakarta.validation.Valid;
@@ -38,8 +39,8 @@ public class UserController {
 
     // 유저의 예약 내역 상세 조회
     @GetMapping("/{id}/reservations/{reservationId}")
-    public RspTemplate<UserReservationRspDto> getReservation(@PathVariable Long id, @PathVariable Long reservationId) {
-        UserReservationRspDto reservation = userService.getReservationById(reservationId);
+    public RspTemplate<UserReservationDetailRspDto> getReservation(@PathVariable Long id, @PathVariable Long reservationId) {
+        UserReservationDetailRspDto reservation = userService.getReservationById(reservationId);
         return new RspTemplate<>(HttpStatus.OK, "예약 내역 상세 조회", reservation);
     }
 
