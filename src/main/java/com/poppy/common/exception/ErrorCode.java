@@ -9,6 +9,7 @@ public enum ErrorCode {
 
     // 회원 관리
     DUPLICATE_EMAIL(500, "이미 존재하는 이메일입니다."),
+    DUPLICATE_NICKNAME(500, "이미 존재하는 닉네임입니다."),
     VERIFICATION_CODE_NOT_FOUND(404, "인증 코드를 찾을 수 없습니다."),
     USER_NOT_FOUND(404, "존재하지 않는 회원입니다."),
     UNAUTHORIZED(403, "인증되지 않은 사용자입니다."),

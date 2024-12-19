@@ -1,62 +1,89 @@
 package com.poppy.domain.user.service;
 
+import com.poppy.common.auth.JwtTokenizer;
+import com.poppy.common.auth.cache.OAuthOTUCache;
+import com.poppy.common.auth.dto.TokenRspDto;
 import com.poppy.common.exception.BusinessException;
 import com.poppy.common.exception.ErrorCode;
 import com.poppy.domain.reservation.service.ReservationService;
-import com.poppy.domain.user.dto.UserReservationRspDto;
+import com.poppy.domain.user.dto.response.UserReservationRspDto;
 import com.poppy.domain.user.entity.Role;
 import com.poppy.domain.user.entity.User;
 import com.poppy.domain.user.repository.LoginUserProvider;
 import com.poppy.domain.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.TimeUnit;
 
 @Service
 @RequiredArgsConstructor
 public class UserService {
     private final UserRepository userRepository;
     private final LoginUserProvider loginUserProvider;  // 로그인 유저 확인용
+    private final OAuthOTUCache oAuthOTUCache;
+    private final JwtTokenizer jwtTokenizer;
+    private final RedisTemplate<String, String> redisTemplate;
     private final ReservationService reservationService;
 
     // 로그인/회원가입
     @Transactional
-    public User login(String email, String nickname, String phoneNumber) {
+    public User login(String email, String phoneNumber) {
         Optional<User> optionalUser = userRepository.findByEmail(email);
         User user;
 
         // 가입이 안 되어 있을 경우 회원가입
         if(optionalUser.isEmpty()) {
             // 이메일 중복 확인
-            if (userRepository.findByEmail(email).isPresent()) {
+            if (userRepository.findByEmail(email).isPresent())
                 throw new BusinessException(ErrorCode.DUPLICATE_EMAIL);
-            }
 
             user = User.builder()
                     .email(email)
                     .phoneNumber(phoneNumber)
-                    .nickname(nickname)
+                    .nickname(null)
                     .oauthProvider("naver")
                     .role(Role.ROLE_USER)
                     .build();
 
-            userRepository.save(user);
-        }
-        // 가입이 되어 있으면 로그인
-        else {
-            user = optionalUser.get();
-            user.updateLoginInfo(nickname, "naver", Role.ROLE_USER);
+            return userRepository.save(user);
         }
 
-        return user;
+        // 가입이 되어 있으면 로그인
+        return optionalUser.get();
     }
 
     public User getById(Long id) {
         return userRepository.findById(id)
                 .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
+    }
+
+    // 회원가입 후 초기 닉네임 지정
+    @Transactional
+    public TokenRspDto initialNickname(String nickname, String code) {
+        // 닉네임 중복 확인
+        if(userRepository.existsByNickname(nickname))
+            throw new BusinessException(ErrorCode.DUPLICATE_NICKNAME);
+
+        long userId = oAuthOTUCache.getUserId(code);
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
+
+        user.updateNickname(nickname);
+
+        // 토큰 생성
+        TokenRspDto tokenRspDto = jwtTokenizer.generateTokens(user);
+
+        // Redis에 토큰 저장
+        String redisKey = "user:" + user.getId();
+        redisTemplate.opsForValue().set(redisKey, tokenRspDto.getRefreshToken(),
+                jwtTokenizer.getRefreshTokenExpireTime(), TimeUnit.MINUTES);
+
+        return tokenRspDto;
     }
 
     // 유저의 예약 조회
@@ -88,6 +115,11 @@ public class UserService {
         User loginUser = loginUserProvider.getLoggedInUser();
         User user = userRepository.findById(loginUser.getId())
                 .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
+
+        // 닉네임 중복 확인
+        if(userRepository.existsByNickname(nickname))
+            throw new BusinessException(ErrorCode.DUPLICATE_NICKNAME);
+
         user.updateNickname(nickname);
     }
 

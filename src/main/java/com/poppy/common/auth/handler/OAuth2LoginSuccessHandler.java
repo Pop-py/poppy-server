@@ -43,16 +43,24 @@ public class OAuth2LoginSuccessHandler extends SimpleUrlAuthenticationSuccessHan
         Map<String, String> responseMap = (Map<String, String>) naverUser.getAttributes().get("response");
 
         String email = responseMap.get("email");
-        String nickname = responseMap.get("nickname");
         String phoneNumber = responseMap.get("mobile").replace("-", "");
 
-        User user = userService.login(email, nickname, phoneNumber);     // 가입되어 있으면 로그인, 아닌 경우 회원가입
+        User user = userService.login(email, phoneNumber);     // 가입되어 있으면 로그인, 아닌 경우 회원가입
         redirect(request, response, user);
     }
 
     private void redirect(HttpServletRequest request, HttpServletResponse response, User user) throws IOException {
         log.info("Naver Login Success!");
-        // JWT Access Token 및 Refresh Token 생성
+        String verificationCode = oauthOTUCache.putVerificationCodeInCache(user.getId());
+
+        // 닉네임이 없는 경우 닉네임 설정 페이지로 리다이렉트
+        if (user.getNickname() == null) {
+            String uri = createURI("/signup", verificationCode).toString();
+            getRedirectStrategy().sendRedirect(request, response, uri);
+            return;
+        }
+
+        // 기존 사용자의 경우 JWT Access Token 및 Refresh Token 생성
         String accessToken = jwtTokenizer.createAccessToken(user);
         String refreshToken = jwtTokenizer.createRefreshToken(user);
 
@@ -63,26 +71,23 @@ public class OAuth2LoginSuccessHandler extends SimpleUrlAuthenticationSuccessHan
         String redisKey = "user:" + user.getId();
         redisTemplate.opsForValue().set(redisKey, refreshToken, jwtTokenizer.getRefreshTokenExpireTime(), TimeUnit.MINUTES);
 
-        String verificationCode = oauthOTUCache.putVerificationCodeInCache(user.getId());
-        String uri = createURI(verificationCode).toString();
+        String uri = createURI("/token", verificationCode).toString();
 
         getRedirectStrategy().sendRedirect(request, response, uri);
     }
 
     // OAuth2 로그인 성공 시 토큰값과 함께 반환될 URL 설정
-    private URI createURI(String verificationCode) {
+    private URI createURI(String path, String verificationCode) {
         MultiValueMap<String, String> queryParams = new LinkedMultiValueMap<>();
         queryParams.add("code", verificationCode);
 
-        // 프론트 화면 나오면 포트 번호도 변경해야 함
-        // https 설정하면 scheme도 수정 필요
         return UriComponentsBuilder
                 .newInstance()
                 .scheme("http")
-                .host("pop-py.duckdns.org")
-//                .host("localhost")
-                .port(80)
-                .path("/token")
+//                .host("poppy-fe-git-pop-36-feature-1-notice-poppy-ca4d5978.vercel.app")
+                .host("localhost")
+                .port(3000)
+                .path(path)
                 .queryParams(queryParams)
                 .build()
                 .toUri();

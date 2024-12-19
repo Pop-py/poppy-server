@@ -30,7 +30,7 @@ public class User extends BaseTimeEntity {
     @Column(name = "phone_number", nullable = false)
     private String phoneNumber;
 
-    @Column(nullable = false)
+    @Column(unique = true)
     private String nickname;
 
     @Column(nullable = false)
@@ -59,13 +59,6 @@ public class User extends BaseTimeEntity {
     public User(String email, String phoneNumber, String nickname, String oauthProvider, Role role) {
         this.email = email;
         this.phoneNumber = phoneNumber;
-        this.nickname = nickname;
-        this.oauthProvider = oauthProvider;
-        this.role = role;
-    }
-
-    // 로그인 시 네이버 정보를 바탕으로 업데이트
-    public void updateLoginInfo(String nickname, String oauthProvider, Role role) {
         this.nickname = nickname;
         this.oauthProvider = oauthProvider;
         this.role = role;

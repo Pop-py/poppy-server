@@ -1,4 +1,4 @@
-package com.poppy.domain.user.dto;
+package com.poppy.domain.user.dto.request;
 
 import jakarta.validation.constraints.NotNull;
 import lombok.Getter;

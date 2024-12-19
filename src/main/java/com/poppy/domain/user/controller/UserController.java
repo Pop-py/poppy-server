@@ -1,9 +1,10 @@
 package com.poppy.domain.user.controller;
 
 import com.poppy.common.api.RspTemplate;
-import com.poppy.domain.user.dto.UpdateFcmTokenReqDto;
-import com.poppy.domain.user.dto.UpdateNicknameReqDto;
-import com.poppy.domain.user.dto.UserReservationRspDto;
+import com.poppy.common.auth.dto.TokenRspDto;
+import com.poppy.domain.user.dto.request.UpdateFcmTokenReqDto;
+import com.poppy.domain.user.dto.request.UpdateNicknameReqDto;
+import com.poppy.domain.user.dto.response.UserReservationRspDto;
 import com.poppy.domain.user.service.UserService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -18,6 +19,13 @@ import java.util.List;
 @RequestMapping("/users")
 public class UserController {
     private final UserService userService;
+
+    // 회원가입 후 초기 닉네임 설정
+    @PatchMapping("/initial")
+    public RspTemplate<TokenRspDto> initialNickname(@RequestParam String code, @Valid @RequestBody UpdateNicknameReqDto reqDto) {
+        TokenRspDto tokenRspDto = userService.initialNickname(reqDto.getNickname(), code);
+        return new RspTemplate<>(HttpStatus.OK, "회원 가입 완료", tokenRspDto);
+    }
 
     // 유저의 예약 내역 전체 조회
     @GetMapping("/{id}/reservations")
@@ -44,7 +52,7 @@ public class UserController {
 
     // 닉네임 변경
     @PatchMapping("/{id}")
-    public RspTemplate<?> updateNickname(@PathVariable Long id, @Valid @RequestBody UpdateNicknameReqDto reqDto) {
+    public RspTemplate<Void> updateNickname(@PathVariable Long id, @Valid @RequestBody UpdateNicknameReqDto reqDto) {
         userService.updateNickname(reqDto.getNickname());
         return new RspTemplate<>(HttpStatus.OK, reqDto.getNickname() + "으로 변경되었습니다.");
     }

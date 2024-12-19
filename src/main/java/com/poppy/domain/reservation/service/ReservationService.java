@@ -17,7 +17,7 @@ import com.poppy.domain.reservation.entity.ReservationAvailableSlot;
 import com.poppy.domain.reservation.entity.ReservationStatus;
 import com.poppy.domain.reservation.repository.ReservationAvailableSlotRepository;
 import com.poppy.domain.reservation.repository.ReservationRepository;
-import com.poppy.domain.user.dto.UserReservationRspDto;
+import com.poppy.domain.user.dto.response.UserReservationRspDto;
 import com.poppy.domain.user.entity.User;
 import com.poppy.domain.user.repository.LoginUserProvider;
 import lombok.RequiredArgsConstructor;
