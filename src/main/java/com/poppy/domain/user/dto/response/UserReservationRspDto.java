@@ -1,6 +1,8 @@
 package com.poppy.domain.user.dto.response;
 
-import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.poppy.common.util.LocalDateWithDayOfWeekSerializer;
+import com.poppy.common.util.LocalTimeWithAmPmSerializer;
 import com.poppy.domain.reservation.entity.Reservation;
 import com.poppy.domain.reservation.entity.ReservationStatus;
 import lombok.Builder;
@@ -16,10 +18,10 @@ public class UserReservationRspDto {
 
     private String popupStoreName;
 
-    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd")
+    @JsonSerialize(using = LocalDateWithDayOfWeekSerializer.class)
     private LocalDate reservationDate;
 
-    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "HH:mm:ss")
+    @JsonSerialize(using = LocalTimeWithAmPmSerializer.class)
     private LocalTime reservationTime;
 
     private String location;

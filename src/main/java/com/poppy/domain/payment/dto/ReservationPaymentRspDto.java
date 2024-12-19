@@ -1,6 +1,8 @@
 package com.poppy.domain.payment.dto;
 
-import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.poppy.common.util.LocalDateWithDayOfWeekSerializer;
+import com.poppy.common.util.LocalTimeWithAmPmSerializer;
 import lombok.Builder;
 import lombok.Getter;
 
@@ -16,10 +18,10 @@ public class ReservationPaymentRspDto {
 
     private String storeName;     // 매장명
 
-    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd")
+    @JsonSerialize(using = LocalDateWithDayOfWeekSerializer.class)
     private LocalDate date;       // 예약 날짜
 
-    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "HH:mm:ss")
+    @JsonSerialize(using = LocalTimeWithAmPmSerializer.class)
     private LocalTime time;       // 예약 시간
 
     private int person;           // 예약 인원
