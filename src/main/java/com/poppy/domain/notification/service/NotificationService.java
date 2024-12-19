@@ -6,6 +6,7 @@ import com.google.firebase.messaging.Message;
 import com.poppy.common.config.redis.NotificationPublisher;
 import com.poppy.common.exception.BusinessException;
 import com.poppy.common.exception.ErrorCode;
+import com.poppy.domain.notification.dto.NoticeNotificationDto;
 import com.poppy.domain.notification.dto.ReservationNotificationDto;
 import com.poppy.domain.notification.dto.WaitingNotificationDto;
 import com.poppy.domain.notification.entity.Notification;
@@ -13,8 +14,10 @@ import com.poppy.domain.notification.entity.NotificationType;
 import com.poppy.domain.notification.repository.NotificationRepository;
 import com.poppy.domain.reservation.entity.Reservation;
 import com.poppy.domain.reservation.entity.ReservationStatus;
+import com.poppy.domain.user.entity.Role;
 import com.poppy.domain.user.entity.User;
 import com.poppy.domain.user.repository.LoginUserProvider;
+import com.poppy.domain.user.repository.UserRepository;
 import com.poppy.domain.waiting.entity.Waiting;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -33,6 +36,7 @@ public class NotificationService {
     private final NotificationMessageGenerator messageGenerator;
     private final NotificationPublisher notificationPublisher;
     private final LoginUserProvider loginUserProvider;
+    private final UserRepository userRepository;
 
     // 웨이팅 알림 전송
     @Transactional
@@ -128,6 +132,39 @@ public class NotificationService {
                 .build());
     }
 
+    @Transactional
+    public void sendNotification(String title, String message) {
+        List<User> users = userRepository.findByRole(Role.ROLE_USER);
+
+        for(User user : users) {
+            // WebSocket 메시지 생성
+            String wsMessage = messageGenerator.generateWebSocketMessage(title, message);
+
+            NoticeNotificationDto notificationDto = NoticeNotificationDto.from(user, title, wsMessage);
+
+            // WebSocket 알림 DB 저장
+            saveNotification(user, notificationDto);
+
+            // Redis로 WebSocket 알림 발행
+            notificationPublisher.publish(notificationDto);
+
+            // FCM 알림 전송
+            if (user.getFcmToken() != null) {
+                sendNoticeFCM(user.getFcmToken(), String.format("[%s]", title), message);
+            }
+        }
+    }
+
+    // 공지사항 알림 DB 저장
+    private void saveNotification(User user, NoticeNotificationDto dto) {
+        notificationRepository.save(Notification.builder()
+                .message(dto.getMessage())
+                .type(NotificationType.NOTICE)
+                .user(user)
+                .isFcm(false)
+                .build());
+    }
+
     // FCM 푸시 알림 전송
     private void sendFCMNotification(String fcmToken, String title, WaitingNotificationDto dto) {
         if (fcmToken == null) {
@@ -158,6 +195,24 @@ public class NotificationService {
         }
         catch (FirebaseMessagingException e) {
             log.error("Failed to send FCM notification.html", e);
+        }
+    }
+
+    private void sendNoticeFCM(String fcmToken, String title, String content) {
+        Message message = Message.builder()
+                .setToken(fcmToken)
+                .setNotification(com.google.firebase.messaging.Notification.builder()
+                        .setTitle(title)
+                        .setBody(content)
+                        .build())
+                .putData("type", NotificationType.NOTICE.name())
+                .build();
+
+        try {
+            firebaseMessaging.send(message);
+            log.info("FCM notice sent to token: {}", fcmToken);
+        } catch (FirebaseMessagingException e) {
+            log.error("Failed to send FCM notice", e);
         }
     }
 
