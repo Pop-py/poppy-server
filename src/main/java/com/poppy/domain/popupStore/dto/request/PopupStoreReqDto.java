@@ -1,5 +1,6 @@
 package com.poppy.domain.popupStore.dto.request;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.poppy.domain.popupStore.entity.ReservationType;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
@@ -33,15 +34,19 @@ public class PopupStoreReqDto {
     private String address; // 실제 도로명 주소
 
     @NotNull
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy.MM.dd")
     private LocalDate startDate; // 시작일
 
     @NotNull
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy.MM.dd")
     private LocalDate endDate; // 종료일
 
     @NotNull
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "HH:mm")
     private LocalTime openingTime; // 운영 시작 시간
 
     @NotNull
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "HH:mm")
     private LocalTime closingTime; // 운영 종료 시간
 
     @NotNull

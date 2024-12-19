@@ -2,7 +2,7 @@ package com.poppy.domain.reservation.controller;
 
 import com.poppy.common.api.RspTemplate;
 import com.poppy.domain.payment.dto.ReservationPaymentRspDto;
-import com.poppy.domain.reservation.dto.ReservationReqDto;
+import com.poppy.domain.reservation.dto.request.ReservationReqDto;
 import com.poppy.domain.reservation.service.ReservationService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
