@@ -3,7 +3,7 @@ package com.poppy.domain.user.entity;
 import com.poppy.common.entity.BaseTimeEntity;
 import com.poppy.domain.likes.entity.ReviewLike;
 import com.poppy.domain.popupStore.entity.PopupStore;
-import com.poppy.domain.wishList.entity.WishList;
+import com.poppy.domain.scrap.entity.Scrap;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -43,7 +43,7 @@ public class User extends BaseTimeEntity {
     private Role role;
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<WishList> wishLists = new ArrayList<>();
+    private List<Scrap> wishLists = new ArrayList<>();
 
     @OneToMany(mappedBy = "masterUser",cascade = CascadeType.ALL, orphanRemoval = true)
     private List<PopupStore> masterPopupStore = new ArrayList<>();

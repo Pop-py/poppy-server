@@ -3,9 +3,9 @@ package com.poppy.domain.popupStore.entity;
 import com.poppy.common.entity.BaseTimeEntity;
 import com.poppy.common.entity.Images;
 import com.poppy.domain.reservation.entity.ReservationAvailableSlot;
+import com.poppy.domain.scrap.entity.Scrap;
 import com.poppy.domain.storeCategory.entity.StoreCategory;
 import com.poppy.domain.user.entity.User;
-import com.poppy.domain.wishList.entity.WishList;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -95,8 +95,19 @@ public class PopupStore extends BaseTimeEntity {
     private User masterUser;
 
     @OneToMany(mappedBy = "popupStore", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<WishList> wishLists = new ArrayList<>();
+    private List<Scrap> wishLists = new ArrayList<>();
 
     @OneToMany(mappedBy = "popupStore",cascade = CascadeType.ALL,orphanRemoval = true)
     private List<ReservationAvailableSlot> reservationAvailableSlots;
+
+    @Column(nullable = false)
+    private Integer scrapCount = 0;
+
+    @OneToMany(mappedBy = "popupStore", cascade = CascadeType.REMOVE)
+    private List<Scrap> scraps = new ArrayList<>();
+
+    public void updateScrapCount(Integer count) {
+        this.scrapCount = count;
+    }
+
 }
