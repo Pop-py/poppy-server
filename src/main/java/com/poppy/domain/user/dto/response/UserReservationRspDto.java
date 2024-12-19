@@ -1,4 +1,4 @@
-package com.poppy.domain.user.dto;
+package com.poppy.domain.user.dto.response;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.poppy.domain.reservation.entity.Reservation;

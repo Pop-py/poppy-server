@@ -37,7 +37,7 @@ public class SecurityConfig {
                 .cors(cors -> cors.configurationSource(configurationSource()))  // cors 설정
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/test/**").permitAll()
-                        .requestMatchers("/", "/token", "/refresh").permitAll()
+                        .requestMatchers("/", "/token", "/refresh", "/users/initial").permitAll()
                         .requestMatchers("/oauth2/**", "/login/oauth2/code/**").permitAll()
                         .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()   // Swagger API
                         .requestMatchers("/popup-stores/**").permitAll()
