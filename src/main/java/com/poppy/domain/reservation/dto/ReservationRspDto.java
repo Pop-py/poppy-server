@@ -32,6 +32,8 @@ public class ReservationRspDto {
 
     private Integer person;
 
+    private Integer price;
+
     public static ReservationRspDto from(Reservation reservation) {
         return ReservationRspDto.builder()
                 .popupStoreId(reservation.getPopupStore().getId())
@@ -41,6 +43,7 @@ public class ReservationRspDto {
                 .date(reservation.getDate())
                 .time(reservation.getTime())
                 .person(reservation.getPerson())
+                .price((int)(reservation.getPopupStore().getPrice() * reservation.getPerson()))
                 .build();
     }
 }
