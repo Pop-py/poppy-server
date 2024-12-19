@@ -6,6 +6,7 @@ import com.poppy.common.auth.dto.TokenRspDto;
 import com.poppy.common.exception.BusinessException;
 import com.poppy.common.exception.ErrorCode;
 import com.poppy.domain.reservation.service.ReservationService;
+import com.poppy.domain.user.dto.response.UserReservationDetailRspDto;
 import com.poppy.domain.user.dto.response.UserReservationRspDto;
 import com.poppy.domain.user.entity.Role;
 import com.poppy.domain.user.entity.User;
@@ -95,7 +96,7 @@ public class UserService {
 
     // 유저의 예약 상세 조회
     @Transactional(readOnly = true)
-    public UserReservationRspDto getReservationById(Long reservationId) {
+    public UserReservationDetailRspDto getReservationById(Long reservationId) {
         User user = loginUserProvider.getLoggedInUser();
         return reservationService.getReservationById(user.getId(), reservationId);
     }
