@@ -1,6 +1,8 @@
 package com.poppy.domain.popupStore.dto.response;
 
-import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.poppy.common.util.LocalDateWithDayOfWeekSerializer;
+import com.poppy.common.util.LocalTimeWithAmPmSerializer;
 import com.poppy.domain.popupStore.entity.PopupStore;
 import com.poppy.domain.popupStore.entity.ReservationType;
 import com.poppy.domain.reservation.entity.PopupStoreStatus;
@@ -26,16 +28,16 @@ public class PopupStoreRspDto {
 
     private final String address;         // 실제 도로명 주소
 
-    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd")
+    @JsonSerialize(using = LocalDateWithDayOfWeekSerializer.class)
     private final LocalDate startDate;
 
-    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd")
+    @JsonSerialize(using = LocalDateWithDayOfWeekSerializer.class)
     private final LocalDate endDate;
 
-    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "HH:mm:ss")
+    @JsonSerialize(using = LocalTimeWithAmPmSerializer.class)
     private final LocalTime openingTime;  // 운영 시작 시간
 
-    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "HH:mm:ss")
+    @JsonSerialize(using = LocalTimeWithAmPmSerializer.class)
     private final LocalTime closingTime;  // 운영 종료 시간
 
     private final Integer availableSlot;  // 예약 가능한 총 인원

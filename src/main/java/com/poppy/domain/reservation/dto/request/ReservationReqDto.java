@@ -1,4 +1,4 @@
-package com.poppy.domain.reservation.dto;
+package com.poppy.domain.reservation.dto.request;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import jakarta.validation.constraints.NotNull;
@@ -13,11 +13,11 @@ public class ReservationReqDto {
     Long popupStoreId;
 
     @NotNull(message = "날짜를 입력해주세요.")
-    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd")
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy.MM.dd")
     LocalDate date;
 
     @NotNull(message = "시간을 입력해주세요.")
-    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "HH:mm:ss")
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "HH:mm")
     LocalTime time;
 
     @NotNull(message = "인원을 입력해주세요.")

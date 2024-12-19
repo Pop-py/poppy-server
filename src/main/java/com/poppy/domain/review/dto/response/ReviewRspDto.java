@@ -30,7 +30,7 @@ public class ReviewRspDto {
 
     private String popupStoreName;
 
-    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd")
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy.MM.dd")
     private LocalDate date;    // 작성일 (수정 시 해당 날짜로 갱신됨)
 
     public static ReviewRspDto from(Review review) {
