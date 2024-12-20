@@ -3,11 +3,15 @@ package com.poppy.domain.notification.service;
 import com.google.firebase.messaging.FirebaseMessaging;
 import com.google.firebase.messaging.FirebaseMessagingException;
 import com.poppy.common.config.redis.NotificationPublisher;
+import com.poppy.domain.notification.dto.NotificationDto;
+import com.poppy.domain.notification.dto.ReservationNotificationDto;
 import com.poppy.domain.notification.dto.WaitingNotificationDto;
 import com.poppy.domain.notification.entity.Notification;
 import com.poppy.domain.notification.entity.NotificationType;
 import com.poppy.domain.notification.repository.NotificationRepository;
 import com.poppy.domain.popupStore.entity.PopupStore;
+import com.poppy.domain.reservation.entity.Reservation;
+import com.poppy.domain.reservation.entity.ReservationStatus;
 import com.poppy.domain.user.entity.User;
 import com.poppy.domain.user.repository.LoginUserProvider;
 import com.poppy.domain.waiting.entity.Waiting;
@@ -18,8 +22,12 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
@@ -153,4 +161,42 @@ class NotificationServiceTest {
         // then
         verify(notificationRepository).delete(notification);
     }
+    @Test
+    void 활동_알림_최신순_30개_조회_성공() {
+        // given
+        List<Notification> notifications = IntStream.range(0, 3)
+                .mapToObj(i -> {
+                    NotificationType type = i % 2 == 0 ?
+                            NotificationType.WAITING_CALL : NotificationType.RESERVATION;
+                    return Notification.builder()
+                            .user(user)
+                            .popupStore(popupStore)
+                            .message("테스트 메시지 " + i)
+                            .type(type)
+                            .build();
+                })
+                .collect(Collectors.toList());
+
+        when(notificationRepository.findTop30ByUserIdAndIsFcmFalseAndTypeNotOrderByCreateTimeDesc(
+                anyLong(), eq(NotificationType.NOTICE)))
+                .thenReturn(notifications);
+
+        // when
+        List<? extends NotificationDto> result = notificationService.getNotifications(1L);
+
+        // then
+        assertThat(result).hasSize(3);
+        verify(notificationRepository)
+                .findTop30ByUserIdAndIsFcmFalseAndTypeNotOrderByCreateTimeDesc(
+                        eq(1L), eq(NotificationType.NOTICE));
+
+        // 타입에 따른 DTO 변환 확인
+        assertThat(result.get(0))
+                .isInstanceOf(WaitingNotificationDto.class);
+        assertThat(result.get(1))
+                .isInstanceOf(ReservationNotificationDto.class);
+        assertThat(result.get(2))
+                .isInstanceOf(WaitingNotificationDto.class);
+    }
 }
+
