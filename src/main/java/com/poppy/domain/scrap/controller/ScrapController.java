@@ -19,7 +19,7 @@ public class ScrapController {
 
     @PostMapping("/{storeId}")
     public RspTemplate<ScrapRspDto> toggleScrap(@PathVariable Long storeId) {
-        return new RspTemplate<>(HttpStatus.OK,"팝업스토어 저장 완료",scrapService.toggleScrap(storeId));
+        return new RspTemplate<>(HttpStatus.OK, "팝업스토어 저장 여부 확인", scrapService.toggleScrap(storeId));
     }
 
     // 유저의 팝업 스토어 스크랩 상태 확인
