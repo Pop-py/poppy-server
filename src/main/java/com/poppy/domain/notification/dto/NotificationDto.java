@@ -13,7 +13,8 @@ import lombok.experimental.SuperBuilder;
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "type")
 @JsonSubTypes({
         @JsonSubTypes.Type(value = WaitingNotificationDto.class, name = "WAITING"),
-        @JsonSubTypes.Type(value = ReservationNotificationDto.class, name = "RESERVATION")
+        @JsonSubTypes.Type(value = ReservationNotificationDto.class, name = "RESERVATION"),
+        @JsonSubTypes.Type(value = NoticeNotificationDto.class, name = "NOTICE")
 })
 public abstract class NotificationDto {
     private String message;
