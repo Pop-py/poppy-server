@@ -11,14 +11,11 @@ import java.util.List;
 
 @Repository
 public interface NotificationRepository extends JpaRepository<Notification, Long> {
-    // FCM이 아닌(WebSocket) 알림을 최근 생성 시간 순으로 최대 30개 조회
-    // List<Notification> findTop30ByUserIdAndIsFcmFalseOrderByCreateTimeDesc(Long userId);
-
+    // 활동 알림 최신순으로 최대 30개 조회
     List<Notification> findTop30ByUserIdAndIsFcmFalseAndTypeNotOrderByCreateTimeDesc(
             Long userId,
             NotificationType type
     );
-
 
     // 유저별 알림 개수를 초과하는 알림만 조회
     @Query(value = """
