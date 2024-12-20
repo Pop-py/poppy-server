@@ -1,15 +1,18 @@
-package com.poppy.domain.wishList.entity;
+package com.poppy.domain.scrap.entity;
 
 import com.poppy.common.entity.BaseTimeEntity;
 import com.poppy.domain.popupStore.entity.PopupStore;
 import com.poppy.domain.user.entity.User;
 import jakarta.persistence.*;
+import lombok.Builder;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 @Entity
-@Table(name = "wish_lists")
+@Table(name = "scraps")
 @Getter
-public class WishList {  // User와 PopupStore의 연결 테이블
+@NoArgsConstructor
+public class Scrap extends BaseTimeEntity{  // User와 PopupStore의 연결 테이블
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -22,6 +25,9 @@ public class WishList {  // User와 PopupStore의 연결 테이블
     @JoinColumn(name = "popup_store_id", nullable = false)
     private PopupStore popupStore;
 
-    @Embedded
-    private BaseTimeEntity baseTime;
+    @Builder
+    protected Scrap(User user, PopupStore popupStore) {
+        this.user = user;
+        this.popupStore = popupStore;
+    }
 }

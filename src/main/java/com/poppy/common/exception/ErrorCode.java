@@ -76,7 +76,13 @@ public enum ErrorCode {
     // 알림 관련
     NOTIFICATION_NOT_FOUND(404, "해당 알림을 찾을 수 없습니다."),
     UNAUTHORIZED_NOTIFICATION_ACCESS(403, "해당 알림에 대한 접근 권한이 없습니다."),
-    NOTICE_NOT_FOUND(404, "해당 공지를 찾을 수 없습니다")
+    NOTICE_NOT_FOUND(404, "해당 공지를 찾을 수 없습니다"),
+
+    // 스크랩 관련
+    SCRAP_CONFLICT(409, "처리 중입니다."),
+    SCRAP_FAILED(500, "팝업스토어 저장에 실패 하였습니다."),
+    SCRAP_NOT_FOUND(404, "해당 스크랩을 찾을 수 없습니다."),
+    SCRAP_NOT_AUTHORIZED(403, "해당 스크랩에 대한 접근 권한이 없습니다.")
     ;
 
     private final int code;

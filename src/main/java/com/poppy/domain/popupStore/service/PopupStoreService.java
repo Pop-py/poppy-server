@@ -44,18 +44,16 @@ public class PopupStoreService {
     // 팝업 스토어 상세 조회
     @Transactional
     public PopupStoreRspDto getPopupStore(Long id) {
-        // 1️⃣ PopupStore 조회
         PopupStore popupStore = popupStoreRepository.findById(id)
                 .orElseThrow(() -> new BusinessException(ErrorCode.STORE_NOT_FOUND));
 
-        // 2️⃣ 조회 기록 추가 (PopupStoreView에 추가)
+        // 조회 기록 추가 (PopupStoreView에 추가)
         PopupStoreView view = PopupStoreView.builder()
                 .popupStore(popupStore)
                 .viewedAt(LocalDateTime.now())
                 .build();
         popupStoreViewRepository.save(view);
 
-        // 3️⃣ 응답 DTO 반환
         return PopupStoreRspDto.from(popupStore);
     }
 
