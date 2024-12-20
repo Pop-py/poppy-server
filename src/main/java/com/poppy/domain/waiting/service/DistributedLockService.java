@@ -13,7 +13,7 @@ import java.util.concurrent.TimeUnit;
 @Slf4j
 public class DistributedLockService {
     private final RedissonClient redissonClient;
-    private static final String SCHEDULER_LOCK_KEY = "waiting-scheduler-lock";
+    public static final String SCHEDULER_LOCK_KEY = "waiting-scheduler-lock";
     private static final long LOCK_WAIT_TIME = 5L;
     private static final long LOCK_LEASE_TIME = 60L;
 

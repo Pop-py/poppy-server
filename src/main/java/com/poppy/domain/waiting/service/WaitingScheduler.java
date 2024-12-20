@@ -19,13 +19,12 @@ public class WaitingScheduler {
     private final WaitingRepository waitingRepository;
     private final MasterWaitingService masterWaitingService;
     private final DistributedLockService lockService;
-    private static final String SCHEDULER_LOCK_KEY = "waiting-scheduler-lock";
 
     @Scheduled(fixedDelay = 60000) // 1분마다 실행
     @Transactional
     public void checkWaitingTimeout() {
         // 분산 락 획득 시도
-        if (!lockService.tryLock(SCHEDULER_LOCK_KEY)) {
+        if (!lockService.tryLock(DistributedLockService.SCHEDULER_LOCK_KEY)) {
             log.debug("Failed to acquire scheduler lock. Skipping this execution.");
             return;
         }
@@ -43,7 +42,7 @@ public class WaitingScheduler {
         } catch (Exception e) {
             log.error("Error in scheduler execution: {}", e.getMessage(), e);
         } finally {
-            lockService.unlock(SCHEDULER_LOCK_KEY);
+            lockService.unlock(DistributedLockService.SCHEDULER_LOCK_KEY);
         }
     }
 }
