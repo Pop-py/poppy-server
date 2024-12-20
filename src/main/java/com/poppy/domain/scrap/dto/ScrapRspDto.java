@@ -7,8 +7,6 @@ import lombok.Getter;
 @Getter
 @Builder
 public class ScrapRspDto {
-
-
     @JsonProperty("isScraped")
     private final Boolean isScraped;
 

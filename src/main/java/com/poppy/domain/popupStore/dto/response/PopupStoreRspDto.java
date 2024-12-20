@@ -4,16 +4,11 @@ import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.poppy.common.util.LocalDateWithDayOfWeekSerializer;
 import com.poppy.common.util.LocalTimeWithAmPmSerializer;
 import com.poppy.domain.popupStore.entity.PopupStore;
-import com.poppy.domain.popupStore.entity.ReservationType;
-import com.poppy.domain.reservation.entity.PopupStoreStatus;
-import com.poppy.domain.reservation.entity.ReservationAvailableSlot;
 import lombok.Builder;
 import lombok.Getter;
 
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.time.LocalTime;
-import java.util.List;
 
 @Getter
 @Builder
@@ -62,6 +57,8 @@ public class PopupStoreRspDto {
 
     private final String blogUrl;
 
+    private final Integer scrapCount;
+
     private Boolean isAlmostFull;   // 마감임박 여부
 
     // Entity to DTO
@@ -87,38 +84,8 @@ public class PopupStoreRspDto {
                 .homepageUrl(store.getHomepageUrl())
                 .instagramUrl(store.getInstagramUrl())
                 .blogUrl(store.getBlogUrl())
-                .isAlmostFull(calculateAlmostFull(store.getReservationAvailableSlots(), store.getReservationType()))
+                .scrapCount(store.getScrapCount())
+                .isAlmostFull(store.calculateAlmostFull(store.getReservationAvailableSlots(), store.getReservationType()))
                 .build();
-    }
-
-    // 마감임박 여부 판단
-    private static Boolean calculateAlmostFull(List<ReservationAvailableSlot> slots, ReservationType reservationType) {
-        // Offline인 경우 null
-        if(reservationType == ReservationType.OFFLINE) return null;
-
-        if(slots == null || slots.isEmpty()) return false;
-
-        // 현재 시점 이후의 휴무일이 아닌 슬롯만 필터링
-        List<ReservationAvailableSlot> activeSlots = slots.stream()
-                .filter(slot -> !slot.getStatus().equals(PopupStoreStatus.HOLIDAY))
-                .filter(slot -> {
-                    LocalDateTime slotDateTime = LocalDateTime.of(slot.getDate(), slot.getTime());
-                    return !slotDateTime.isBefore(LocalDateTime.now());
-                })
-                .toList();
-
-        if (activeSlots.isEmpty()) return false;
-
-        // 남은 슬롯 수와 전체 슬롯 수 계산
-        int remainingSlots = activeSlots.stream()
-                .mapToInt(ReservationAvailableSlot::getAvailableSlot)
-                .sum();
-
-        int totalSlots = activeSlots.stream()
-                .mapToInt(ReservationAvailableSlot::getTotalSlot)
-                .sum();
-
-        // 전체 슬롯의 20% 이하가 남은 경우 true
-        return totalSlots > 0 && ((double) remainingSlots / totalSlots) <= 0.2;
     }
 }

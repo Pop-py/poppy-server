@@ -36,21 +36,29 @@ public class SecurityConfig {
                 .csrf(csrf -> csrf.disable())
                 .cors(cors -> cors.configurationSource(configurationSource()))  // cors 설정
                 .authorizeHttpRequests(auth -> auth
+                        // 공통
                         .requestMatchers("/test/**").permitAll()
                         .requestMatchers("/", "/token", "/refresh", "/users/initial").permitAll()
                         .requestMatchers("/oauth2/**", "/login/oauth2/code/**").permitAll()
                         .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()   // Swagger API
-                        .requestMatchers("/popup-stores/**").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/reviews/**").permitAll()
-                        .requestMatchers("/admin/**").hasRole("ADMIN")
                         .requestMatchers("/ws/**", "/ws/notification/**", "/queue/**").permitAll()
-                        .requestMatchers("/popup-stores/{storeId}/waiting/**").hasRole("MASTER")  // 관리자용 API
-                        .requestMatchers("/users/{id}/popup-stores/{storeId}/waiting/**").hasRole("USER")  // 사용자용 API
+                        // 토스페이먼츠 관련
+                        .requestMatchers("/payments/**").permitAll()
+                        // 팝업스토어 관련
+                        .requestMatchers("/popup-stores/**").permitAll()
+                        // 공지사항 관련
+                        .requestMatchers("/notices/**").permitAll()
+                        // 리뷰 관련
+                        .requestMatchers(HttpMethod.GET, "/reviews/**").permitAll()
+                        // 사용자용 API
+                        .requestMatchers("/users/{id}/popup-stores/{storeId}/waiting/**").hasRole("USER")
                         .requestMatchers("/users/{id}/notifications").hasRole("USER")
                         .requestMatchers("/users/{id}/notification/{notificationId}").hasRole("USER")
-                        .requestMatchers("/payments/**").permitAll()    // 토스페이먼츠 관련
+                        // 매니저용 API
+                        .requestMatchers("/popup-stores/{storeId}/waiting/**").hasRole("MASTER")
+                        // 관리자용 API
+                        .requestMatchers("/admin/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.PATCH, "/notices/{noticeId}").hasRole("ADMIN")
-                        .requestMatchers("/notices/**").permitAll()
                         .anyRequest().authenticated()
                 )
                 .formLogin(form -> form.disable())  // form 로그인 비활성화

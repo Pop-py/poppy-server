@@ -25,7 +25,6 @@ public class Scrap extends BaseTimeEntity{  // User와 PopupStore의 연결 테�
     @JoinColumn(name = "popup_store_id", nullable = false)
     private PopupStore popupStore;
 
-
     @Builder
     protected Scrap(User user, PopupStore popupStore) {
         this.user = user;
