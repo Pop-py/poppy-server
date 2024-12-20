@@ -16,7 +16,7 @@ public class WaitingNotificationDto extends NotificationDto {
     private Integer peopleAhead;
 
     // 알림 생성 시 사용
-    public static WaitingNotificationDto from(Waiting waiting, String message, NotificationType type, Integer peopleAhead, boolean isFcm) {
+    public static WaitingNotificationDto of(Waiting waiting, String message, NotificationType type, Integer peopleAhead, boolean isFcm) {
         return WaitingNotificationDto.builder()
                 .message(message)
                 .type(type)

@@ -12,6 +12,7 @@ public class NotificationMessageGenerator {
             case WAITING_CALL, TEAMS_AHEAD -> storeName;
             case WAITING_CANCEL -> "대기 취소 알림";
             case WAITING_TIMEOUT -> "대기 시간 초과";
+            case NOTICE -> "[공지사항]";
             default -> throw new IllegalArgumentException("Unknown notification.html type: " + type);
         };
     }
@@ -23,7 +24,7 @@ public class NotificationMessageGenerator {
             case WAITING_CANCEL -> String.format("%d번 대기가 취소되었습니다", waitingNumber);
             case TEAMS_AHEAD -> String.format("현재 %d번째 순서\n대기번호 %d번", peopleAhead, waitingNumber);
             case WAITING_TIMEOUT -> String.format("%d번 대기가 시간 초과로 취소되었습니다", waitingNumber);
-            case RESERVATION -> null;
+            case RESERVATION, NOTICE -> null;
         };
     }
 
@@ -38,10 +39,10 @@ public class NotificationMessageGenerator {
                 yield String.format("%s\n현재 %d번째 순서입니다.", storeName, peopleAhead);
             }
             case WAITING_TIMEOUT -> String.format("%s\n%d번 대기\n호출 시간 초과로 자동 취소되었습니다.", storeName, waitingNumber);
-            case RESERVATION -> null;
+            case RESERVATION, NOTICE -> null;
         };
     }
-
+ 
     // 예약 WebSocket 실시간 알림 메시지 생성
     public String generateWebSocketMessage(ReservationStatus status, String storeName) {
         return switch (status) {
@@ -49,5 +50,10 @@ public class NotificationMessageGenerator {
             case CHECKED -> String.format("%s의 예약이 완료되었습니다.", storeName);
             case CANCELED -> String.format("%s의 예약이 취소되었습니다.", storeName);
         };
+    }
+
+    // 공지사항 알림 메시지 생성
+    public String generateWebSocketMessage(String title, String content) {
+        return String.format("[%s]\n%s", title, content);
     }
 }
