@@ -6,7 +6,9 @@ import com.google.firebase.messaging.Message;
 import com.poppy.common.config.redis.NotificationPublisher;
 import com.poppy.common.exception.BusinessException;
 import com.poppy.common.exception.ErrorCode;
+import com.poppy.domain.notice.dto.NoticeRspDto;
 import com.poppy.domain.notification.dto.NoticeNotificationDto;
+import com.poppy.domain.notification.dto.NotificationDto;
 import com.poppy.domain.notification.dto.ReservationNotificationDto;
 import com.poppy.domain.notification.dto.WaitingNotificationDto;
 import com.poppy.domain.notification.entity.Notification;
@@ -25,6 +27,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -47,7 +51,7 @@ public class NotificationService {
         String fcmTitle = messageGenerator.generateFCMTitle(type, waiting.getPopupStore().getName());
         String fcmBody = messageGenerator.generateFCMBody(type, waiting.getWaitingNumber(), peopleAhead);
 
-        WaitingNotificationDto fcmNotification = WaitingNotificationDto.from(
+        WaitingNotificationDto fcmNotification = WaitingNotificationDto.of(
                 waiting,
                 fcmBody,
                 type,
@@ -68,7 +72,7 @@ public class NotificationService {
         // wsMessage가 null이면 알림을 발송하지 않음
         if (wsMessage == null) return;
 
-        WaitingNotificationDto wsWaitingNotificationDto = WaitingNotificationDto.from(
+        WaitingNotificationDto wsWaitingNotificationDto = WaitingNotificationDto.of(
                 waiting,
                 wsMessage,
                 type,
@@ -132,15 +136,35 @@ public class NotificationService {
                 .build());
     }
 
+    // 공지사항 알림 전송
     @Transactional
-    public void sendNotification(String title, String message) {
+    public void sendNotice(NoticeRspDto noticeRspDto) {
         List<User> users = userRepository.findByRole(Role.ROLE_USER);
 
-        for(User user : users) {
-            // WebSocket 메시지 생성
-            String wsMessage = messageGenerator.generateWebSocketMessage(title, message);
+        String title = noticeRspDto.getTitle();
 
-            NoticeNotificationDto notificationDto = NoticeNotificationDto.from(user, title, wsMessage);
+        // notice 제목에서 [카테고리]와 제목 분리
+        String categoryPattern = "\\[(.*?)\\]";
+        String subjectPattern = "\\](.+)";
+        Pattern categoryRegex = Pattern.compile(categoryPattern);
+        Pattern subjectRegex = Pattern.compile(subjectPattern);
+        Matcher categoryMatcher = categoryRegex.matcher(title);
+        Matcher subjectMatcher = subjectRegex.matcher(title);
+
+        String noticeCategory = "";
+        String noticeSubject = "";
+        if (categoryMatcher.find()) {
+            noticeCategory = categoryMatcher.group(1);
+        }
+        if (subjectMatcher.find()) {
+            noticeSubject = subjectMatcher.group(1).trim();
+        }
+
+        for (User user : users) {
+            // WebSocket 메시지 생성
+            String wsMessage = messageGenerator.generateWebSocketMessage(noticeCategory, noticeSubject);
+
+            NoticeNotificationDto notificationDto = NoticeNotificationDto.of(user, wsMessage);
 
             // WebSocket 알림 DB 저장
             saveNotification(user, notificationDto);
@@ -150,7 +174,7 @@ public class NotificationService {
 
             // FCM 알림 전송
             if (user.getFcmToken() != null) {
-                sendNoticeFCM(user.getFcmToken(), String.format("[%s]", title), message);
+                sendNoticeFCM(user.getFcmToken(), String.format("[%s]", noticeCategory), noticeSubject);
             }
         }
     }
@@ -216,11 +240,21 @@ public class NotificationService {
         }
     }
 
-    // WebSocket 알림 최신순 30개 목록 조회
+    // 활동 알림 최신순 30개 목록 조회
     @Transactional(readOnly = true)
-    public List<WaitingNotificationDto> getNotifications(Long userId) {
-        return notificationRepository.findTop30ByUserIdAndIsFcmFalseOrderByCreateTimeDesc(userId).stream()
-                .map(WaitingNotificationDto::from)
+    public List<? extends NotificationDto> getNotifications(Long userId) {
+        return notificationRepository.findTop30ByUserIdAndIsFcmFalseAndTypeNotOrderByCreateTimeDesc(
+                        userId,
+                        NotificationType.NOTICE
+                )
+                .stream()
+                .map(notification -> {
+                    if (notification.getType() == NotificationType.RESERVATION) {
+                        return ReservationNotificationDto.from(notification);
+                    } else {
+                        return WaitingNotificationDto.from(notification);
+                    }
+                })
                 .collect(Collectors.toList());
     }
 

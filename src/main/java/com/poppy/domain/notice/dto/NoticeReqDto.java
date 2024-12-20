@@ -1,4 +1,4 @@
-package com.poppy.domain.notification.dto;
+package com.poppy.domain.notice.dto;
 
 import jakarta.validation.constraints.NotBlank;
 import lombok.Getter;
@@ -11,5 +11,5 @@ public class NoticeReqDto {
     private String title;
 
     @NotBlank(message = "메시지는 필수입니다.")
-    private String message;
+    private String content;
 }

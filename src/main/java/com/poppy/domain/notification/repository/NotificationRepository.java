@@ -1,6 +1,7 @@
 package com.poppy.domain.notification.repository;
 
 import com.poppy.domain.notification.entity.Notification;
+import com.poppy.domain.notification.entity.NotificationType;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -11,7 +12,13 @@ import java.util.List;
 @Repository
 public interface NotificationRepository extends JpaRepository<Notification, Long> {
     // FCM이 아닌(WebSocket) 알림을 최근 생성 시간 순으로 최대 30개 조회
-    List<Notification> findTop30ByUserIdAndIsFcmFalseOrderByCreateTimeDesc(Long userId);
+    // List<Notification> findTop30ByUserIdAndIsFcmFalseOrderByCreateTimeDesc(Long userId);
+
+    List<Notification> findTop30ByUserIdAndIsFcmFalseAndTypeNotOrderByCreateTimeDesc(
+            Long userId,
+            NotificationType type
+    );
+
 
     // 유저별 알림 개수를 초과하는 알림만 조회
     @Query(value = """

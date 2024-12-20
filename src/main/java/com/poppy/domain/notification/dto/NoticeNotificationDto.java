@@ -26,14 +26,13 @@ public class NoticeNotificationDto extends NotificationDto {
         this.noticeDate = noticeDate;
     }
 
-    public static NoticeNotificationDto from(User user, String title, String message) {
+    public static NoticeNotificationDto of(User user, String message) {
         return NoticeNotificationDto.builder()
                 .message(message)
                 .type(NotificationType.NOTICE)
                 .userId(user.getId())
                 .popupStoreName(null)
                 .isRead(false)
-                .title(title)
                 .noticeDate(LocalDateTime.now())
                 .build();
     }

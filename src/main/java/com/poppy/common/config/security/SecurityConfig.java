@@ -49,6 +49,8 @@ public class SecurityConfig {
                         .requestMatchers("/users/{id}/notifications").hasRole("USER")
                         .requestMatchers("/users/{id}/notification/{notificationId}").hasRole("USER")
                         .requestMatchers("/payments/**").permitAll()    // 토스페이먼츠 관련
+                        .requestMatchers(HttpMethod.PATCH, "/notices/{noticeId}").hasRole("ADMIN")
+                        .requestMatchers("/notices/**").permitAll()
                         .anyRequest().authenticated()
                 )
                 .formLogin(form -> form.disable())  // form 로그인 비활성화
