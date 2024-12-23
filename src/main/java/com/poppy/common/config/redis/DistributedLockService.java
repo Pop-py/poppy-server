@@ -1,4 +1,4 @@
-package com.poppy.domain.waiting.service;
+package com.poppy.common.config.redis;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -12,16 +12,21 @@ import java.util.concurrent.TimeUnit;
 @RequiredArgsConstructor
 @Slf4j
 public class DistributedLockService {
+    public static final String WAITING_SCHEDULER_LOCK = "waiting-scheduler-lock";
+    public static final String NOTIFICATION_CLEANUP_LOCK = "notification-cleanup-lock";
+
     private final RedissonClient redissonClient;
-    public static final String SCHEDULER_LOCK_KEY = "waiting-scheduler-lock";
-    private static final long LOCK_WAIT_TIME = 5L;
-    private static final long LOCK_LEASE_TIME = 60L;
+    private static final long DEFAULT_WAIT_TIME = 5L; // 락 획득 시도 대기 시간
+    private static final long DEFAULT_LEASE_TIME = 60L; // 락 점유 시간
 
     public boolean tryLock(String lockName) {
+        return tryLock(lockName, DEFAULT_WAIT_TIME, DEFAULT_LEASE_TIME);
+    }
+
+    public boolean tryLock(String lockName, long waitTime, long leaseTime) {
         RLock lock = redissonClient.getLock(lockName);
         try {
-            // 5초 동안 락 획득 시도, 획득하면 60초 동안 락 유지
-            return lock.tryLock(LOCK_WAIT_TIME, LOCK_LEASE_TIME, TimeUnit.SECONDS);
+            return lock.tryLock(waitTime, leaseTime, TimeUnit.SECONDS);
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
             log.error("Failed to acquire lock: {}", e.getMessage());
