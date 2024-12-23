@@ -16,15 +16,24 @@ import com.poppy.domain.user.entity.User;
 
 import com.poppy.domain.user.repository.LoginUserProviderImpl;
 import lombok.RequiredArgsConstructor;
+import org.redisson.api.RLock;
+import org.redisson.api.RedissonClient;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.concurrent.TimeUnit;
+
 @Service
 @RequiredArgsConstructor
 public class ReviewService {
 
+    private static final String LOCK_PREFIX = "REVIEW_LIKE:";
+    private static final long WAIT_TIME = 3L;
+    private static final long LEASE_TIME = 3L;
+
+    private final RedissonClient redissonClient;
     private final LoginUserProviderImpl loginUserProvider;
     private final PopupStoreRepository popupStoreRepository;
     private final ReviewRepository reviewRepository;
@@ -42,7 +51,6 @@ public class ReviewService {
         Review review = Review.builder()
                 .title(reviewCreateReqDto.getTitle())
                 .content(reviewCreateReqDto.getContent())
-                .thumbnail(reviewCreateReqDto.getThumbnail())
                 .rating(reviewCreateReqDto.getRating())
                 .user(user)
                 .popupStore(popupStore)
@@ -93,37 +101,52 @@ public class ReviewService {
 
     @Transactional
     public ReviewLikeRspDto toggleLike(Long reviewId) {
-        Review review = reviewRepository.findById(reviewId)
-                .orElseThrow(() -> new BusinessException(ErrorCode.REVIEW_NOT_FOUND));
+        RLock lock = redissonClient.getLock(LOCK_PREFIX + reviewId);
 
-        User user = loginUserProvider.getLoggedInUser();
+        try {
+            boolean isLocked = lock.tryLock(WAIT_TIME, LEASE_TIME, TimeUnit.SECONDS);
+            if (!isLocked) {
+                throw new BusinessException(ErrorCode.LOCK_ACQUISITION_FAILURE);
+            }
 
-        // 좋아요 여부 확인
-        boolean hasLiked = reviewLikeRepository.existsByUserIdAndReviewId(user.getId(), reviewId);
+            Review review = reviewRepository.findById(reviewId)
+                    .orElseThrow(() -> new BusinessException(ErrorCode.REVIEW_NOT_FOUND));
 
-        // 좋아요가 있으면 삭제, 없으면 생성
-        if(hasLiked) {
-            reviewLikeRepository.delete(reviewLikeRepository
-                    .findByUserAndReview(user, review)
-                    .orElseThrow(() -> new BusinessException(ErrorCode.LIKE_NOT_FOUND)));
-        }
-        else {
-            ReviewLike newLike = ReviewLike.builder()
-                    .user(user)
-                    .review(review)
+            User user = loginUserProvider.getLoggedInUser();
+
+            boolean hasLiked = reviewLikeRepository.existsByUserIdAndReviewId(user.getId(), reviewId);
+
+            if(hasLiked) {
+                reviewLikeRepository.delete(reviewLikeRepository
+                        .findByUserAndReview(user, review)
+                        .orElseThrow(() -> new BusinessException(ErrorCode.LIKE_NOT_FOUND)));
+            } else {
+                ReviewLike newLike = ReviewLike.builder()
+                        .user(user)
+                        .review(review)
+                        .build();
+                reviewLikeRepository.save(newLike);
+            }
+
+            reviewRepository.flush();
+            reviewRepository.refresh(reviewId);
+
+            return ReviewLikeRspDto.builder()
+                    .liked(!hasLiked)
+                    .likeCount(review.getReviewLikes().size())
                     .build();
-            reviewLikeRepository.save(newLike);
+
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new BusinessException(ErrorCode.LOCK_ACQUISITION_FAILURE);
+        } finally {
+            if (lock.isHeldByCurrentThread()) {
+                lock.unlock();
+            }
         }
-
-        // 갱신된 좋아요 수 조회
-        reviewRepository.flush();
-        reviewRepository.refresh(reviewId);
-
-        return ReviewLikeRspDto.builder()
-                .liked(!hasLiked)
-                .likeCount(review.getReviewLikes().size())
-                .build();
     }
+
+
 
     // 팝업 스토어 리뷰 전체 조회
     @Transactional(readOnly = true)
