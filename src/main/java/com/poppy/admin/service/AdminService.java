@@ -68,6 +68,7 @@ public class AdminService {
                 .masterUser(masterUser)
                 .reservationType(reqDto.getReservationType())
                 .thumbnail(reqDto.getThumbnail())
+                .scrapCount(0)
                 .build();
 
         PopupStore savedPopupStore = popupStoreRepository.save(popupStore);
