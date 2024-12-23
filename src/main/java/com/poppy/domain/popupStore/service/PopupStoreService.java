@@ -2,6 +2,7 @@ package com.poppy.domain.popupStore.service;
 
 import com.poppy.common.exception.BusinessException;
 import com.poppy.common.exception.ErrorCode;
+import com.poppy.domain.popupStore.dto.request.PopupStoreSearchReqDto;
 import com.poppy.domain.popupStore.dto.response.PopupStoreCalenderRspDto;
 import com.poppy.domain.popupStore.dto.response.PopupStoreRspDto;
 import com.poppy.domain.popupStore.entity.PopupStore;
@@ -57,47 +58,10 @@ public class PopupStoreService {
         return PopupStoreRspDto.from(popupStore);
     }
 
-
-    // 카테고리별 조회
+    // 팝업 스토어 조회 필터링
     @Transactional(readOnly = true)
-    public List<PopupStoreRspDto> getStoresByCategory(Long categoryId) {
-        List<PopupStore> stores = popupStoreRepository.findByCategoryId(categoryId);
-        if (stores.isEmpty()) {
-            throw new BusinessException(ErrorCode.STORE_NOT_FOUND);
-        }
-        return stores.stream()
-                .map(PopupStoreRspDto::from)
-                .collect(Collectors.toList());
-    }
-
-    // 위치별 조회
-    @Transactional(readOnly = true)
-    public List<PopupStoreRspDto> getStoresByLocation(String location) {
-        List<PopupStore> stores = popupStoreRepository.findByLocation(location);
-        if (stores.isEmpty()) {
-            throw new BusinessException(ErrorCode.LOCATION_NOT_FOUND);
-        }
-        return stores.stream()
-                .map(PopupStoreRspDto::from)
-                .collect(Collectors.toList());
-    }
-
-    // 날짜별 조회
-    @Transactional(readOnly = true)
-    public List<PopupStoreRspDto> getStoresByDate(LocalDate startDate, LocalDate endDate) {
-        // 시작일/종료일이 null이면 오늘 날짜로 설정
-        LocalDate effectiveStartDate = startDate != null ? startDate : LocalDate.now();
-        LocalDate effectiveEndDate = endDate != null ? endDate : LocalDate.now();
-
-        // 시작일이 종료일보다 늦은 경우 예외 발생
-        if (effectiveStartDate.isAfter(effectiveEndDate)) {
-            throw new BusinessException(ErrorCode.INVALID_DATE_RANGE);
-        }
-
-        List<PopupStore> stores = popupStoreRepository.findByDateRange(effectiveStartDate, effectiveEndDate);
-        if (stores.isEmpty()) {
-            throw new BusinessException(ErrorCode.STORE_NOT_FOUND);
-        }
+    public List<PopupStoreRspDto> searchFiltering(PopupStoreSearchReqDto popupStoreSearchReqDto) {
+        List<PopupStore> stores = popupStoreRepository.findBySearchCondition(popupStoreSearchReqDto);
         return stores.stream()
                 .map(PopupStoreRspDto::from)
                 .collect(Collectors.toList());
@@ -127,7 +91,7 @@ public class PopupStoreService {
                 .collect(Collectors.toList());
     }
 
-    // 오픈 예정 팝업스토어
+    // 오픈 예정 팝업 스토어
     @Transactional(readOnly = true)
     public List<PopupStoreRspDto> getAllFuturePopupStores() {
         LocalDate today = LocalDate.now();
@@ -158,7 +122,8 @@ public class PopupStoreService {
                 .map(PopupStoreRspDto::from)
                 .collect(Collectors.toList());
     }
-    // 지금 주목해야할 (카테고리) 팝업
+
+    // 지금 주목해야 할 (카테고리) 팝업
     @Transactional(readOnly = true)
     public List<PopupStoreRspDto> getPopularPopupStoresByCategory(Long categoryId) {
         LocalDateTime startTime = LocalDateTime.now().minusHours(3);
@@ -170,9 +135,7 @@ public class PopupStoreService {
                 pageable
         );
 
-        if (results.isEmpty()) {
-            throw new BusinessException(ErrorCode.STORE_NOT_FOUND);
-        }
+        if (results.isEmpty()) throw new BusinessException(ErrorCode.STORE_NOT_FOUND);
 
         List<Long> popupStoreIds = results.getContent().stream()
                 .map(result -> (Long) result[0])
@@ -185,8 +148,7 @@ public class PopupStoreService {
                 .collect(Collectors.toList());
     }
 
-
-    // 팝업스토어 캘린더 반환
+    // 팝업 스토어 캘린더 반환
     @Transactional(readOnly = true)
     public PopupStoreCalenderRspDto getCalender(Long id) {
         PopupStore popupStore = popupStoreRepository.findById(id)
@@ -208,9 +170,7 @@ public class PopupStoreService {
         // 예약 가능한 날짜 조회
         while (!current.isAfter(popupStore.getEndDate())) {
             // 오늘 이전의 날짜는 PAST로 갱신
-            if(current.isBefore(now)) {
-                popupStoreStatuses.put(current, PopupStoreStatus.PAST);
-            }
+            if(current.isBefore(now)) popupStoreStatuses.put(current, PopupStoreStatus.PAST);
             else {
                 List<ReservationAvailableSlot> daySlots = slotsByDate.get(current);
                 if (daySlots == null || daySlots.isEmpty())

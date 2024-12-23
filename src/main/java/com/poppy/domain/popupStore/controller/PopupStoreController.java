@@ -1,6 +1,7 @@
 package com.poppy.domain.popupStore.controller;
 
 import com.poppy.common.api.RspTemplate;
+import com.poppy.domain.popupStore.dto.request.PopupStoreSearchReqDto;
 import com.poppy.domain.popupStore.dto.response.PopupStoreCalenderRspDto;
 import com.poppy.domain.popupStore.dto.response.PopupStoreRspDto;
 import com.poppy.domain.popupStore.dto.response.ReservationAvailableSlotRspDto;
@@ -63,18 +64,6 @@ public class PopupStoreController {
         );
     }
 
-    // 카테고리별 조회
-    @GetMapping("/category/{categoryId}")
-    public RspTemplate<List<PopupStoreRspDto>> getStoresByCategory(
-            @PathVariable Long categoryId) {
-        return new RspTemplate<>(
-                HttpStatus.OK,
-                "카테고리별 팝업스토어 조회 성공",
-                popupStoreService.getStoresByCategory(categoryId)
-        );
-    }
-
-
     // 오픈 예정 팝업스토어
     @GetMapping("/future")
     public RspTemplate<List<PopupStoreRspDto>> getFutureStores() {
@@ -85,26 +74,13 @@ public class PopupStoreController {
         );
     }
 
-    // 위치 기반 검색
-    @GetMapping("/location/{location}")
-    public RspTemplate<List<PopupStoreRspDto>> getStoresByLocation(
-            @PathVariable String location) {
+    // 팝업 스토어 검색 필터링
+    @GetMapping("/search")
+    public RspTemplate<List<PopupStoreRspDto>> searchStores(PopupStoreSearchReqDto reqDto) {
         return new RspTemplate<>(
                 HttpStatus.OK,
-                "위치별 팝업스토어 조회 성공",
-                popupStoreService.getStoresByLocation(location)
-        );
-    }
-
-    // 날짜별 검색
-    @GetMapping("/date")
-    public RspTemplate<List<PopupStoreRspDto>> getStoresByDate(
-            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
-            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate) {
-        return new RspTemplate<>(
-                HttpStatus.OK,
-                "날짜별 팝업스토어 조회 성공",
-                popupStoreService.getStoresByDate(startDate, endDate)
+                "팝업스토어 검색 성공",
+                popupStoreService.searchFiltering(reqDto)
         );
     }
 
