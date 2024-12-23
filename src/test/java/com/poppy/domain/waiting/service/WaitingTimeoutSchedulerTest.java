@@ -1,18 +1,15 @@
 package com.poppy.domain.waiting.service;
 
+import com.poppy.common.config.redis.DistributedLockService;
 import com.poppy.domain.notification.service.NotificationService;
 import com.poppy.domain.popupStore.entity.PopupStore;
-import com.poppy.domain.user.entity.Role;
 import com.poppy.domain.user.entity.User;
 import com.poppy.domain.waiting.entity.Waiting;
 import com.poppy.domain.waiting.entity.WaitingStatus;
 import com.poppy.domain.waiting.repository.WaitingRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
@@ -24,9 +21,9 @@ import java.util.List;
 import static org.mockito.Mockito.*;
 
 @SpringBootTest
-class WaitingSchedulerTest {
+class WaitingTimeoutSchedulerTest {
     @Autowired
-    private WaitingScheduler waitingScheduler;
+    private WaitingTimeoutScheduler waitingScheduler;
 
     @MockBean
     private WaitingRepository waitingRepository;

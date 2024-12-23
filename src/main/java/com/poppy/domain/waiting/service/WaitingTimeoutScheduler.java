@@ -1,5 +1,6 @@
 package com.poppy.domain.waiting.service;
 
+import com.poppy.common.config.redis.DistributedLockService;
 import com.poppy.domain.waiting.entity.Waiting;
 import com.poppy.domain.waiting.entity.WaitingStatus;
 import com.poppy.domain.waiting.repository.WaitingRepository;
@@ -15,17 +16,18 @@ import java.util.List;
 @Component
 @RequiredArgsConstructor
 @Slf4j
-public class WaitingScheduler {
+public class WaitingTimeoutScheduler {
+    private static final long CHECK_INTERVAL = 60000; // 1분
+
     private final WaitingRepository waitingRepository;
     private final MasterWaitingService masterWaitingService;
     private final DistributedLockService lockService;
 
-    @Scheduled(fixedDelay = 60000) // 1분마다 실행
+    @Scheduled(fixedDelay = CHECK_INTERVAL)
     @Transactional
     public void checkWaitingTimeout() {
-        // 분산 락 획득 시도
-        if (!lockService.tryLock(DistributedLockService.SCHEDULER_LOCK_KEY)) {
-            log.debug("Failed to acquire scheduler lock. Skipping this execution.");
+        if (!lockService.tryLock(DistributedLockService.WAITING_SCHEDULER_LOCK)) {
+            log.debug("Failed to acquire waiting scheduler lock. Skipping this execution.");
             return;
         }
 
@@ -35,14 +37,15 @@ public class WaitingScheduler {
 
             for (Waiting waiting : waitingList) {
                 LocalDateTime calledTime = waiting.getUpdateTime();
+                // 호출된 시간으로부터 5분이 지났는지 확인
                 if (calledTime.plusMinutes(MasterWaitingService.WAITING_TIMEOUT_MINUTES).isBefore(now)) {
                     masterWaitingService.handleWaitingTimeout(waiting.getId());
                 }
             }
         } catch (Exception e) {
-            log.error("Error in scheduler execution: {}", e.getMessage(), e);
+            log.error("Error in waiting timeout scheduler: {}", e.getMessage(), e);
         } finally {
-            lockService.unlock(DistributedLockService.SCHEDULER_LOCK_KEY);
+            lockService.unlock(DistributedLockService.WAITING_SCHEDULER_LOCK);
         }
     }
 }
