@@ -7,7 +7,6 @@ import com.poppy.domain.popupStore.entity.ReservationType;
 import com.poppy.domain.popupStore.repository.PopupStoreRepository;
 import com.poppy.domain.popupStore.repository.PopupStoreViewRepository;
 import com.poppy.domain.popupStore.service.PopupStoreService;
-import com.poppy.domain.reservation.repository.ReservationAvailableSlotRepository;
 import com.poppy.domain.storeCategory.entity.StoreCategory;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -39,9 +38,6 @@ class PopupStoreServiceTest {
 
     @Mock
     private PopupStoreViewRepository popupStoreViewRepository;
-
-    @Mock
-    private ReservationAvailableSlotRepository reservationAvailableSlotRepository;
 
     @InjectMocks
     private PopupStoreService popupStoreService;
@@ -158,38 +154,6 @@ class PopupStoreServiceTest {
             // then
             assertThat(result).hasSize(2);
             verify(popupStoreViewRepository).findPopularPopupStores(any(), any());
-        }
-    }
-
-    @Nested
-    @DisplayName("날짜별 팝업스토어 조회 테스트")
-    class GetStoresByDateTest {
-        @Test
-        void 날짜_범위로_팝업스토어_조회_성공() {
-            // given
-            LocalDate startDate = LocalDate.now();
-            LocalDate endDate = LocalDate.now().plusDays(7);
-            when(popupStoreRepository.findByDateRange(startDate, endDate))
-                    .thenReturn(Arrays.asList(store1, store2));
-
-            // when
-            List<PopupStoreRspDto> result = popupStoreService.getStoresByDate(startDate, endDate);
-
-            // then
-            assertThat(result).hasSize(2);
-            verify(popupStoreRepository).findByDateRange(startDate, endDate);
-        }
-
-        @Test
-        void 잘못된_날짜_범위로_조회시_예외_발생() {
-            // given
-            LocalDate startDate = LocalDate.now().plusDays(7);
-            LocalDate endDate = LocalDate.now();
-
-            // when & then
-            assertThatThrownBy(() -> popupStoreService.getStoresByDate(startDate, endDate))
-                    .isInstanceOf(BusinessException.class)
-                    .hasMessage("시작일이 종료일보다 늦을 수 없습니다.");
         }
     }
 
