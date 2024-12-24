@@ -70,6 +70,10 @@ public enum ErrorCode {
     SETTINGS_NOT_FOUND(404, "대기 설정을 찾을 수 없습니다."),
     CANNOT_CANCEL_CALLED_WAITING(400, "호출된 대기는 취소할 수 없습니다."),
     UNAUTHORIZED_WAITING_ACCESS(403, "해당 대기에 대한 접근 권한이 없습니다."),
+    STORE_NOT_OPERATING(400, "현재 운영 기간이 아닙니다."),
+    STORE_NOT_OPERATING_HOURS(400, "현재 운영 시간이 아닙니다."),
+    STORE_ENDED(400, "종료된 팝업스토어입니다."),
+    STORE_INACTIVE(400, "현재 운영하지 않는 팝업스토어입니다."),
 
     // FCM 토큰 관련
     FCM_TOKEN_UPDATE_FORBIDDEN(403, "다른 사용자의 FCM 토큰을 업데이트할 수 없습니다."),

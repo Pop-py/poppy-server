@@ -39,7 +39,17 @@ public class MasterWaitingService {
     @Transactional(readOnly = true)
     public List<DailyWaitingRspDto> getDailyWaitings(Long storeId, LocalDate date) {
         validateMasterAuthority(storeId);
-        return waitingRepository.findWaitingsByStoreIdAndDate(storeId, date.atStartOfDay())
+        return waitingRepository.findWaitingsByStoreIdAndDate(storeId, date)
+                .stream()
+                .map(DailyWaitingRspDto::from)
+                .collect(Collectors.toList());
+    }
+
+    // 날짜와 시간대별 대기 목록 조회
+    @Transactional(readOnly = true)
+    public List<DailyWaitingRspDto> getHourlyWaitings(Long storeId, LocalDate date, int hour) {
+        validateMasterAuthority(storeId);
+        return waitingRepository.findWaitingsByStoreIdAndDateTime(storeId, date, hour)
                 .stream()
                 .map(DailyWaitingRspDto::from)
                 .collect(Collectors.toList());
