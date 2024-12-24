@@ -66,4 +66,15 @@ public class MasterWaitingController {
                 masterWaitingService.getDailyWaitings(storeId, date)
         );
     }
+
+    @GetMapping("/waitings/hourly")
+    public RspTemplate<List<DailyWaitingRspDto>> getHourlyWaitingHistory(
+            @PathVariable Long storeId,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date, @RequestParam int hour) {
+        return new RspTemplate<>(
+                HttpStatus.OK,
+                "시간대별 대기 현황 조회 성공",
+                masterWaitingService.getHourlyWaitings(storeId, date, hour)
+        );
+    }
 }

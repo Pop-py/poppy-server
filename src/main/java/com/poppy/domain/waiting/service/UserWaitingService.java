@@ -19,6 +19,8 @@ import org.redisson.api.RedissonClient;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
+import java.time.LocalTime;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
@@ -52,6 +54,9 @@ public class UserWaitingService {
             PopupStore store = popupStoreRepository.findById(storeId)
                     .orElseThrow(() -> new BusinessException(ErrorCode.STORE_NOT_FOUND));
 
+            // 운영 시간 체크
+            validateOperatingHours(store);
+
             User user = loginUserProvider.getLoggedInUser();
 
             checkMaxWaitingCount(storeId);
@@ -64,6 +69,8 @@ public class UserWaitingService {
                     .popupStore(store)
                     .user(user)
                     .waitingNumber(waitingNumber)
+                    .waitingDate(LocalDate.now())
+                    .waitingTime(LocalTime.now())
                     .build());
 
             // 내 앞에 몇 팀 있는지 계산
@@ -90,8 +97,7 @@ public class UserWaitingService {
     @Transactional(readOnly = true)
     public List<UserWaitingHistoryRspDto> getUserWaitingHistory() {
         User user = loginUserProvider.getLoggedInUser();
-
-        return waitingRepository.findByUserIdOrderByCreateTimeDesc(user.getId())
+        return waitingRepository.findByUserIdOrderByWaitingDateDescWaitingTimeDesc(user.getId())
                 .stream()
                 .map(UserWaitingHistoryRspDto::from)
                 .collect(Collectors.toList());
@@ -164,5 +170,30 @@ public class UserWaitingService {
         return waitingRepository.findMaxWaitingNumberByStoreId(storeId)
                 .map(num -> num + 1)
                 .orElse(1);
+    }
+
+    private void validateOperatingHours(PopupStore store) {
+        LocalDate currentDate = LocalDate.now();
+        LocalTime currentTime = LocalTime.now();
+
+        // 운영 날짜 체크
+        if (currentDate.isBefore(store.getStartDate()) || currentDate.isAfter(store.getEndDate())) {
+            throw new BusinessException(ErrorCode.STORE_NOT_OPERATING);
+        }
+
+        // 운영 시간 체크
+        if (currentTime.isBefore(store.getOpeningTime()) || currentTime.isAfter(store.getClosingTime())) {
+            throw new BusinessException(ErrorCode.STORE_NOT_OPERATING_HOURS);
+        }
+
+        // 종료된 팝업스토어 체크
+        if (store.getIsEnd()) {
+            throw new BusinessException(ErrorCode.STORE_ENDED);
+        }
+
+        // 비활성화된 팝업스토어 체크
+        if (!store.getIsActive()) {
+            throw new BusinessException(ErrorCode.STORE_INACTIVE);
+        }
     }
 }
