@@ -43,7 +43,6 @@ dependencies {
 		exclude group: 'commons-logging', module: 'commons-logging'
 	}
 
-
 	// QueryDSL
 	implementation 'com.querydsl:querydsl-jpa:5.0.0:jakarta'
 	annotationProcessor "com.querydsl:querydsl-apt:${dependencyManagement.importedProperties['querydsl.version']}:jakarta"
@@ -55,6 +54,9 @@ dependencies {
 
 	// Redission
 	implementation group: 'org.redisson', name: 'redisson', version: '3.39.0'
+
+	// Redis Connection
+	implementation 'org.apache.commons:commons-pool2'
 
 	// WebSocket
 	implementation 'org.springframework.boot:spring-boot-starter-websocket'
