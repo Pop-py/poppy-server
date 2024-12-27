@@ -1,8 +1,12 @@
 package com.poppy.domain.popupStore.dto.response;
 
+import com.poppy.common.entity.Images;
 import com.poppy.domain.popupStore.entity.PopupStore;
 import lombok.Builder;
 import lombok.Getter;
+
+import java.util.Collections;
+import java.util.List;
 
 @Getter
 @Builder
@@ -13,7 +17,6 @@ public class PopupStoreRspDto {
     private final String location;
     private final String address;
 
-
     @Getter
     @Builder
     public static class DateInfo {
@@ -21,7 +24,6 @@ public class PopupStoreRspDto {
         private final int month;
         private final int day;
     }
-
 
     @Getter
     @Builder
@@ -41,7 +43,8 @@ public class PopupStoreRspDto {
     private final Double rating;
     private final String categoryName;
     private final String reservationType;
-    private final String thumbnail;
+    private final String thumbnailUrl;
+    private final List<String> imageUrls;
     private final Long price;
     private final String homepageUrl;
     private final String instagramUrl;
@@ -49,8 +52,9 @@ public class PopupStoreRspDto {
     private final Integer scrapCount;
     private Boolean isAlmostFull;
 
-
     public static PopupStoreRspDto from(PopupStore store) {
+        List<Images> images = store.getImages();
+
         return PopupStoreRspDto.builder()
                 .id(store.getId())
                 .name(store.getName())
@@ -80,8 +84,13 @@ public class PopupStoreRspDto {
                 .isEnd(store.getIsEnd())
                 .rating(store.getRating())
                 .categoryName(store.getStoreCategory().getName())
-                .thumbnail(store.getThumbnail())
                 .reservationType(store.getReservationType().toString())
+                .thumbnailUrl(images != null && !images.isEmpty() ? images.get(0).getUploadUrl() : null)
+                .imageUrls(images != null ?
+                        images.stream()
+                                .map(Images::getUploadUrl)
+                                .toList()
+                        : Collections.emptyList())
                 .price(store.getPrice())
                 .homepageUrl(store.getHomepageUrl())
                 .instagramUrl(store.getInstagramUrl())

@@ -40,7 +40,7 @@ public class UserReservationRspDto {
                 .reservationTime(reservation.getTime())
                 .location(reservation.getPopupStore().getLocation())
                 .status(reservation.getStatus())
-                .thumbnail(reservation.getPopupStore().getThumbnail())
+                .thumbnail(reservation.getPopupStore().getImages().get(0).getUploadUrl())
                 .person(reservation.getPerson())
                 .build();
     }

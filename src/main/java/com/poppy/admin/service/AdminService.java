@@ -1,7 +1,9 @@
 package com.poppy.admin.service;
 
+import com.poppy.common.entity.Images;
 import com.poppy.common.exception.BusinessException;
 import com.poppy.common.exception.ErrorCode;
+import com.poppy.common.service.ImageService;
 import com.poppy.domain.popupStore.dto.request.PopupStoreReqDto;
 import com.poppy.domain.popupStore.dto.response.PopupStoreRspDto;
 import com.poppy.domain.popupStore.entity.PopupStore;
@@ -35,11 +37,12 @@ public class AdminService {
     private final ReservationAvailableSlotRepository reservationAvailableSlotRepository;
     private final PopupStoreService popupStoreService;
     private final AsyncRedisSlotInitializationService asyncRedisSlotService;
+    private final ImageService imageService;
 
     @Transactional
     public PopupStoreRspDto savePopupStore(PopupStoreReqDto reqDto) {
         // 카테고리 존재 여부 확인
-        StoreCategory category = storeCategoryRepository.findByName(reqDto.getCategoryName())
+        StoreCategory category = storeCategoryRepository.findById(reqDto.getCategoryId())
                 .orElseThrow(() -> new BusinessException(ErrorCode.CATEGORY_NOT_FOUND));
 
         // 관리자 유저 존재 여부 확인
@@ -53,6 +56,7 @@ public class AdminService {
         // PopupStore 엔티티 생성 및 저장
         PopupStore popupStore = PopupStore.builder()
                 .name(reqDto.getName())
+                .description(reqDto.getDescription())
                 .location(reqDto.getLocation())
                 .address(reqDto.getAddress())
                 .startDate(reqDto.getStartDate())
@@ -65,13 +69,29 @@ public class AdminService {
                 .isEnd(false)
                 .rating(0.0)
                 .price(reqDto.getPrice())
+                .homepageUrl(reqDto.getHomepageUrl())
+                .instagramUrl(reqDto.getInstagramUrl())
+                .blogUrl(reqDto.getBlogUrl())
                 .masterUser(masterUser)
                 .reservationType(reqDto.getReservationType())
-                .thumbnail(reqDto.getThumbnail())
                 .scrapCount(0)
+                .images(new ArrayList<>())
                 .build();
 
         PopupStore savedPopupStore = popupStoreRepository.save(popupStore);
+
+        // 이미지 업로드 및 저장
+        if (reqDto.getImages() != null && !reqDto.getImages().isEmpty()) {
+            List<Images> uploadedImages = reqDto.getImages().stream()
+                    .map(image -> imageService.uploadImageFromMultipart(image, "PopupStore", savedPopupStore.getId()))
+                    .toList();
+
+            // 팝업스토어에 이미지 추가
+            uploadedImages.forEach(image -> {
+                image.updatePopupStore(savedPopupStore);
+                savedPopupStore.getImages().add(image);
+            });
+        }
 
         // 휴무일 설정
         if(reqDto.getHolidays() != null && !reqDto.getHolidays().isEmpty()) {
@@ -139,9 +159,14 @@ public class AdminService {
                 .orElseThrow(() -> new BusinessException(ErrorCode.STORE_NOT_FOUND));
 
         try {
+            // 이미지 삭제
+            if (popupStore.getImages() != null && !popupStore.getImages().isEmpty())
+                popupStore.getImages().forEach(image -> imageService.deleteImage(image.getId()));
+
             asyncRedisSlotService.clearRedisData(popupStore.getId());
             popupStoreRepository.delete(popupStore);
-        } catch (DataIntegrityViolationException e) {
+        }
+        catch (DataIntegrityViolationException e) {
             throw new BusinessException(ErrorCode.STORE_HAS_REFERENCES);
         }
     }

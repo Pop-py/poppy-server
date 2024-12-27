@@ -16,7 +16,7 @@ public class AdminController {
     private final AdminService adminService;
 
     @PostMapping("/popup-stores")
-    public RspTemplate<PopupStoreRspDto> registerPopUpStore(@RequestBody @Valid PopupStoreReqDto reqDto){
+    public RspTemplate<PopupStoreRspDto> registerPopUpStore(@Valid @RequestBody @ModelAttribute PopupStoreReqDto reqDto){
         PopupStoreRspDto popupStoreRspDto = adminService.savePopupStore(reqDto);
         return new RspTemplate<>(HttpStatus.OK, "팝업스토어 등록 완료", popupStoreRspDto);
     }

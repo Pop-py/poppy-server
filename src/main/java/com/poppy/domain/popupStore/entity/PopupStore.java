@@ -33,8 +33,6 @@ public class PopupStore extends BaseTimeEntity {
     @Column(nullable = false)
     private String name;
 
-    private String thumbnail;
-
     @Column(columnDefinition = "LONGTEXT")
     private String description;
 
@@ -80,6 +78,9 @@ public class PopupStore extends BaseTimeEntity {
     @Column(name = "blog_url")
     private String blogUrl;
 
+    @Column(nullable = false)
+    private Integer scrapCount = 0;
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, name = "reservation_type")
     private ReservationType reservationType;    // 팝업 스토어 예약 유형
@@ -89,21 +90,53 @@ public class PopupStore extends BaseTimeEntity {
     private StoreCategory storeCategory;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "image_id")
-    private Images image;  // 상세 페이지에서 보여줄 이미지
-
-    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name ="matser_user_id",nullable = false)
     private User masterUser;
 
-    @OneToMany(mappedBy = "popupStore",cascade = CascadeType.ALL,orphanRemoval = true)
-    private List<ReservationAvailableSlot> reservationAvailableSlots;
+    @OneToMany(mappedBy = "popupStore", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private List<Images> images = new ArrayList<>();
+
+    @OneToMany(mappedBy = "popupStore", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<ReservationAvailableSlot> reservationAvailableSlots = new ArrayList<>();
 
     @OneToMany(mappedBy = "popupStore", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Scrap> scraps = new ArrayList<>();
 
-    @Column(nullable = false)
-    private Integer scrapCount = 0;
+    @OneToMany(mappedBy = "popupStore", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<PopupStoreView> views = new ArrayList<>();
+
+    @Builder
+    public PopupStore(String name, String description, String location, String address,
+                       LocalDate startDate, LocalDate endDate, LocalTime openingTime,
+                       LocalTime closingTime, Integer availableSlot, StoreCategory storeCategory,
+                       Boolean isActive, Boolean isEnd, Double rating, Long price,
+                       String homepageUrl, String instagramUrl, String blogUrl,
+                       User masterUser, ReservationType reservationType, Integer scrapCount) {
+        this.name = name;
+        this.description = description;
+        this.location = location;
+        this.address = address;
+        this.startDate = startDate;
+        this.endDate = endDate;
+        this.openingTime = openingTime;
+        this.closingTime = closingTime;
+        this.availableSlot = availableSlot;
+        this.storeCategory = storeCategory;
+        this.isActive = isActive;
+        this.isEnd = isEnd;
+        this.rating = rating;
+        this.price = price;
+        this.homepageUrl = homepageUrl;
+        this.instagramUrl = instagramUrl;
+        this.blogUrl = blogUrl;
+        this.masterUser = masterUser;
+        this.reservationType = reservationType;
+        this.scrapCount = scrapCount;
+        this.images = new ArrayList<>();
+        this.reservationAvailableSlots = new ArrayList<>();
+        this.scraps = new ArrayList<>();
+        this.views = new ArrayList<>();
+    }
 
     public void updateScrapCount(Integer count) {
         this.scrapCount = count;
