@@ -4,6 +4,7 @@ import com.poppy.domain.popupStore.entity.PopupStore;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
+import org.springframework.stereotype.Repository;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -19,4 +20,7 @@ public interface PopupStoreRepository extends JpaRepository<PopupStore, Long>, P
             "WHERE p.startDate > :today " +
             "ORDER BY p.startDate ASC")
     List<PopupStore> findAllFuturePopupStores(@Param("today") LocalDate today);
+
+    @Query("SELECT p FROM PopupStore p WHERE p.address LIKE %:address%")
+    List<PopupStore> findByAddress(@Param("address") String address);
 }

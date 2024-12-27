@@ -311,4 +311,13 @@ public class PopupStoreService {
                 )
                 .collect(Collectors.toList());
     }
+
+    // 특정 구역으로 반환
+    @Transactional(readOnly = true)
+    public List<PopupStoreRspDto> getStoresByAddress(String address) {
+        return popupStoreRepository.findByAddress(address)
+                .stream()
+                .map(PopupStoreRspDto::from)
+                .collect(Collectors.toList());
+    }
 }
