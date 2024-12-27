@@ -21,12 +21,12 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.time.LocalDate;
+import java.time.LocalTime;
 import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -68,6 +68,8 @@ class MasterWaitingServiceTest {
                 .popupStore(popupStore)
                 .user(User.builder().id(2L).build())
                 .waitingNumber(1)
+                .waitingDate(LocalDate.now())
+                .waitingTime(LocalTime.now())
                 .build();
     }
 
@@ -77,13 +79,32 @@ class MasterWaitingServiceTest {
         LocalDate date = LocalDate.now();
         when(loginUserProvider.getLoggedInUser()).thenReturn(masterUser);
         when(popupStoreRepository.findById(anyLong())).thenReturn(Optional.of(popupStore));
-        when(waitingRepository.findWaitingsByStoreIdAndDate(anyLong(), any())).thenReturn(List.of(waiting));
+        when(waitingRepository.findWaitingsByStoreIdAndDate(anyLong(), any(LocalDate.class))).thenReturn(List.of(waiting));
 
         // when
         List<DailyWaitingRspDto> result = masterWaitingService.getDailyWaitings(1L, date);
 
         // then
         assertFalse(result.isEmpty());
+    }
+
+    @Test
+    void 시간대별_대기목록_조회_성공() {
+        // given
+        LocalDate date = LocalDate.now();
+        int hour = 14;  // 오후 2시
+
+        when(loginUserProvider.getLoggedInUser()).thenReturn(masterUser);
+        when(popupStoreRepository.findById(anyLong())).thenReturn(Optional.of(popupStore));
+        when(waitingRepository.findWaitingsByStoreIdAndDateTime(anyLong(), any(LocalDate.class), anyInt()))
+                .thenReturn(List.of(waiting));
+
+        // when
+        List<DailyWaitingRspDto> result = masterWaitingService.getHourlyWaitings(1L, date, hour);
+
+        // then
+        assertFalse(result.isEmpty());
+        assertEquals(1, result.size());
     }
 
     @Test
@@ -111,6 +132,21 @@ class MasterWaitingServiceTest {
         // when & then
         assertThrows(BusinessException.class, () ->
                 masterWaitingService.updateWaitingStatus(1L, 1L, WaitingStatus.CALLED));
+    }
+
+    @Test
+    void 활성화된_대기목록_조회_성공() {
+        // given
+        when(loginUserProvider.getLoggedInUser()).thenReturn(masterUser);
+        when(popupStoreRepository.findById(anyLong())).thenReturn(Optional.of(popupStore));
+        when(waitingRepository.findActiveWaitings(anyLong(), any())).thenReturn(List.of(waiting));
+
+        // when
+        List<WaitingRspDto> result = masterWaitingService.getActiveWaitings(1L);
+
+        // then
+        assertFalse(result.isEmpty());
+        assertEquals(1, result.size());
     }
 
     @Test
