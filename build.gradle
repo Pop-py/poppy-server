@@ -67,6 +67,18 @@ dependencies {
 	// JSON Serializer
 	implementation 'com.fasterxml.jackson.core:jackson-databind'
 
+	// AWS S3 SDK
+	implementation 'com.amazonaws:aws-java-sdk-s3:1.12.566'
+
+	// AWS SDK V2 (선택적, 더 최신 버전)
+	implementation 'software.amazon.awssdk:s3:2.25.11'
+
+	// 파일 업로드 지원
+	implementation 'commons-fileupload:commons-fileupload:1.5'
+
+	// 이미지 메타데이터 처리
+	implementation 'com.drewnoakes:metadata-extractor:2.18.0'
+
 	compileOnly 'org.projectlombok:lombok'
 	developmentOnly 'org.springframework.boot:spring-boot-devtools'
 	runtimeOnly 'com.mysql:mysql-connector-j'

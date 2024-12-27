@@ -36,9 +36,13 @@ out/
 ### VS Code ###
 .vscode/
 
+# yml 파일
 application.yml
 docker-compose.yml
 
 # 특정 파일 제외
 /src/main/generated/
 /src/main/resources/firebase-service-account.json
+
+# 로그 파일
+*.log

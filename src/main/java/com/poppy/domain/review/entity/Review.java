@@ -1,6 +1,7 @@
 package com.poppy.domain.review.entity;
 
 import com.poppy.common.entity.BaseTimeEntity;
+import com.poppy.common.entity.Images;
 import com.poppy.domain.likes.entity.ReviewLike;
 import com.poppy.domain.popupStore.entity.PopupStore;
 import com.poppy.domain.user.entity.User;
@@ -25,13 +26,8 @@ public class Review extends BaseTimeEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false)
-    private String title;
-
     @Column(nullable = false, columnDefinition = "longtext")
     private String content;
-
-    private String thumbnail;
 
     @Column(nullable = false)
     private Double rating;
@@ -45,23 +41,31 @@ public class Review extends BaseTimeEntity {
     private PopupStore popupStore;
 
     @OneToMany(mappedBy = "review", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Images> images = new ArrayList<>();
+
+    @OneToMany(mappedBy = "review", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<ReviewLike> reviewLikes = new ArrayList<>();
 
     @Builder
-    private Review(Long id,String title, String content, String thumbnail, Double rating, User user, PopupStore popupStore) {
-        this.title = title;
+    private Review(String content, Double rating, User user, PopupStore popupStore) {
         this.content = content;
-        this.thumbnail = thumbnail;
         this.rating = rating;
         this.user = user;
         this.popupStore = popupStore;
+        this.images = new ArrayList<>();
         this.reviewLikes = new ArrayList<>();
     }
 
-    public void update(String title, String content, String thumbnail, Double rating) {
-        this.title = title;
+    public void update(String content, List<Images> images, Double rating) {
         this.content = content;
-        this.thumbnail = thumbnail;
+        this.images.clear();
+        this.images.addAll(images);
         this.rating = rating;
+    }
+
+    // 이미지 추가
+    public void addImage(Images image) {
+        this.images.add(image);
+        image.updateReview(this);
     }
 }
