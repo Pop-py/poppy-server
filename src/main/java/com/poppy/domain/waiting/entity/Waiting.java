@@ -11,6 +11,7 @@ import lombok.NoArgsConstructor;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
+import java.time.temporal.ChronoUnit;
 
 @Entity
 @Getter
@@ -47,7 +48,7 @@ public class Waiting extends BaseTimeEntity {
         this.user = user;
         this.waitingNumber = waitingNumber;
         this.waitingDate = LocalDate.now();
-        this.waitingTime = LocalTime.now();
+        this.waitingTime = LocalTime.now().truncatedTo(ChronoUnit.SECONDS);;
     }
 
     public void updateStatus(WaitingStatus status) {
