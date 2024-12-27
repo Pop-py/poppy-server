@@ -123,4 +123,14 @@ public class PopupStoreController {
         List<ReservationAvailableSlotRspDto> available = popupStoreService.getAvailableSlots(storeId, date);
         return new RspTemplate<>(HttpStatus.OK, popupStore.getName() + "의 예약 가능 시간 조회", available);
     }
+
+    // 특정 구역으로 검색
+    @GetMapping("/address/{address}")
+    public RspTemplate<List<PopupStoreRspDto>> getStoresByDistrict(@PathVariable String address) {
+        return new RspTemplate<>(
+                HttpStatus.OK,
+                address + " 지역 팝업스토어 조회 성공",
+                popupStoreService.getStoresByAddress(address)
+        );
+    }
 }
