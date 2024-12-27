@@ -11,6 +11,7 @@ import java.time.LocalTime;
 @Getter
 @Builder
 public class NoticeRspDto {
+    private Long id;
     private String title;
     private String content;
 
@@ -22,6 +23,7 @@ public class NoticeRspDto {
 
     public static NoticeRspDto from(Notice notice) {
         return NoticeRspDto.builder()
+                .id(notice.getId())
                 .title(notice.getTitle())
                 .content(notice.getContent())
                 .createdDate(notice.getCreateTime().toLocalDate())
