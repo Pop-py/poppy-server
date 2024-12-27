@@ -15,7 +15,6 @@ public enum ErrorCode {
     UNAUTHORIZED(403, "인증되지 않은 사용자입니다."),
 
     // 팝업스토어 조회 관련
-    LOCATION_NOT_FOUND(404, "해당 위치를 찾을 수 없습니다."),
     STORE_NOT_FOUND(404, "해당 팝업스토어를 찾을 수 없습니다."),
     INVALID_DATE_RANGE(400, "시작일이 종료일보다 늦을 수 없습니다."),
     SLOT_NOT_FOUND(404, "해당 팝업스토어의 슬롯을 찾을 수 없습니다."),
@@ -66,8 +65,6 @@ public enum ErrorCode {
     WAITING_NOT_FOUND(404, "해당 대기 정보를 찾을 수 없습니다."),
     MAX_WAITING_EXCEEDED(400, "현재 대기 인원이 초과되었습니다."),
     DUPLICATE_WAITING(400, "이미 대기 중인 사용자입니다."),
-    INVALID_WAITING_STATUS(400, "잘못된 대기 상태입니다."),
-    SETTINGS_NOT_FOUND(404, "대기 설정을 찾을 수 없습니다."),
     CANNOT_CANCEL_CALLED_WAITING(400, "호출된 대기는 취소할 수 없습니다."),
     UNAUTHORIZED_WAITING_ACCESS(403, "해당 대기에 대한 접근 권한이 없습니다."),
     STORE_NOT_OPERATING(400, "현재 운영 기간이 아닙니다."),
@@ -87,7 +84,15 @@ public enum ErrorCode {
     SCRAP_CONFLICT(409, "처리 중입니다."),
     SCRAP_FAILED(500, "팝업스토어 저장에 실패 하였습니다."),
     SCRAP_NOT_FOUND(404, "해당 스크랩을 찾을 수 없습니다."),
-    SCRAP_NOT_AUTHORIZED(403, "해당 스크랩에 대한 접근 권한이 없습니다.")
+    SCRAP_NOT_AUTHORIZED(403, "해당 스크랩에 대한 접근 권한이 없습니다."),
+
+    // 이미지 관련
+    IMAGE_NOT_FOUND(404, "해당 이미지를 찾을 수 없습니다."),
+    IMAGE_UPLOAD_FAILED(500, "이미지 업로드에 실패하였습니다."),
+    IMAGE_DELETE_FAILED(500, "이미지 삭제에 실패하였습니다."),
+    FILE_IS_EMPTY(500, "파일이 비어있습니다."),
+    FILE_SIZE_EXCEEDED(500, "파일 크기 제한을 초과하였습니다."),
+    INVALID_IMAGE_TYPE(500, "유효하지 않은 이미지 타입입니다."),
     ;
 
     private final int code;

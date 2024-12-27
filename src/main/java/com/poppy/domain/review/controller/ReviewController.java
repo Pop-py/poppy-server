@@ -24,7 +24,7 @@ public class ReviewController {
     @PostMapping("/{popupStoreId}")
     public RspTemplate<ReviewRspDto> createReview(
             @PathVariable Long popupStoreId,
-            @Valid @RequestBody ReviewReqDto reviewCreateReqDto){
+            @Valid @ModelAttribute ReviewReqDto reviewCreateReqDto){
         ReviewRspDto reviewRspDto = reviewService.createReview(popupStoreId,reviewCreateReqDto);
 
         return new RspTemplate<>(HttpStatus.CREATED, "리뷰 작성 완료", reviewRspDto);
@@ -34,7 +34,7 @@ public class ReviewController {
     @PatchMapping("/{id}")
     public RspTemplate<ReviewRspDto> updateReview(
             @PathVariable Long id,
-            @Valid @RequestBody ReviewReqDto reviewUpdateReqDto) {
+            @Valid @ModelAttribute ReviewReqDto reviewUpdateReqDto) {
         ReviewRspDto reviewRspDto = reviewService.updateReview(id, reviewUpdateReqDto);
         return new RspTemplate<>(HttpStatus.OK, "리뷰 수정 완료", reviewRspDto);
     }
