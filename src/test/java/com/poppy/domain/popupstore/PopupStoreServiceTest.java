@@ -1,5 +1,6 @@
 package com.poppy.domain.popupstore;
 
+import com.poppy.common.entity.Images;
 import com.poppy.common.exception.BusinessException;
 import com.poppy.domain.popupStore.dto.response.PopupStoreRspDto;
 import com.poppy.domain.popupStore.entity.PopupStore;
@@ -18,9 +19,11 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
+import org.springframework.test.util.ReflectionTestUtils;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
@@ -32,10 +35,8 @@ import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class PopupStoreServiceTest {
-
     @Mock
     private PopupStoreRepository popupStoreRepository;
-
     @Mock
     private PopupStoreViewRepository popupStoreViewRepository;
 
@@ -53,6 +54,20 @@ class PopupStoreServiceTest {
                 .name("패션")
                 .build();
 
+        Images testImage1 = Images.builder()
+                .originName("test1.jpg")
+                .storedName("stored-test1.jpg")
+                .uploadUrl("https://test-url.com/test1.jpg")
+                .build();
+        ReflectionTestUtils.setField(testImage1, "id", 1L);
+
+        Images testImage2 = Images.builder()
+                .originName("test2.jpg")
+                .storedName("stored-test2.jpg")
+                .uploadUrl("https://test-url.com/test2.jpg")
+                .build();
+        ReflectionTestUtils.setField(testImage2, "id", 2L);
+
         store1 = PopupStore.builder()
                 .id(1L)
                 .name("테스트 팝업 1")
@@ -67,7 +82,9 @@ class PopupStoreServiceTest {
                 .isEnd(false)
                 .storeCategory(category)
                 .reservationType(ReservationType.ONLINE)
+                .images(new ArrayList<>())
                 .build();
+        store1.getImages().add(testImage1);
 
         store2 = PopupStore.builder()
                 .id(2L)
@@ -83,7 +100,9 @@ class PopupStoreServiceTest {
                 .isEnd(false)
                 .storeCategory(category)
                 .reservationType(ReservationType.ONLINE)
+                .images(new ArrayList<>())
                 .build();
+        store2.getImages().add(testImage2);
     }
 
     @Nested
@@ -100,7 +119,12 @@ class PopupStoreServiceTest {
             // then
             assertThat(result).hasSize(2);
             assertThat(result.get(0).getName()).isEqualTo("테스트 팝업 1");
+            assertThat(result.get(0).getThumbnailUrl()).isEqualTo("https://test-url.com/test1.jpg");
+            assertThat(result.get(0).getImageUrls()).containsExactly("https://test-url.com/test1.jpg");
+
             assertThat(result.get(1).getName()).isEqualTo("테스트 팝업 2");
+            assertThat(result.get(1).getThumbnailUrl()).isEqualTo("https://test-url.com/test2.jpg");
+            assertThat(result.get(1).getImageUrls()).containsExactly("https://test-url.com/test2.jpg");
         }
     }
 
@@ -119,6 +143,8 @@ class PopupStoreServiceTest {
             // then
             assertThat(result.getId()).isEqualTo(1L);
             assertThat(result.getName()).isEqualTo("테스트 팝업 1");
+            assertThat(result.getImageUrls()).isNotEmpty();  // 이미지 URL 확인
+            assertThat(result.getImageUrls().get(0)).isEqualTo("https://test-url.com/test1.jpg");
             verify(popupStoreViewRepository, times(1)).save(any());
         }
 
@@ -153,6 +179,10 @@ class PopupStoreServiceTest {
 
             // then
             assertThat(result).hasSize(2);
+            assertThat(result.get(0).getThumbnailUrl()).isEqualTo("https://test-url.com/test1.jpg");
+            assertThat(result.get(0).getImageUrls()).containsExactly("https://test-url.com/test1.jpg");
+            assertThat(result.get(1).getThumbnailUrl()).isEqualTo("https://test-url.com/test2.jpg");
+            assertThat(result.get(1).getImageUrls()).containsExactly("https://test-url.com/test2.jpg");
             verify(popupStoreViewRepository).findPopularPopupStores(any(), any());
         }
     }
@@ -172,7 +202,12 @@ class PopupStoreServiceTest {
             // then
             assertThat(result).hasSize(2);
             assertThat(result.get(0).getName()).isEqualTo("테스트 팝업 1");
+            assertThat(result.get(0).getThumbnailUrl()).isEqualTo("https://test-url.com/test1.jpg");
+            assertThat(result.get(0).getImageUrls()).containsExactly("https://test-url.com/test1.jpg");
+
             assertThat(result.get(1).getName()).isEqualTo("테스트 팝업 2");
+            assertThat(result.get(1).getThumbnailUrl()).isEqualTo("https://test-url.com/test2.jpg");
+            assertThat(result.get(1).getImageUrls()).containsExactly("https://test-url.com/test2.jpg");
             verify(popupStoreRepository).findAllFuturePopupStores(any());
         }
     }
