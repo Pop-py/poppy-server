@@ -1,18 +1,18 @@
 package com.poppy.domain.popupStore.dto.request;
 
-import com.fasterxml.jackson.annotation.JsonFormat;
 import com.poppy.domain.popupStore.entity.ReservationType;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.*;
+import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
+import java.util.List;
 import java.util.Set;
 
+@Setter
 @Getter
 @NoArgsConstructor
 @AllArgsConstructor
@@ -34,19 +34,19 @@ public class PopupStoreReqDto {
     private String address; // 실제 도로명 주소
 
     @NotNull
-    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy.MM.dd")
+    @DateTimeFormat(pattern = "yyyy.MM.dd")
     private LocalDate startDate; // 시작일
 
     @NotNull
-    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy.MM.dd")
+    @DateTimeFormat(pattern = "yyyy.MM.dd")
     private LocalDate endDate; // 종료일
 
     @NotNull
-    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "HH:mm")
+    @DateTimeFormat(pattern = "HH:mm")
     private LocalTime openingTime; // 운영 시작 시간
 
     @NotNull
-    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "HH:mm")
+    @DateTimeFormat(pattern = "HH:mm")
     private LocalTime closingTime; // 운영 종료 시간
 
     @NotNull
@@ -61,7 +61,7 @@ public class PopupStoreReqDto {
     private String blogUrl;
 
     @NotNull
-    private String categoryName; // 카테고리 ID
+    private Long categoryId;
 
     @NotNull
     private Long masterUserId; // 관리자 유저 ID
@@ -69,7 +69,9 @@ public class PopupStoreReqDto {
     @NotNull
     private ReservationType reservationType;
 
+    @DateTimeFormat(pattern = "yyyy.MM.dd")
     private Set<LocalDate> holidays;
 
-    private String thumbnail; // 썸네일 URL
+    @NotNull
+    private List<MultipartFile> images;     // 이미지 등록 시 여러 개인 경우 첫번째 이미지가 썸네일로 지정됨
 }

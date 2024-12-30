@@ -40,8 +40,8 @@ public class UserWaitingHistoryRspDto {
                 .location(waiting.getPopupStore().getLocation())
                 .phoneNumber(waiting.getUser().getPhoneNumber())
                 .status(waiting.getStatus())
-                .date(waiting.getCreateTime().toLocalDate())
-                .time(waiting.getCreateTime().toLocalTime())
+                .date(waiting.getWaitingDate())
+                .time(waiting.getWaitingTime())
                 .build();
     }
 }

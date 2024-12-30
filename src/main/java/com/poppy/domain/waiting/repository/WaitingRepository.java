@@ -7,6 +7,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
@@ -31,17 +32,31 @@ public interface WaitingRepository extends JpaRepository<Waiting, Long> {
             Integer waitingNumber
     );
 
-    // 날짜별 대기 목록 조회 추가
+    // 날짜별 대기 목록 조회
     @Query("SELECT w FROM Waiting w " +
             "WHERE w.popupStore.id = :storeId " +
-            "AND DATE(w.createTime) = DATE(:date) " +
-            "ORDER BY w.createTime DESC")
+            "AND w.waitingDate = :date " +
+            "ORDER BY w.waitingTime DESC")
     List<Waiting> findWaitingsByStoreIdAndDate(
             @Param("storeId") Long storeId,
-            @Param("date") LocalDateTime date
+            @Param("date") LocalDate date
     );
 
-    // 활성화된 대기 목록 조회 추가
+    // 날짜와 시간대별 대기 목록 조회
+    @Query("SELECT w FROM Waiting w " +
+            "WHERE w.popupStore.id = :storeId " +
+            "AND w.waitingDate = :date " +
+            "AND HOUR(w.waitingTime) = :hour " +
+            "AND HOUR(w.waitingTime) >= HOUR(w.popupStore.openingTime) " +
+            "AND HOUR(w.waitingTime) <= HOUR(w.popupStore.closingTime) " +
+            "ORDER BY w.waitingTime DESC")
+    List<Waiting> findWaitingsByStoreIdAndDateTime(
+            @Param("storeId") Long storeId,
+            @Param("date") LocalDate date,
+            @Param("hour") int hour
+    );
+
+    // 활성화된 대기 목록 조회
     @Query("SELECT w FROM Waiting w " +
             "WHERE w.popupStore.id = :storeId " +
             "AND w.status IN :activeStatuses " +
@@ -60,5 +75,5 @@ public interface WaitingRepository extends JpaRepository<Waiting, Long> {
 
     List<Waiting> findByStatus(WaitingStatus status);
 
-    List<Waiting> findByUserIdOrderByCreateTimeDesc(Long userId);
+    List<Waiting> findByUserIdOrderByWaitingDateDescWaitingTimeDesc(Long userId);
 }

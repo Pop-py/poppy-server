@@ -9,6 +9,10 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
+import java.time.LocalDate;
+import java.time.LocalTime;
+import java.time.temporal.ChronoUnit;
+
 @Entity
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
@@ -28,15 +32,23 @@ public class Waiting extends BaseTimeEntity {
     @Column(nullable = false)
     private Integer waitingNumber;  // 대기 번호
 
+    @Column(name = "waiting_date", nullable = false)
+    private LocalDate waitingDate;    // 대기 예약 날짜
+
+    @Column(name = "waiting_time", nullable = false)
+    private LocalTime waitingTime;    // 대기 예약 시간
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private WaitingStatus status = WaitingStatus.WAITING;
 
     @Builder
-    public Waiting(PopupStore popupStore, User user, Integer waitingNumber) {
+    public Waiting(PopupStore popupStore, User user, Integer waitingNumber, LocalDate waitingDate, LocalTime waitingTime) {
         this.popupStore = popupStore;
         this.user = user;
         this.waitingNumber = waitingNumber;
+        this.waitingDate = LocalDate.now();
+        this.waitingTime = LocalTime.now().truncatedTo(ChronoUnit.SECONDS);;
     }
 
     public void updateStatus(WaitingStatus status) {

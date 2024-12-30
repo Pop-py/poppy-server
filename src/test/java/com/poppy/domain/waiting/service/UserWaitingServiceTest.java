@@ -23,6 +23,8 @@ import org.redisson.api.RLock;
 import org.redisson.api.RedissonClient;
 import org.springframework.test.util.ReflectionTestUtils;
 
+import java.time.LocalDate;
+import java.time.LocalTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -66,12 +68,20 @@ class UserWaitingServiceTest {
                 .id(1L)
                 .name("테스트 매장")
                 .masterUser(user)
+                .startDate(LocalDate.now())
+                .endDate(LocalDate.now().plusDays(7))
+                .openingTime(LocalTime.of(9, 0))
+                .closingTime(LocalTime.of(18, 0))
+                .isActive(true)
+                .isEnd(false)
                 .build();
 
         waiting = Waiting.builder()
                 .popupStore(popupStore)
                 .user(user)
                 .waitingNumber(1)
+                .waitingDate(LocalDate.now())
+                .waitingTime(LocalTime.now())
                 .build();
     }
 
@@ -122,7 +132,7 @@ class UserWaitingServiceTest {
     void 대기내역_조회_성공() {
         // given
         when(loginUserProvider.getLoggedInUser()).thenReturn(user);
-        when(waitingRepository.findByUserIdOrderByCreateTimeDesc(anyLong()))
+        when(waitingRepository.findByUserIdOrderByWaitingDateDescWaitingTimeDesc(anyLong()))  // 메서드명 변경
                 .thenReturn(List.of(waiting));
 
         // when

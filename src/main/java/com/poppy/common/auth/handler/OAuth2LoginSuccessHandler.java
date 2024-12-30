@@ -71,7 +71,7 @@ public class OAuth2LoginSuccessHandler extends SimpleUrlAuthenticationSuccessHan
         String redisKey = "user:" + user.getId();
         redisTemplate.opsForValue().set(redisKey, refreshToken, jwtTokenizer.getRefreshTokenExpireTime(), TimeUnit.MINUTES);
 
-        String uri = createURI("/token", verificationCode).toString();
+        String uri = createURI("/login", verificationCode).toString();
 
         getRedirectStrategy().sendRedirect(request, response, uri);
     }
@@ -85,6 +85,7 @@ public class OAuth2LoginSuccessHandler extends SimpleUrlAuthenticationSuccessHan
                 .newInstance()
                 .scheme("http")
 //                .host("poppy-fe-git-pop-36-feature-1-notice-poppy-ca4d5978.vercel.app")
+//                .host("pop-py.duckdns.org")
                 .host("localhost")
                 .port(3000)
                 .path(path)

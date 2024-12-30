@@ -1,6 +1,7 @@
 package com.poppy.domain.review.dto.response;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
+import com.poppy.common.entity.Images;
 import com.poppy.domain.review.entity.Review;
 import lombok.Builder;
 import lombok.Getter;
@@ -8,6 +9,8 @@ import lombok.NoArgsConstructor;
 import lombok.AllArgsConstructor;
 
 import java.time.LocalDate;
+import java.util.List;
+import java.util.stream.Collectors;
 
 @Getter
 @Builder
@@ -15,12 +18,10 @@ import java.time.LocalDate;
 @AllArgsConstructor
 public class ReviewRspDto {
     private Long id;
-    
-    private String title;
 
     private String content;
 
-    private String thumbnail;
+    private List<String> imageUrls;
 
     private Double rating;
 
@@ -36,9 +37,10 @@ public class ReviewRspDto {
     public static ReviewRspDto from(Review review) {
         return ReviewRspDto.builder()
                 .id(review.getId())
-                .title(review.getTitle())
                 .content(review.getContent())
-                .thumbnail(review.getThumbnail())
+                .imageUrls(review.getImages().stream()
+                        .map(Images::getUploadUrl)
+                        .collect(Collectors.toList()))
                 .rating(review.getRating())
                 .likes(review.getReviewLikes().size())
                 .userName(review.getUser().getNickname())

@@ -1,6 +1,5 @@
 package com.poppy.domain.popupStore.entity;
 
-import com.poppy.domain.user.entity.User;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;

@@ -34,7 +34,7 @@ public class UserScrapRspDto {
                 .location(scrap.getPopupStore().getLocation())
                 .startDate(scrap.getPopupStore().getStartDate())
                 .endDate(scrap.getPopupStore().getEndDate())
-                .thumbnail(scrap.getPopupStore().getThumbnail())
+                .thumbnail(scrap.getPopupStore().getImages().get(0).getUploadUrl())
                 .isAlmostFull(scrap.getPopupStore().calculateAlmostFull(
                         scrap.getPopupStore().getReservationAvailableSlots(),
                         scrap.getPopupStore().getReservationType()))

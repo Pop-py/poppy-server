@@ -36,7 +36,7 @@ jobs:
           touch ./docker-compose.yml
           echo "$DOCKER_COMPOSE_YML" > ./docker-compose.yml
           cd ./src/main
-          mkdir resources
+          mkdir -p resources
           cd ./resources
           touch ./application.yml
           echo "$APPLICATION_YML" > ./application.yml
