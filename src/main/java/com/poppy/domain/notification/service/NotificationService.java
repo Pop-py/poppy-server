@@ -132,12 +132,12 @@ public class NotificationService {
     }
 
     // 예약 알림 DB 저장
-    private void saveNotification(Reservation waiting, ReservationNotificationDto dto, NotificationType type) {
+    private void saveNotification(Reservation reservation, ReservationNotificationDto dto, NotificationType type) {
         notificationRepository.save(Notification.builder()
                 .message(dto.getMessage())
                 .type(type)
-                .user(waiting.getUser())
-                .popupStore(waiting.getPopupStore())
+                .user(reservation.getUser())
+                .popupStore(reservation.getPopupStore())
                 .build());
     }
 
