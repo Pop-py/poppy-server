@@ -41,4 +41,8 @@ public interface ReviewRepository extends JpaRepository<Review,Long> {
 
     @Query("SELECT r FROM Review r WHERE r.popupStore.id = :popupStoreId ORDER BY r.rating ASC")
     Page<Review> findByPopupStoreIdOrderByRatingAsc(Long popupStoreId, Pageable pageable);
+
+
+    @Query("SELECT COALESCE(AVG(r.rating), 0.0) FROM Review r WHERE r.popupStore.id = :popupStoreId")
+    Double calculateAverageRatingByPopupStore(@Param("popupStoreId") Long popupStoreId);
 }

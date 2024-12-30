@@ -172,4 +172,12 @@ public class PopupStore extends BaseTimeEntity {
         // 전체 슬롯의 20% 이하가 남은 경우 true
         return totalSlots > 0 && ((double) remainingSlots / totalSlots) <= 0.2;
     }
+
+    public void updateAverageRating(Double newRating) {
+        if (newRating == null) {
+            this.rating = 0.0;
+            return;
+        }
+        this.rating = Math.round(newRating * 10.0) / 10.0;
+    }
 }

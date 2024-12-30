@@ -71,6 +71,8 @@ public class ReviewService {
         // 리뷰에 이미지 추가
         uploadedImages.forEach(savedReview::addImage);
 
+        updatePopupStoreRating(popupStore);
+
         return ReviewRspDto.from(savedReview);
     }
 
@@ -106,8 +108,13 @@ public class ReviewService {
         // 리뷰 내용, 평점 업데이트 및 새 이미지 설정
         review.update(reviewUpdateReqDto.getContent(), newImages, reviewUpdateReqDto.getRating());
 
+        Review updatedReview = reviewRepository.save(review);
+
+        // 리뷰 갱신
+        updatePopupStoreRating(review.getPopupStore());
+
         // 리뷰 엔티티 저장
-        return ReviewRspDto.from(reviewRepository.save(review));
+        return ReviewRspDto.from(updatedReview);
     }
 
     // 리뷰 이미지 업로드 메서드
@@ -134,8 +141,13 @@ public class ReviewService {
         // 리뷰에 연결된 모든 이미지 삭제
         review.getImages().forEach(image -> imageService.deleteImage(image.getId()));
 
+        PopupStore popupStore = review.getPopupStore();
+
         // 리뷰 삭제
         reviewRepository.delete(review);
+
+        // 평균 평점 업데이트
+        updatePopupStoreRating(popupStore);
     }
 
     @Transactional
@@ -204,5 +216,15 @@ public class ReviewService {
         Review review = reviewRepository.findById(reviewId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.REVIEW_NOT_FOUND));
         return ReviewRspDto.from(review);
+    }
+
+    // 해당 팝업스토어의 리뷰 평점 계산
+    private void updatePopupStoreRating(PopupStore popupStore) {
+        // 해당 팝업스토어의 모든 리뷰 평점의 평균을 계산
+        Double averageRating = reviewRepository.calculateAverageRatingByPopupStore(popupStore.getId());
+        // 팝업스토어 평점 업데이트
+        popupStore.updateAverageRating(averageRating);
+        // 변경사항 저장
+        popupStoreRepository.save(popupStore);
     }
 }
