@@ -14,7 +14,9 @@ import java.time.LocalTime;
 @Getter
 @Builder
 public class UserReservationRspDto {
-    private String userId;
+    private Long userId;
+
+    private Long popupStoreId;
 
     private String popupStoreName;
 
@@ -34,7 +36,8 @@ public class UserReservationRspDto {
 
     public static UserReservationRspDto from(Reservation reservation) {
         return UserReservationRspDto.builder()
-                .userId(reservation.getUser().getId().toString())
+                .userId(reservation.getUser().getId())
+                .popupStoreId(reservation.getPopupStore().getId())
                 .popupStoreName(reservation.getPopupStore().getName())
                 .reservationDate(reservation.getDate())
                 .reservationTime(reservation.getTime())

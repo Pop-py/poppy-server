@@ -53,4 +53,9 @@ public class Reservation extends BaseTimeEntity {
     public void updateStatus(ReservationStatus status) {
         this.status = status;
     }
+
+    public void updateReservation(LocalTime time, int person) {
+        this.time = time;
+        this.person = person;
+    }
 }
