@@ -102,35 +102,40 @@ public class NotificationService {
 
     // 예약 알림 전송
     @Transactional
-    public void sendNotification(Reservation reservation, ReservationStatus status) {
+    public void sendNotification(Reservation reservation, ReservationStatus status, NotificationType type) {
         // WebSocket 알림 생성
         String wsMessage = messageGenerator.generateWebSocketMessage(
                 status,
-                reservation.getPopupStore().getName());
+                reservation.getPopupStore().getName(),
+                reservation.getDate().toString(),
+                reservation.getTime().toString(),
+                reservation.getPerson()
+        );
 
         // wsMessage가 null이면 알림을 발송하지 않음
         if (wsMessage == null) return;
 
         ReservationNotificationDto reservationNotificationDto = ReservationNotificationDto.from(
                 wsMessage,
-                NotificationType.RESERVATION,
+                type,
                 reservation.getUser().getId(),
+                reservation.getPopupStore().getId(),
                 reservation.getPopupStore().getName(),
                 false
         );
 
         // WebSocket 알림 DB 저장
-        saveNotification(reservation, reservationNotificationDto);
+        saveNotification(reservation, reservationNotificationDto, type);
 
         // Redis로 WebSocket 알림 발행
         notificationPublisher.publish(reservationNotificationDto);
     }
 
     // 예약 알림 DB 저장
-    private void saveNotification(Reservation waiting, ReservationNotificationDto dto) {
+    private void saveNotification(Reservation waiting, ReservationNotificationDto dto, NotificationType type) {
         notificationRepository.save(Notification.builder()
                 .message(dto.getMessage())
-                .type(NotificationType.RESERVATION)
+                .type(type)
                 .user(waiting.getUser())
                 .popupStore(waiting.getPopupStore())
                 .build());
@@ -203,7 +208,7 @@ public class NotificationService {
                         .setBody(dto.getMessage())
                         .build())
                 .putData("type", dto.getType().name())
-                .putData("storeId", dto.getStoreId().toString())
+                .putData("storeId", dto.getPopupStoreId().toString())
                 .putData("waitingNumber", dto.getWaitingNumber().toString());
 
         // peopleAhead가 null이 아닐 때만 추가
@@ -249,11 +254,9 @@ public class NotificationService {
                 )
                 .stream()
                 .map(notification -> {
-                    if (notification.getType() == NotificationType.RESERVATION) {
+                    if(notification.getType() == NotificationType.RESERVATION_CHECK || notification.getType() == NotificationType.RESERVATION_CANCEL)
                         return ReservationNotificationDto.from(notification);
-                    } else {
-                        return WaitingNotificationDto.from(notification);
-                    }
+                    else return WaitingNotificationDto.from(notification);
                 })
                 .collect(Collectors.toList());
     }

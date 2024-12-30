@@ -11,7 +11,7 @@ import lombok.experimental.SuperBuilder;
 @SuperBuilder
 @NoArgsConstructor
 public class WaitingNotificationDto extends NotificationDto {
-    private Long storeId;
+    private Long popupStoreId;
     private Integer waitingNumber;
     private Integer peopleAhead;
 
@@ -21,7 +21,7 @@ public class WaitingNotificationDto extends NotificationDto {
                 .message(message)
                 .type(type)
                 .userId(waiting.getUser().getId())
-                .storeId(waiting.getPopupStore().getId())
+                .popupStoreId(waiting.getPopupStore().getId())
                 .popupStoreName(waiting.getPopupStore().getName())
                 .waitingNumber(waiting.getWaitingNumber())
                 .peopleAhead(peopleAhead)
@@ -35,7 +35,7 @@ public class WaitingNotificationDto extends NotificationDto {
                 .message(notification.getMessage())
                 .type(notification.getType())
                 .userId(notification.getUser().getId())
-                .storeId(notification.getPopupStore().getId())
+                .popupStoreId(notification.getPopupStore().getId())
                 .popupStoreName(notification.getPopupStore().getName())
                 .waitingNumber(notification.getWaitingNumber())
                 .peopleAhead(notification.getPeopleAhead())

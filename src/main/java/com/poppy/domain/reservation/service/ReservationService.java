@@ -2,6 +2,7 @@ package com.poppy.domain.reservation.service;
 
 import com.poppy.common.exception.BusinessException;
 import com.poppy.common.exception.ErrorCode;
+import com.poppy.domain.notification.entity.NotificationType;
 import com.poppy.domain.notification.service.NotificationService;
 import com.poppy.domain.payment.entity.Payment;
 import com.poppy.domain.payment.entity.PaymentStatus;
@@ -90,9 +91,22 @@ public class ReservationService {
             Optional<Reservation> existingReservation =
                     reservationRepository.findByUserIdAndPopupStoreIdAndDate(user.getId(), storeId, date);
 
-            // 해당 날짜에 예약이 있는 경우
-            if(existingReservation.isPresent())
-                throw new BusinessException(ErrorCode.ALREADY_BOOKED);
+            if (existingReservation.isPresent()) {
+                Reservation reservation = existingReservation.get();
+
+                // 이미 결제된 예약이 있는 경우
+                if (reservation.getStatus() == ReservationStatus.CHECKED)
+                    throw new BusinessException(ErrorCode.ALREADY_BOOKED);
+
+                // 취소된 예약인 경우 업데이트
+                if (reservation.getStatus() == ReservationStatus.CANCELED) {
+                    paymentRepository.deleteByReservationId(reservation.getId());   // 기존 결제 정보 삭제
+
+                    reservation.updateReservation(time, person);
+                    reservation.updateStatus(ReservationStatus.PENDING);
+                    return createPaymentAndGetResponse(reservation, user, person);
+                }
+            }
 
             // 임시 예약 생성
             Reservation tempReservation = reservationRepository.save(Reservation.builder()
@@ -100,33 +114,12 @@ public class ReservationService {
                     .user(new User(user.getId()))
                     .date(date)
                     .time(time)
-                    .status(ReservationStatus.PENDING)  // 결제 전 상태
+                    .status(ReservationStatus.PENDING)
                     .person(person)
                     .build()
             );
 
-            String orderId = UUID.randomUUID().toString();
-            Long amount = popupStore.getPrice() * person;
-
-            // 결제 생성
-            Payment payment = Payment.builder()
-                    .orderId(orderId)
-                    .amount(amount)
-                    .status(PaymentStatus.PENDING)  // 결제 진행 전
-                    .user(user)
-                    .reservation(tempReservation)
-                    .build();
-            paymentRepository.save(payment);
-
-            // 임시 예약 객체 반환
-            return ReservationPaymentRspDto.builder()
-                    .orderId(orderId)
-                    .amount(amount)
-                    .storeName(tempReservation.getPopupStore().getName())
-                    .date(date)
-                    .time(time)
-                    .person(person)
-                    .build();
+            return createPaymentAndGetResponse(tempReservation, user, person);
         }
         catch (InterruptedException e) {
             Thread.currentThread().interrupt();
@@ -138,6 +131,30 @@ public class ReservationService {
                 lock.unlock();
             }
         }
+    }
+
+    // 결제 정보 생성 및 응답 DTO 반환 메서드
+    private ReservationPaymentRspDto createPaymentAndGetResponse(Reservation reservation, User user, int person) {
+        String orderId = UUID.randomUUID().toString();
+        Long amount = reservation.getPopupStore().getPrice() * person;
+
+        Payment payment = Payment.builder()
+                .orderId(orderId)
+                .amount(amount)
+                .status(PaymentStatus.PENDING)
+                .user(user)
+                .reservation(reservation)
+                .build();
+        paymentRepository.save(payment);
+
+        return ReservationPaymentRspDto.builder()
+                .orderId(orderId)
+                .amount(amount)
+                .storeName(reservation.getPopupStore().getName())
+                .date(reservation.getDate())
+                .time(reservation.getTime())
+                .person(person)
+                .build();
     }
 
     // 예약 완료 처리
@@ -169,7 +186,7 @@ public class ReservationService {
 
         // 예약 확정 (DB 업데이트)
         Reservation reservation = processReservation(tempReservation);
-        notificationService.sendNotification(reservation, reservation.getStatus());     // 알림 전송
+        notificationService.sendNotification(reservation, reservation.getStatus(), NotificationType.RESERVATION_CHECK);     // 알림 전송
         return reservation;
     }
 
@@ -290,6 +307,7 @@ public class ReservationService {
                 reservation.getTime(),
                 reservation.getPerson()
         );
+        notificationService.sendNotification(reservation, ReservationStatus.CANCELED, NotificationType.RESERVATION_CANCEL); // 알림 전송
     }
 
     // 유저의 모든 예약 조회
