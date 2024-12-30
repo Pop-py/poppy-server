@@ -52,17 +52,13 @@ public class ImageService {
     @Transactional
     public Images uploadImageFromMultipart(MultipartFile file, String entityType, Long entityId) {
         try {
-            log.info("Start uploading file: {}", file.getOriginalFilename());
             validateImageFile(file);
-            log.info("File validation passed");
 
             String originalFileName = StringUtils.cleanPath(file.getOriginalFilename());
             String storedFileName = generateStoredFileName(originalFileName);
-            log.info("Generated stored filename: {}", storedFileName);
 
             // S3 업로드 시도
             String cloudFrontUrl = uploadMultipartToS3(file, storedFileName);
-            log.info("Uploaded to S3, CloudFront URL: {}", cloudFrontUrl);
 
             // DB 저장
             return saveImageEntity(originalFileName, storedFileName, cloudFrontUrl, entityType, entityId);
@@ -72,7 +68,7 @@ public class ImageService {
             log.error("Image upload failed: ", e);
             try {
                 amazonS3Client.deleteObject(new DeleteObjectRequest(bucket, generateStoredFileName(file.getOriginalFilename())));
-            } catch (Exception ignored) {log.warn("Failed to delete uploaded file after error");}
+            } catch (Exception ignored) {}
 
             throw new BusinessException(ErrorCode.IMAGE_UPLOAD_FAILED);
         }

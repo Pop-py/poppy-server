@@ -14,7 +14,7 @@ import java.time.LocalTime;
 @Getter
 @Builder
 public class UserReservationDetailRspDto {
-    private Long storeId;
+    private Long popupStoreId;
 
     private String popupStoreName;
 
@@ -44,6 +44,7 @@ public class UserReservationDetailRspDto {
 
     public static UserReservationDetailRspDto from(Reservation reservation) {
         return UserReservationDetailRspDto.builder()
+                .popupStoreId(reservation.getPopupStore().getId())
                 .popupStoreName(reservation.getPopupStore().getName())
                 .address(reservation.getPopupStore().getAddress())
                 .userId(reservation.getUser().getId())
@@ -52,6 +53,7 @@ public class UserReservationDetailRspDto {
                 .userNickname(reservation.getUser().getNickname())
                 .phoneNumber(reservation.getUser().getPhoneNumber())
                 .paymentMethod("토스페이")
+                .status(reservation.getStatus())
                 .amount((int)(reservation.getPerson() * reservation.getPopupStore().getPrice()))
                 .paidAmount((int)(reservation.getPerson() * reservation.getPopupStore().getPrice()))
                 .person(reservation.getPerson())

@@ -4,6 +4,11 @@ import com.poppy.domain.notification.entity.NotificationType;
 import com.poppy.domain.reservation.entity.ReservationStatus;
 import org.springframework.stereotype.Component;
 
+import java.time.LocalDate;
+import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
+import java.util.Locale;
+
 @Component
 public class NotificationMessageGenerator {
     // FCM 알림의 제목 생성
@@ -24,7 +29,7 @@ public class NotificationMessageGenerator {
             case WAITING_CANCEL -> String.format("%d번 대기가 취소되었습니다", waitingNumber);
             case TEAMS_AHEAD -> String.format("현재 %d번째 순서\n대기번호 %d번", peopleAhead, waitingNumber);
             case WAITING_TIMEOUT -> String.format("%d번 대기가 시간 초과로 취소되었습니다", waitingNumber);
-            case RESERVATION, NOTICE -> null;
+            case RESERVATION_CHECK, RESERVATION_CANCEL, NOTICE -> null;
         };
     }
 
@@ -39,16 +44,24 @@ public class NotificationMessageGenerator {
                 yield String.format("%s\n현재 %d번째 순서입니다.", storeName, peopleAhead);
             }
             case WAITING_TIMEOUT -> String.format("%s\n%d번 대기\n호출 시간 초과로 자동 취소되었습니다.", storeName, waitingNumber);
-            case RESERVATION, NOTICE -> null;
+            case RESERVATION_CHECK, RESERVATION_CANCEL, NOTICE -> null;
         };
     }
  
     // 예약 WebSocket 실시간 알림 메시지 생성
-    public String generateWebSocketMessage(ReservationStatus status, String storeName) {
+    public String generateWebSocketMessage(ReservationStatus status, String storeName, String date, String time, Integer person) {
+        DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd(E)");
+        DateTimeFormatter timeFormatter = DateTimeFormatter.ofPattern("a h:mm")
+                .withLocale(Locale.KOREA);  // 오전/오후를 한글로 표시
+
         return switch (status) {
             case PENDING, VISITED -> null;
-            case CHECKED -> String.format("%s의 예약이 완료되었습니다.", storeName);
-            case CANCELED -> String.format("%s의 예약이 취소되었습니다.", storeName);
+            case CHECKED -> String.format("[%s]\n예약이 확정되었습니다.\n일시: %s %s\n인원: %d명",
+                    storeName,
+                    LocalDate.parse(date).format(dateFormatter),
+                    LocalTime.parse(time).format(timeFormatter),
+                    person);
+            case CANCELED -> String.format("[%s]\n예약이 취소되었습니다.", storeName);
         };
     }
 

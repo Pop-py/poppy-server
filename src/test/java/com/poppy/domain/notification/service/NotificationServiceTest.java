@@ -10,8 +10,6 @@ import com.poppy.domain.notification.entity.Notification;
 import com.poppy.domain.notification.entity.NotificationType;
 import com.poppy.domain.notification.repository.NotificationRepository;
 import com.poppy.domain.popupStore.entity.PopupStore;
-import com.poppy.domain.reservation.entity.Reservation;
-import com.poppy.domain.reservation.entity.ReservationStatus;
 import com.poppy.domain.user.entity.User;
 import com.poppy.domain.user.repository.LoginUserProvider;
 import com.poppy.domain.waiting.entity.Waiting;
@@ -167,7 +165,7 @@ class NotificationServiceTest {
         List<Notification> notifications = IntStream.range(0, 3)
                 .mapToObj(i -> {
                     NotificationType type = i % 2 == 0 ?
-                            NotificationType.WAITING_CALL : NotificationType.RESERVATION;
+                            NotificationType.WAITING_CALL : NotificationType.RESERVATION_CHECK;
                     return Notification.builder()
                             .user(user)
                             .popupStore(popupStore)
