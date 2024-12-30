@@ -71,7 +71,7 @@ public class OAuth2LoginSuccessHandler extends SimpleUrlAuthenticationSuccessHan
         String redisKey = "user:" + user.getId();
         redisTemplate.opsForValue().set(redisKey, refreshToken, jwtTokenizer.getRefreshTokenExpireTime(), TimeUnit.MINUTES);
 
-        String uri = createURI("/home", verificationCode).toString();
+        String uri = createURI("/login", verificationCode).toString();
 
         getRedirectStrategy().sendRedirect(request, response, uri);
     }
