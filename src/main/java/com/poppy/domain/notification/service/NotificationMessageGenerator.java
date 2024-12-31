@@ -18,6 +18,7 @@ public class NotificationMessageGenerator {
             case WAITING_CANCEL -> "대기 취소 알림";
             case WAITING_TIMEOUT -> "대기 시간 초과";
             case NOTICE -> "[공지사항]";
+            case REMIND_24H -> "에약 알림";
             default -> throw new IllegalArgumentException("Unknown notification.html type: " + type);
         };
     }
@@ -29,6 +30,7 @@ public class NotificationMessageGenerator {
             case WAITING_CANCEL -> String.format("%d번 대기가 취소되었습니다", waitingNumber);
             case TEAMS_AHEAD -> String.format("현재 %d번째 순서\n대기번호 %d번", peopleAhead, waitingNumber);
             case WAITING_TIMEOUT -> String.format("%d번 대기가 시간 초과로 취소되었습니다", waitingNumber);
+            case REMIND_24H -> "팝업스토어 예약 하루 전입니다. 방문 시간을 확인해주세요.";
             case RESERVATION_CHECK, RESERVATION_CANCEL, NOTICE -> null;
         };
     }
@@ -44,6 +46,7 @@ public class NotificationMessageGenerator {
                 yield String.format("%s\n현재 %d번째 순서입니다.", storeName, peopleAhead);
             }
             case WAITING_TIMEOUT -> String.format("%s\n%d번 대기\n호출 시간 초과로 자동 취소되었습니다.", storeName, waitingNumber);
+            case REMIND_24H -> String.format("%s\n예약 하루 전입니다. 방문 시간을 확인해주세요.", storeName);
             case RESERVATION_CHECK, RESERVATION_CANCEL, NOTICE -> null;
         };
     }

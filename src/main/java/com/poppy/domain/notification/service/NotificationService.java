@@ -31,6 +31,8 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
+import static io.lettuce.core.pubsub.PubSubOutput.Type.message;
+
 @Slf4j
 @Service
 @RequiredArgsConstructor
@@ -139,6 +141,67 @@ public class NotificationService {
                 .user(reservation.getUser())
                 .popupStore(reservation.getPopupStore())
                 .build());
+    }
+
+    @Transactional
+    public void send24HNotification(Reservation reservation) {
+        log.info("Sending 24h before notification to userId: {}", reservation.getUser().getId());
+
+        String storeName = reservation.getPopupStore().getName();
+
+        // FCM 알림 생성 및 전송
+        if (reservation.getUser().getFcmToken() != null) {
+            String fcmTitle = messageGenerator.generateFCMTitle(NotificationType.REMIND_24H, storeName);
+            String fcmBody = messageGenerator.generateFCMBody(NotificationType.REMIND_24H, null, null);
+
+            Message message = Message.builder()
+                    .setToken(reservation.getUser().getFcmToken())
+                    .setNotification(com.google.firebase.messaging.Notification.builder()
+                            .setTitle(fcmTitle)
+                            .setBody(fcmBody)
+                            .build())
+                    .putData("type", NotificationType.REMIND_24H.name())
+                    .putData("storeId", reservation.getPopupStore().getId().toString())
+                    .putData("reservationId", reservation.getId().toString())
+                    .putData("reservationTime", reservation.getTime().toString())
+                    .build();
+
+            try {
+                firebaseMessaging.send(message);
+                log.info("FCM 24h before notification sent - userId: {}", reservation.getUser().getId());
+            } catch (FirebaseMessagingException e) {
+                log.error("Failed to send FCM 24h before notification", e);
+            }
+        }
+
+        // WebSocket 알림 생성
+        String wsMessage = messageGenerator.generateWebSocketMessage(
+                NotificationType.REMIND_24H,
+                storeName,
+                null,
+                null
+        );
+
+        ReservationNotificationDto wsNotificationDto = ReservationNotificationDto.from(
+                wsMessage,
+                NotificationType.REMIND_24H,
+                reservation.getUser().getId(),
+                reservation.getPopupStore().getId(),
+                storeName,
+                false
+        );
+
+        // WebSocket 알림 DB 저장
+        notificationRepository.save(Notification.builder()
+                .message(wsMessage)
+                .type(NotificationType.REMIND_24H)
+                .user(reservation.getUser())
+                .popupStore(reservation.getPopupStore())
+                .isFcm(false)
+                .build());
+
+        // Redis로 WebSocket 알림 발행
+        notificationPublisher.publish(wsNotificationDto);
     }
 
     // 공지사항 알림 전송

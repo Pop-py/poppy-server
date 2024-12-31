@@ -7,7 +7,8 @@ public enum NotificationType {
     WAITING_TIMEOUT("호출 시간 초과"),      // 5분 초과 자동 취소 알림
     RESERVATION_CHECK("예약 완료 알림"),
     RESERVATION_CANCEL("예약 취소 알림"),
-    NOTICE("공지사항");
+    NOTICE("공지사항"),
+    REMIND_24H("예약 24시간 전 알림"); // 예약 24시간 전 알림;
 
     private final String description;
 

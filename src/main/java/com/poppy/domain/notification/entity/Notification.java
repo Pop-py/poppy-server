@@ -54,6 +54,7 @@ public class Notification extends BaseTimeEntity {
         this.popupStore = popupStore;
         this.waitingNumber = waitingNumber;
         this.peopleAhead = peopleAhead;
+        this.isFcm = isFcm;
     }
 
     public Notification(String message, NotificationType type, User user, PopupStore popupStore) {

@@ -25,7 +25,7 @@ public class WaitingNotificationDto extends NotificationDto {
                 .popupStoreName(waiting.getPopupStore().getName())
                 .waitingNumber(waiting.getWaitingNumber())
                 .peopleAhead(peopleAhead)
-                .isRead(!isFcm)
+                .isRead(isFcm) // FCM 알림은 푸시로 바로 확인되므로 읽음 처리, WebSocket 알림은 읽지 않음 상태로 설정
                 .build();
     }
 
