@@ -51,6 +51,7 @@ public class PopupStoreRspDto {
     private final String blogUrl;
     private final Integer scrapCount;
     private Boolean isAlmostFull;
+    private Integer viewCount;
 
     public static PopupStoreRspDto from(PopupStore store) {
         List<Images> images = store.getImages();
@@ -97,6 +98,7 @@ public class PopupStoreRspDto {
                 .blogUrl(store.getBlogUrl())
                 .scrapCount(store.getScrapCount())
                 .isAlmostFull(store.calculateAlmostFull(store.getReservationAvailableSlots(), store.getReservationType()))
+                .viewCount(store.getViews().size())
                 .build();
     }
 }
