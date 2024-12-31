@@ -20,4 +20,6 @@ public class TokenRspDto {
     private Date refreshTokenExp;
 
     private String userEmail;
+
+    private String nickname;
 }
