@@ -8,7 +8,7 @@ public enum NotificationType {
     RESERVATION_CHECK("예약 완료 알림"),
     RESERVATION_CANCEL("예약 취소 알림"),
     NOTICE("공지사항"),
-    REMIND_24H("예약 24시간 전 알림"); // 예약 24시간 전 알림;
+    REMIND_24H("예약 24시간 전 알림"); // 예약 24시간 전 알림
 
     private final String description;
 
