@@ -24,7 +24,7 @@ public class NotificationSubscriber implements MessageListener {
 
             if ("notifications".equals(channelName)) {
                 NotificationDto notification = objectMapper.readValue(messageBody, NotificationDto.class);
-                sendWebSocketNotification(notification);
+                sendWebSocketNotification(notification); // 웹소켓으로 전환
             }
         } catch (Exception e) {
             log.error("Error processing Redis message: {}", e.getMessage(), e);

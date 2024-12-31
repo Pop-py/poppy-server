@@ -15,7 +15,10 @@ public class NotificationPublisher {
 
     public <T extends NotificationDto> void publish(T notification) {
         try {
+            log.info("Publishing notification to Redis - Topic: {}, UserId: {}, Type: {}",
+                    NOTIFICATION_TOPIC, notification.getUserId(), notification.getType());
             notificationRedisTemplate.convertAndSend(NOTIFICATION_TOPIC, notification);
+            log.info("Successfully published notification to Redis");
         } catch (Exception e) {
             log.error("Failed to publish notification: {}", e.getMessage(), e);
         }

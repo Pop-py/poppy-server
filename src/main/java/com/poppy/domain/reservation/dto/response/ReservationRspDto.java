@@ -44,6 +44,8 @@ public class ReservationRspDto {
                 .userId(reservation.getUser().getId())
                 .date(reservation.getDate())
                 .time(reservation.getTime())
+                .thumbnail(reservation.getPopupStore().getImages().get(0).getUploadUrl())
+                .status(reservation.getStatus())
                 .person(reservation.getPerson())
                 .price((int)(reservation.getPopupStore().getPrice() * reservation.getPerson()))
                 .build();

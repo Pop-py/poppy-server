@@ -123,4 +123,9 @@ public class JwtTokenizer {
         Role role = Role.valueOf(roleName);
         return List.of((GrantedAuthority) role::name);
     }
+
+    public Long getUserIdFromToken(String token) {
+        Claims claims = parseAccessToken(token);
+        return claims.get("userId", Long.class);  // createAccessToken에서 넣었던 userId를 추출
+    }
 }

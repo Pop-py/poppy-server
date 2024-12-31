@@ -17,4 +17,5 @@ public interface ReservationRepository extends JpaRepository<Reservation, Long> 
     List<Reservation> findAllByUserId(Long userId);
     Optional<Reservation> findByIdAndUserId(Long id, Long userId);
     Optional<Reservation> findByUserIdAndPopupStoreIdAndDateAndStatus(Long userId, Long storeId, LocalDate date, ReservationStatus status);
+    List<Reservation> findByDateAndTimeAndStatus(LocalDate date, LocalTime time, ReservationStatus status);
 }
