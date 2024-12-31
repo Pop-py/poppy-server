@@ -10,17 +10,6 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 @Slf4j
 public class NotificationPublisher {
-//    private final RedisTemplate<String, Object> notificationRedisTemplate;
-//    private static final String NOTIFICATION_TOPIC = RedisConfig.NOTIFICATION_TOPIC;
-//
-//    public <T extends NotificationDto> void publish(T notification) {
-//        try {
-//            notificationRedisTemplate.convertAndSend(NOTIFICATION_TOPIC, notification);
-//        } catch (Exception e) {
-//            log.error("Failed to publish notification: {}", e.getMessage(), e);
-//        }
-//    }
-
     private final RedisTemplate<String, Object> notificationRedisTemplate;
     private static final String NOTIFICATION_TOPIC = RedisConfig.NOTIFICATION_TOPIC;
 

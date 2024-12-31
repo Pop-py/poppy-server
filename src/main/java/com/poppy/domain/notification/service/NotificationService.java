@@ -31,8 +31,6 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
-import static io.lettuce.core.pubsub.PubSubOutput.Type.message;
-
 @Slf4j
 @Service
 @RequiredArgsConstructor
