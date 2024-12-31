@@ -19,7 +19,7 @@ public class OAuthOTUCache {    // 일회성 인증 코드 관리
     // 검증 코드 생성 및 저장
     public String putVerificationCodeInCache(long userId) {
         String verificationCode = UUID.randomUUID().toString();     // UUID로 검증 코드 생성
-        redisTemplate.opsForValue().set(verificationCode, String.valueOf(userId), 5, TimeUnit.MINUTES);     // 5분 뒤 만료
+        redisTemplate.opsForValue().set(verificationCode, String.valueOf(userId), 10, TimeUnit.MINUTES);
 
         return verificationCode;
     }
