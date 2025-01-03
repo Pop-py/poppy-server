@@ -129,11 +129,26 @@ public class UserService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
 
-        if (!userId.equals(authenticatedUserId)) {
+        if (!userId.equals(authenticatedUserId))
             throw new BusinessException(ErrorCode.FCM_TOKEN_UPDATE_FORBIDDEN);
-        }
 
         user.updateFcmToken(fcmToken);
         userRepository.save(user);
+    }
+
+    // 회원 탈퇴
+    public void deleteUser() {
+        User user = loginUserProvider.getLoggedInUser();
+
+        // 일반 유저만 탈퇴 가능
+        if(!user.getRole().equals(Role.ROLE_USER))
+            throw new BusinessException(ErrorCode.NOT_USER_ROLE);
+
+        // redis에서 refresh token 삭제
+        String redisKey = "user:" + user.getId();
+        redisTemplate.delete(redisKey);
+
+        // 유저 삭제
+        userRepository.delete(user);
     }
 }
