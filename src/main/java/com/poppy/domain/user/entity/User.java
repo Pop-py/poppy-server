@@ -2,8 +2,10 @@ package com.poppy.domain.user.entity;
 
 import com.poppy.common.entity.BaseTimeEntity;
 import com.poppy.domain.likes.entity.ReviewLike;
+import com.poppy.domain.notification.entity.Notification;
 import com.poppy.domain.popupStore.entity.PopupStore;
 import com.poppy.domain.scrap.entity.Scrap;
+import com.poppy.domain.waiting.entity.Waiting;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -43,13 +45,19 @@ public class User extends BaseTimeEntity {
     private Role role;
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<Scrap> wishLists = new ArrayList<>();
+    private List<Scrap> scraps = new ArrayList<>();
 
     @OneToMany(mappedBy = "masterUser",cascade = CascadeType.ALL, orphanRemoval = true)
     private List<PopupStore> masterPopupStore = new ArrayList<>();
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<ReviewLike> likedReviews = new ArrayList<>();
+
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Notification> notifications = new ArrayList<>();
+
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Waiting> waitings = new ArrayList<>();
 
     public User(Long id) {
         this.id = id;
@@ -69,27 +77,11 @@ public class User extends BaseTimeEntity {
         this.nickname = nickname;
     }
 
-    public void upgradeToMaster(){
+    public void upgradeToMaster() {
         this.role = Role.ROLE_MASTER;
     }
 
     public void updateFcmToken(String fcmToken) {
         this.fcmToken = fcmToken;
     }
-
-    public String getFcmToken() {
-        return fcmToken;
-    }
-
-    // 위시 추가
-//    public void addWish(PopupStore popupStore) {
-//        WishList wishList = new WishList(this, popupStore);
-//        wishLists.add(wishList);
-//        popupStore.getWishLists().add(wishList);
-//    }
-
-    // 위시 삭제
-//    public void removeWish(PopupStore popupStore) {
-//        wishLists.removeIf(wish -> wish.getPopupStore().equals(popupStore));
-//    }
 }

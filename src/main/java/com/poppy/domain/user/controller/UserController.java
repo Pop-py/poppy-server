@@ -60,12 +60,16 @@ public class UserController {
 
     // FCM 토큰 저장
     @PatchMapping("/{id}/fcm-token")
-    public RspTemplate<?> updateFcmToken(
-            @PathVariable Long userId, @RequestBody UpdateFcmTokenReqDto request, @AuthenticationPrincipal Long authenticatedUserId) {
-        userService.updateFcmToken(userId, request.getFcmToken(), authenticatedUserId);
-        return new RspTemplate<>(
-                HttpStatus.OK,
-                "FCM 토큰이 업데이트되었습니다."
-        );
+    public RspTemplate<Void> updateFcmToken(
+            @PathVariable Long id, @RequestBody UpdateFcmTokenReqDto request, @AuthenticationPrincipal Long authenticatedUserId) {
+        userService.updateFcmToken(id, request.getFcmToken(), authenticatedUserId);
+        return new RspTemplate<>(HttpStatus.OK, "FCM 토큰이 업데이트되었습니다.");
+    }
+
+    // 회원 탈퇴
+    @DeleteMapping("/bye")
+    public RspTemplate<Void> deleteUser() {
+        userService.deleteUser();
+        return new RspTemplate<>(HttpStatus.OK, "회원 탈퇴가 완료되었습니다.");
     }
 }

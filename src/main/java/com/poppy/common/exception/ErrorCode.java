@@ -13,6 +13,7 @@ public enum ErrorCode {
     VERIFICATION_CODE_NOT_FOUND(404, "인증 코드를 찾을 수 없습니다."),
     USER_NOT_FOUND(404, "존재하지 않는 회원입니다."),
     UNAUTHORIZED(403, "인증되지 않은 사용자입니다."),
+    NOT_USER_ROLE(403, "회원 탈퇴는 일반 유저만 가능합니다."),
 
     // 팝업스토어 조회 관련
     STORE_NOT_FOUND(404, "해당 팝업스토어를 찾을 수 없습니다."),
