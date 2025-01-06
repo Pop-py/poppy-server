@@ -16,17 +16,20 @@ import java.util.List;
 public class StoreSearchService {
     private final PopupStoreService popupStoreService;
     private final SearchHistoryService searchHistoryService;
+    private final PopularKeywordService popularKeywordService;
     private final LoginUserProvider loginUserProvider;
 
-    // 이름으로 검색 후 검색어 저장
+    // 이름으로 검색 후 검색어 저장 및 카운트 증가
     @Transactional(readOnly = true)
     public List<PopupStoreRspDto> searchStoresAndSaveHistory(String name) {
-        // 로그인한 경우 검색어 저장
+        popularKeywordService.incrementSearchCount(name);
+
+        // 로그인한 경우에만 개인 검색 기록 저장
         try {
             loginUserProvider.getLoggedInUser();
             searchHistoryService.saveSearchHistory(name);
-        } catch (BusinessException e) {
-            // 로그인 하지 않은 경우는 예외를 던지지 않음
+        }
+        catch (BusinessException e) {
             if(e.getCode() != ErrorCode.UNAUTHORIZED.getCode()) throw e;
         }
 

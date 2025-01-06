@@ -1,11 +1,13 @@
 package com.poppy.domain.search.controller;
 
 import com.poppy.common.api.RspTemplate;
+import com.poppy.domain.search.service.PopularKeywordService;
 import com.poppy.domain.search.service.SearchHistoryService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @RestController
@@ -13,6 +15,7 @@ import java.util.List;
 @RequestMapping("/search-history")
 public class SearchHistoryController {
     private final SearchHistoryService searchHistoryService;
+    private final PopularKeywordService popularKeywordService;
 
     @GetMapping
     public RspTemplate<List<String>> getSearchHistory() {
@@ -20,6 +23,24 @@ public class SearchHistoryController {
                 HttpStatus.OK,
                 "검색 기록 조회 성공",
                 searchHistoryService.getSearchHistory()
+        );
+    }
+
+    // 인기 검색어 조회
+    @GetMapping("/popular")
+    public RspTemplate<List<String>> getPopularSearchHistory() {
+        LocalDateTime now = LocalDateTime.now();
+        String message = String.format(
+                "%d월 %d일 %d시 인기 검색어 조회",
+                now.getMonthValue(),
+                now.getDayOfMonth(),
+                now.getHour()
+        );
+
+        return new RspTemplate<>(
+                HttpStatus.OK,
+                message,
+                popularKeywordService.getTopKeywords()
         );
     }
 
