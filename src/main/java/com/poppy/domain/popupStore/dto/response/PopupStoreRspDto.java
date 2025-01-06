@@ -98,7 +98,7 @@ public class PopupStoreRspDto {
                 .blogUrl(store.getBlogUrl())
                 .scrapCount(store.getScrapCount())
                 .isAlmostFull(store.calculateAlmostFull(store.getReservationAvailableSlots(), store.getReservationType()))
-                .viewCount(store.getViews().size())
+                .viewCount(store.getViews() != null ? store.getViews().size() : 0)
                 .build();
     }
 }

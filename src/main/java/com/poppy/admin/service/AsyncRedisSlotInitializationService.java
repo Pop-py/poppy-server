@@ -37,7 +37,7 @@ public class AsyncRedisSlotInitializationService {
                         slot.getDate(),
                         slot.getTime());
 
-                redisTemplate.opsForValue().set(slotKey, slot.getAvailableSlot(), 24, TimeUnit.HOURS);
+                redisTemplate.opsForValue().set(slotKey, slot.getAvailableSlot(), 365, TimeUnit.DAYS);
             }
         }
         catch (Exception e) {
