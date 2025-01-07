@@ -22,6 +22,7 @@ import com.poppy.domain.waiting.entity.Waiting;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
@@ -58,7 +59,13 @@ public class NotificationService {
         );
 
         // FCM 알림 전송
-        sendFCMNotification(waiting.getUser().getFcmToken(), fcmTitle, fcmNotification);
+        if (waiting.getUser().getFcmToken() != null) {
+            try {
+                sendFCMNotificationWithNewTransaction(waiting.getUser().getFcmToken(), fcmTitle, fcmNotification);
+            } catch (Exception e) {
+                log.warn("Failed to send FCM notification for user {}: {}", waiting.getUser().getId(), e.getMessage());
+            }
+        }
 
         // WebSocket 알림 생성
         String wsMessage = messageGenerator.generateWebSocketMessage(
@@ -83,6 +90,11 @@ public class NotificationService {
 
         // Redis로 WebSocket 알림 발행
         notificationPublisher.publish(wsWaitingNotificationDto);
+    }
+
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    public void sendFCMNotificationWithNewTransaction(String token, String title, WaitingNotificationDto dto) {
+        sendFCMNotification(token, title, dto);
     }
 
     // 웨이팅 DB 저장
