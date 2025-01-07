@@ -24,7 +24,6 @@ public class PopupStoreUpdateReqDto {
     @Size(min = 1, max = 255)
     private String address;
 
-    private Integer availableSlot;
     private Long price;
     private String homepageUrl;
     private String instagramUrl;

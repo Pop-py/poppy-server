@@ -192,7 +192,6 @@ public class PopupStore extends BaseTimeEntity {
         if (reqDto.getDescription() != null) this.description = reqDto.getDescription();
         if (reqDto.getLocation() != null) this.location = reqDto.getLocation();
         if (reqDto.getAddress() != null) this.address = reqDto.getAddress();
-        if (reqDto.getAvailableSlot() != null) this.availableSlot = reqDto.getAvailableSlot();
         if (reqDto.getPrice() != null) this.price = reqDto.getPrice();
         if (reqDto.getHomepageUrl() != null) this.homepageUrl = reqDto.getHomepageUrl();
         if (reqDto.getInstagramUrl() != null) this.instagramUrl = reqDto.getInstagramUrl();
