@@ -15,6 +15,8 @@ public class DistributedLockService {
     public static final String WAITING_SCHEDULER_LOCK = "waiting-scheduler-lock";
     public static final String NOTIFICATION_CLEANUP_LOCK = "notification-cleanup-lock";
     public static final String RESERVATION_24H_BEFORE_LOCK = "reservation-24h-before-lock";
+    public static final String SCRAP_STORE_OPENING_LOCK = "scrap-store-opening-lock";
+
 
     private final RedissonClient redissonClient;
     private static final long DEFAULT_WAIT_TIME = 5L; // 락 획득 시도 대기 시간

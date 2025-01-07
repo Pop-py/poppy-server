@@ -7,15 +7,13 @@ import com.poppy.common.config.redis.NotificationPublisher;
 import com.poppy.common.exception.BusinessException;
 import com.poppy.common.exception.ErrorCode;
 import com.poppy.domain.notice.dto.NoticeRspDto;
-import com.poppy.domain.notification.dto.NoticeNotificationDto;
-import com.poppy.domain.notification.dto.NotificationDto;
-import com.poppy.domain.notification.dto.ReservationNotificationDto;
-import com.poppy.domain.notification.dto.WaitingNotificationDto;
+import com.poppy.domain.notification.dto.*;
 import com.poppy.domain.notification.entity.Notification;
 import com.poppy.domain.notification.entity.NotificationType;
 import com.poppy.domain.notification.repository.NotificationRepository;
 import com.poppy.domain.reservation.entity.Reservation;
 import com.poppy.domain.reservation.entity.ReservationStatus;
+import com.poppy.domain.scrap.entity.Scrap;
 import com.poppy.domain.user.entity.Role;
 import com.poppy.domain.user.entity.User;
 import com.poppy.domain.user.repository.LoginUserProvider;
@@ -195,6 +193,65 @@ public class NotificationService {
                 .type(NotificationType.REMIND_24H)
                 .user(reservation.getUser())
                 .popupStore(reservation.getPopupStore())
+                .isFcm(false)
+                .build());
+
+        // Redis로 WebSocket 알림 발행
+        notificationPublisher.publish(wsNotificationDto);
+    }
+
+    @Transactional
+    public void sendStoreOpeningNotification(Scrap scrap) {
+        log.info("Sending store opening notification to userId: {}", scrap.getUser().getId());
+
+        String storeName = scrap.getPopupStore().getName();
+
+        // FCM 알림 전송
+        if (scrap.getUser().getFcmToken() != null) {
+            String fcmTitle = messageGenerator.generateFCMTitle(NotificationType.SCRAPED_STORE_OPENING, storeName);
+            String fcmBody = messageGenerator.generateFCMBody(NotificationType.SCRAPED_STORE_OPENING, null, null);
+
+            Message message = Message.builder()
+                    .setToken(scrap.getUser().getFcmToken())
+                    .setNotification(com.google.firebase.messaging.Notification.builder()
+                            .setTitle(fcmTitle)
+                            .setBody(fcmBody)
+                            .build())
+                    .putData("type", NotificationType.SCRAPED_STORE_OPENING.name())
+                    .putData("storeId", scrap.getPopupStore().getId().toString())
+                    .build();
+
+            try {
+                firebaseMessaging.send(message);
+                log.info("FCM store opening notification sent - userId: {}", scrap.getUser().getId());
+            } catch (FirebaseMessagingException e) {
+                log.error("Failed to send FCM store opening notification", e);
+            }
+        }
+
+        // WebSocket 알림 생성
+        String wsMessage = messageGenerator.generateWebSocketMessage(
+                NotificationType.SCRAPED_STORE_OPENING,
+                storeName,
+                null,
+                null
+        );
+
+        ScrapedStoreNotificationDto wsNotificationDto = ScrapedStoreNotificationDto.from(
+                wsMessage,
+                NotificationType.SCRAPED_STORE_OPENING,
+                scrap.getUser().getId(),
+                scrap.getPopupStore().getId(),
+                storeName,
+                false
+        );
+
+        // WebSocket 알림 DB 저장
+        notificationRepository.save(Notification.builder()
+                .message(wsMessage)
+                .type(NotificationType.SCRAPED_STORE_OPENING)
+                .user(scrap.getUser())
+                .popupStore(scrap.getPopupStore())
                 .isFcm(false)
                 .build());
 
