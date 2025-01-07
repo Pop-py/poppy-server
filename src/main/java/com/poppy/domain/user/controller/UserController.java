@@ -4,6 +4,7 @@ import com.poppy.common.api.RspTemplate;
 import com.poppy.common.auth.dto.TokenRspDto;
 import com.poppy.domain.user.dto.request.UpdateFcmTokenReqDto;
 import com.poppy.domain.user.dto.request.UpdateNicknameReqDto;
+import com.poppy.domain.user.dto.response.UserPopupStoreRspDto;
 import com.poppy.domain.user.dto.response.UserReservationDetailRspDto;
 import com.poppy.domain.user.dto.response.UserReservationRspDto;
 import com.poppy.domain.user.service.UserService;
@@ -56,6 +57,12 @@ public class UserController {
     public RspTemplate<Void> updateNickname(@PathVariable Long id, @Valid @RequestBody UpdateNicknameReqDto reqDto) {
         userService.updateNickname(reqDto.getNickname());
         return new RspTemplate<>(HttpStatus.OK, reqDto.getNickname() + "으로 변경되었습니다.");
+    }
+
+    // 유저별 최근 본 팝업
+    @GetMapping("/recent")
+    public RspTemplate<List<UserPopupStoreRspDto>> getRecentUserReservations() {
+        return new RspTemplate<>(HttpStatus.OK, "최근 본 팝업 조회", userService.getUserPopupStoreRecent());
     }
 
     // FCM 토큰 저장

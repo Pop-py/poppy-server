@@ -6,6 +6,7 @@ import com.poppy.common.auth.dto.TokenRspDto;
 import com.poppy.common.exception.BusinessException;
 import com.poppy.common.exception.ErrorCode;
 import com.poppy.domain.reservation.service.ReservationService;
+import com.poppy.domain.user.dto.response.UserPopupStoreRspDto;
 import com.poppy.domain.user.dto.response.UserReservationDetailRspDto;
 import com.poppy.domain.user.dto.response.UserReservationRspDto;
 import com.poppy.domain.user.entity.Role;
@@ -17,6 +18,7 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
@@ -122,6 +124,16 @@ public class UserService {
             throw new BusinessException(ErrorCode.DUPLICATE_NICKNAME);
 
         user.updateNickname(nickname);
+    }
+
+    // 유저별 최근 본 팝업
+    @Transactional(readOnly = true)
+    public List<UserPopupStoreRspDto> getUserPopupStoreRecent() {
+        User user = loginUserProvider.getLoggedInUserOrNull();
+
+        if (user == null) return Collections.emptyList();
+
+        return userRepository.findRecentViewedStores(user.getId(), 10);
     }
 
     // FCM 토큰 저장

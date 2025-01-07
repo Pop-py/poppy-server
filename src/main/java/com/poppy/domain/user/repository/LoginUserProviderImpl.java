@@ -31,4 +31,21 @@ public class LoginUserProviderImpl implements LoginUserProvider {
             throw new BusinessException(ErrorCode.UNAUTHORIZED);
         }
     }
+
+    @Override
+    public User getLoggedInUserOrNull() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
+        if (authentication == null || !authentication.isAuthenticated() || authentication.getPrincipal().equals("anonymousUser"))
+            return null;
+
+        String userIdStr = authentication.getName();
+
+        try {
+            return userRepository.findById(Long.parseLong(userIdStr)).orElse(null);
+        }
+        catch (NumberFormatException e) {
+            return null;
+        }
+    }
 }
