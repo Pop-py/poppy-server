@@ -2,12 +2,15 @@ package com.poppy.domain.popupStore.controller;
 
 import com.poppy.common.api.RspTemplate;
 import com.poppy.domain.popupStore.dto.request.PopupStoreSearchReqDto;
+import com.poppy.domain.popupStore.dto.request.PopupStoreUpdateReqDto;
 import com.poppy.domain.popupStore.dto.response.PopupStoreCalenderRspDto;
 import com.poppy.domain.popupStore.dto.response.PopupStoreRspDto;
 import com.poppy.domain.popupStore.dto.response.ReservationAvailableSlotRspDto;
 import com.poppy.domain.popupStore.service.PopupStoreService;
 import com.poppy.domain.search.service.StoreSearchService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
@@ -18,6 +21,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/popup-stores")
 @RequiredArgsConstructor
+@Slf4j
 public class PopupStoreController {
     private final PopupStoreService popupStoreService;
     private final StoreSearchService storeSearchService;
@@ -34,7 +38,7 @@ public class PopupStoreController {
 
     // 팝업스토어 상세 조회
     @GetMapping("/detail/{id}")
-    public RspTemplate<PopupStoreRspDto> getStoreDetail(@PathVariable Long id){
+    public RspTemplate<PopupStoreRspDto> getStoreDetail(@PathVariable Long id) {
         return new RspTemplate<>(
                 HttpStatus.OK,
                 "팝업스토어 상세 조회 성공",
@@ -52,11 +56,9 @@ public class PopupStoreController {
         );
     }
 
-    // 현재 많이 찾는 (카테고리 ) 팝업스토어 조회
+    // 현재 많이 찾는 (카테고리) 팝업스토어 조회
     @GetMapping("/popular/category/{categoryId}")
-    public RspTemplate<List<PopupStoreRspDto>> getPopularStoresByCategory(
-            @PathVariable Long categoryId
-    ) {
+    public RspTemplate<List<PopupStoreRspDto>> getPopularStoresByCategory(@PathVariable Long categoryId) {
         return new RspTemplate<>(
                 HttpStatus.OK,
                 "3시간 내 카테고리별 인기 팝업스토어 조회 성공",
@@ -86,8 +88,7 @@ public class PopupStoreController {
 
     // 이름으로 검색
     @GetMapping("/{name}")
-    public RspTemplate<List<PopupStoreRspDto>> searchStores(
-            @PathVariable String name) {
+    public RspTemplate<List<PopupStoreRspDto>> searchStores(@PathVariable String name) {
         return new RspTemplate<>(
                 HttpStatus.OK,
                 "키워드 '" + name + "' 검색 성공",
@@ -106,8 +107,8 @@ public class PopupStoreController {
     }
 
     // 팝업스토어 예약 가능 날짜 조회
-    @GetMapping("/{id}/calender")
-    public RspTemplate<PopupStoreCalenderRspDto> getCalender(@PathVariable Long id){
+    @GetMapping("/{id}/calendar")
+    public RspTemplate<PopupStoreCalenderRspDto> getCalender(@PathVariable Long id) {
         return new RspTemplate<>(
                 HttpStatus.OK,
                 "캘린더 조회 성공",
@@ -118,7 +119,7 @@ public class PopupStoreController {
     // 특정 날짜의 예약 가능 시간 조회
     @GetMapping("/{storeId}/{date}")
     public RspTemplate<List<ReservationAvailableSlotRspDto>> getAvailable(
-            @PathVariable Long storeId, @PathVariable @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate date){
+            @PathVariable Long storeId, @PathVariable @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate date) {
         PopupStoreRspDto popupStore = popupStoreService.getPopupStore(storeId);
         List<ReservationAvailableSlotRspDto> available = popupStoreService.getAvailableSlots(storeId, date);
         return new RspTemplate<>(HttpStatus.OK, popupStore.getName() + "의 예약 가능 시간 조회", available);
@@ -131,6 +132,18 @@ public class PopupStoreController {
                 HttpStatus.OK,
                 address + " 지역 팝업스토어 조회 성공",
                 popupStoreService.getStoresByAddress(address)
+        );
+    }
+
+    // 팝업스토어 수정
+    @PatchMapping("/{id}")
+    public RspTemplate<PopupStoreRspDto> updatePopupStore(
+            @PathVariable Long id,
+            @Valid @ModelAttribute PopupStoreUpdateReqDto reqDto) {
+        return new RspTemplate<>(
+                HttpStatus.OK,
+                "팝업스토어 수정 성공",
+                popupStoreService.updatePopupStore(id, reqDto)
         );
     }
 }

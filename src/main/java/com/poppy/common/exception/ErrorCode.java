@@ -38,6 +38,7 @@ public enum ErrorCode {
     ALREADY_BOOKED(500, "해당 날짜에 이미 예약이 존재합니다."),
     CANCELLATION_FAILED(500, "예약 취소에 실패하였습니다."),
     INVALID_RESERVATION(500, "예약이 불가한 팝업스토어입니다."),
+    OFFLINE_STORE_UPDATE_DENIED(400, "오프라인 팝업스토어는 수정할 수 없습니다."),
 
     // 카테고리 관련
     CATEGORY_NOT_FOUND(400, "카테고리를 찾을 수 없습니다."),
@@ -94,6 +95,7 @@ public enum ErrorCode {
     FILE_IS_EMPTY(500, "파일이 비어있습니다."),
     FILE_SIZE_EXCEEDED(500, "파일 크기 제한을 초과하였습니다."),
     INVALID_IMAGE_TYPE(500, "유효하지 않은 이미지 타입입니다."),
+    IMAGE_UPDATE_FAILED(500, "이미지 업데이트에 실패하였습니다.")
     ;
 
     private final int code;

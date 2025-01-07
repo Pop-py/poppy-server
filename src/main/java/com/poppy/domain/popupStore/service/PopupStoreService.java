@@ -1,24 +1,37 @@
 package com.poppy.domain.popupStore.service;
 
+import com.poppy.admin.service.AsyncRedisSlotInitializationService;
+import com.poppy.common.entity.Images;
 import com.poppy.common.exception.BusinessException;
 import com.poppy.common.exception.ErrorCode;
+import com.poppy.common.service.ImageService;
 import com.poppy.domain.popupStore.dto.request.PopupStoreSearchReqDto;
+import com.poppy.domain.popupStore.dto.request.PopupStoreUpdateReqDto;
 import com.poppy.domain.popupStore.dto.response.PopupStoreCalenderRspDto;
 import com.poppy.domain.popupStore.dto.response.PopupStoreRspDto;
 import com.poppy.domain.popupStore.entity.PopupStore;
 import com.poppy.domain.popupStore.entity.PopupStoreView;
+import com.poppy.domain.popupStore.entity.ReservationType;
 import com.poppy.domain.popupStore.repository.PopupStoreRepository;
 import com.poppy.domain.popupStore.dto.response.ReservationAvailableSlotRspDto;
 import com.poppy.domain.popupStore.repository.PopupStoreViewRepository;
 import com.poppy.domain.reservation.entity.PopupStoreStatus;
 import com.poppy.domain.reservation.entity.ReservationAvailableSlot;
 import com.poppy.domain.reservation.repository.ReservationAvailableSlotRepository;
+import com.poppy.domain.reservation.repository.ReservationRepository;
+import com.poppy.domain.storeCategory.entity.StoreCategory;
+import com.poppy.domain.storeCategory.repository.StoreCategoryRepository;
+import com.poppy.domain.user.entity.Role;
+import com.poppy.domain.user.entity.User;
+import com.poppy.domain.user.repository.LoginUserProvider;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -28,10 +41,16 @@ import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class PopupStoreService {
     private final PopupStoreRepository popupStoreRepository;
     private final ReservationAvailableSlotRepository reservationAvailableSlotRepository;
     private final PopupStoreViewRepository popupStoreViewRepository;
+    private final StoreCategoryRepository storeCategoryRepository;
+    private final ReservationRepository reservationRepository;
+    private final ImageService imageService;
+    private final LoginUserProvider loginUserProvider;
+    private final AsyncRedisSlotInitializationService asyncRedisSlotService;
 
     // 전체 목록 조회
     @Transactional(readOnly = true)
@@ -319,5 +338,130 @@ public class PopupStoreService {
                 .stream()
                 .map(PopupStoreRspDto::from)
                 .collect(Collectors.toList());
+    }
+
+    // 팝업스토어 수정
+    @Transactional
+    public PopupStoreRspDto updatePopupStore(Long id, PopupStoreUpdateReqDto reqDto) {
+        User user = loginUserProvider.getLoggedInUser();
+
+        // 팝업스토어 조회
+        PopupStore popupStore = popupStoreRepository.findById(id)
+                .orElseThrow(() -> new BusinessException(ErrorCode.STORE_NOT_FOUND));
+
+        // 권한 체크 (ADMIN 또는 MASTER만 수정 가능)
+        if (!(user.getRole().equals(Role.ROLE_ADMIN) || user.getRole().equals(Role.ROLE_MASTER))) {
+            throw new BusinessException(ErrorCode.UNAUTHORIZED);
+        }
+
+        // MASTER는 본인의 팝업스토어만 수정 가능
+        if (user.getRole().equals(Role.ROLE_MASTER) && !popupStore.getMasterUser().getId().equals(user.getId())) {
+            throw new BusinessException(ErrorCode.UNAUTHORIZED_STORE_ACCESS);
+        }
+
+        // ONLINE만 수정
+        if (popupStore.getReservationType() != ReservationType.ONLINE) {
+            throw new BusinessException(ErrorCode.OFFLINE_STORE_UPDATE_DENIED);
+        }
+
+        // 휴무일 변경 시 예약 확인
+        if (reqDto.getHolidays() != null && !reqDto.getHolidays().isEmpty()) {
+            boolean hasReservationsOnHolidays = reservationRepository.existsByPopupStoreIdAndDateIn(
+                    popupStore.getId(),
+                    reqDto.getHolidays()
+            );
+
+            if (hasReservationsOnHolidays) {
+                throw new BusinessException(ErrorCode.STORE_HAS_REFERENCES);
+            }
+        }
+
+        // 카테고리 변경 요청이 있는 경우
+        if (reqDto.getCategoryName() != null) {
+            StoreCategory category = storeCategoryRepository.findByName(reqDto.getCategoryName())
+                    .orElseThrow(() -> new BusinessException(ErrorCode.CATEGORY_NOT_FOUND));
+            popupStore.updateCategory(category);
+        }
+
+        // 이미지 처리 로직
+        if (reqDto.getImages() != null && !reqDto.getImages().isEmpty()) {
+            try {
+                // 새 이미지 업로드 및 저장
+                List<Images> uploadedImages = new ArrayList<>();
+
+                // 이미지 파일들을 순차적으로 업로드
+                for (MultipartFile image : reqDto.getImages()) {
+                    Images uploadedImage = imageService.uploadImageFromMultipart(image, "PopupStore", popupStore.getId());
+                    uploadedImages.add(uploadedImage);
+                }
+
+                // 기존 이미지들 중 새로 업로드된 이미지에 포함되지 않은 것만 찾아서 삭제
+                List<Images> imagesToDelete = popupStore.getImages().stream()
+                        .filter(oldImage -> uploadedImages.stream()
+                                .noneMatch(newImage ->
+                                        oldImage.getStoredName().equals(newImage.getStoredName())))
+                        .toList();
+
+                // 삭제 대상 이미지들을 실제로 삭제
+                imagesToDelete.forEach(image -> {
+                    imageService.deleteImage(image.getId());
+                    popupStore.getImages().remove(image);
+                });
+
+                // 새로운 이미지들을 팝업스토어와 연결하고 리스트에 추가
+                uploadedImages.forEach(image -> {
+                    image.updatePopupStore(popupStore);
+                    if (!popupStore.getImages().contains(image)) {
+                        popupStore.getImages().add(image);
+                    }
+                });
+
+            } catch (Exception e) {
+                throw new BusinessException(ErrorCode.IMAGE_UPDATE_FAILED);
+            }
+        }
+
+        // 휴무일 변경이 있는 경우
+        if (reqDto.getHolidays() != null && !reqDto.getHolidays().isEmpty()) {
+            // 기존 휴무일 정보 삭제
+            reservationAvailableSlotRepository.deleteByPopupStoreIdAndStatus(
+                    popupStore.getId(),
+                    PopupStoreStatus.HOLIDAY
+            );
+
+            // 새로운 휴무일 정보 저장
+            List<ReservationAvailableSlot> holidaySlots = reqDto.getHolidays().stream()
+                    .flatMap(date -> {
+                        List<ReservationAvailableSlot> slotsForDay = new ArrayList<>();
+                        LocalTime currentTime = popupStore.getOpeningTime();
+
+                        while (currentTime.isBefore(popupStore.getClosingTime())) {
+                            slotsForDay.add(ReservationAvailableSlot.builder()
+                                    .popupStore(popupStore)
+                                    .date(date)
+                                    .time(currentTime)
+                                    .availableSlot(0)
+                                    .totalSlot(0)
+                                    .status(PopupStoreStatus.HOLIDAY)
+                                    .build());
+                            currentTime = currentTime.plusHours(1);
+                        }
+                        return slotsForDay.stream();
+                    })
+                    .toList();
+
+            reservationAvailableSlotRepository.saveAll(holidaySlots);
+
+            // 예약 슬롯 재초기화 추가
+            if(popupStore.getReservationType() == ReservationType.ONLINE) {
+                initializeSlots(popupStore.getId());
+                asyncRedisSlotService.initializeRedisSlots(popupStore.getId());
+            }
+        }
+
+        // 엔티티 업데이트
+        popupStore.updateDetails(reqDto);
+
+        return PopupStoreRspDto.from(popupStore);
     }
 }
