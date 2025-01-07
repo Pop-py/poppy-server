@@ -9,6 +9,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.time.LocalDate;
 import java.util.List;
 
 @Repository
@@ -33,4 +34,10 @@ public interface ScrapRepository extends JpaRepository<Scrap, Long> {
        CASE WHEN :sortType = 'END_DATE' THEN p.endDate END ASC
        """)
     List<Scrap> findScrapsByUserAndSortType(@Param("user") User user, @Param("sortType") String sortType);
+
+    @Query("SELECT s FROM Scrap s " +
+            "JOIN FETCH s.user u " +
+            "JOIN FETCH s.popupStore p " +
+            "WHERE p.startDate = :date")
+    List<Scrap> findByPopupStoreStartDate(LocalDate date);
 }
