@@ -100,8 +100,6 @@ public class MasterWaitingService {
         Waiting waiting = waitingRepository.findById(waitingId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.WAITING_NOT_FOUND));
 
-        validateMasterAuthority(waiting.getPopupStore().getId());
-
         if (waiting.getStatus() != WaitingStatus.CALLED) {
             return;
         }
