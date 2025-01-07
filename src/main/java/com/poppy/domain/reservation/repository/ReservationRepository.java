@@ -9,6 +9,7 @@ import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 @Repository
 public interface ReservationRepository extends JpaRepository<Reservation, Long> {
@@ -18,4 +19,5 @@ public interface ReservationRepository extends JpaRepository<Reservation, Long> 
     Optional<Reservation> findByIdAndUserId(Long id, Long userId);
     Optional<Reservation> findByUserIdAndPopupStoreIdAndDateAndStatus(Long userId, Long storeId, LocalDate date, ReservationStatus status);
     List<Reservation> findByDateAndTimeAndStatus(LocalDate date, LocalTime time, ReservationStatus status);
+    boolean existsByPopupStoreIdAndDateIn(Long popupStoreId, Set<LocalDate> dates);
 }

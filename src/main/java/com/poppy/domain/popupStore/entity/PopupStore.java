@@ -2,6 +2,7 @@ package com.poppy.domain.popupStore.entity;
 
 import com.poppy.common.entity.BaseTimeEntity;
 import com.poppy.common.entity.Images;
+import com.poppy.domain.popupStore.dto.request.PopupStoreUpdateReqDto;
 import com.poppy.domain.reservation.entity.PopupStoreStatus;
 import com.poppy.domain.reservation.entity.ReservationAvailableSlot;
 import com.poppy.domain.scrap.entity.Scrap;
@@ -12,6 +13,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -90,7 +92,7 @@ public class PopupStore extends BaseTimeEntity {
     private StoreCategory storeCategory;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name ="matser_user_id",nullable = false)
+    @JoinColumn(name = "matser_user_id", nullable = false)
     private User masterUser;
 
     @OneToMany(mappedBy = "popupStore", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
@@ -107,11 +109,11 @@ public class PopupStore extends BaseTimeEntity {
 
     @Builder
     public PopupStore(String name, String description, String location, String address,
-                       LocalDate startDate, LocalDate endDate, LocalTime openingTime,
-                       LocalTime closingTime, Integer availableSlot, StoreCategory storeCategory,
-                       Boolean isActive, Boolean isEnd, Double rating, Long price,
-                       String homepageUrl, String instagramUrl, String blogUrl,
-                       User masterUser, ReservationType reservationType, Integer scrapCount) {
+                      LocalDate startDate, LocalDate endDate, LocalTime openingTime,
+                      LocalTime closingTime, Integer availableSlot, StoreCategory storeCategory,
+                      Boolean isActive, Boolean isEnd, Double rating, Long price,
+                      String homepageUrl, String instagramUrl, String blogUrl,
+                      User masterUser, ReservationType reservationType, Integer scrapCount) {
         this.name = name;
         this.description = description;
         this.location = location;
@@ -142,12 +144,16 @@ public class PopupStore extends BaseTimeEntity {
         this.scrapCount = count;
     }
 
+    public void updateCategory(StoreCategory category) {
+        this.storeCategory = category;
+    }
+
     // 마감임박 여부 판단
     public Boolean calculateAlmostFull(List<ReservationAvailableSlot> slots, ReservationType reservationType) {
         // Offline인 경우 null
-        if(reservationType == ReservationType.OFFLINE) return null;
+        if (reservationType == ReservationType.OFFLINE) return null;
 
-        if(slots == null || slots.isEmpty()) return false;
+        if (slots == null || slots.isEmpty()) return false;
 
         // 현재 시점 이후의 휴무일이 아닌 슬롯만 필터링
         List<ReservationAvailableSlot> activeSlots = slots.stream()
@@ -179,5 +185,16 @@ public class PopupStore extends BaseTimeEntity {
             return;
         }
         this.rating = Math.round(newRating * 10.0) / 10.0;
+    }
+
+    public void updateDetails(PopupStoreUpdateReqDto reqDto) {
+        if (reqDto.getName() != null) this.name = reqDto.getName();
+        if (reqDto.getDescription() != null) this.description = reqDto.getDescription();
+        if (reqDto.getLocation() != null) this.location = reqDto.getLocation();
+        if (reqDto.getAddress() != null) this.address = reqDto.getAddress();
+        if (reqDto.getPrice() != null) this.price = reqDto.getPrice();
+        if (reqDto.getHomepageUrl() != null) this.homepageUrl = reqDto.getHomepageUrl();
+        if (reqDto.getInstagramUrl() != null) this.instagramUrl = reqDto.getInstagramUrl();
+        if (reqDto.getBlogUrl() != null) this.blogUrl = reqDto.getBlogUrl();
     }
 }
