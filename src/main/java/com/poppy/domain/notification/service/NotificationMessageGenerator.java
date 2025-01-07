@@ -79,6 +79,6 @@ public class NotificationMessageGenerator {
     }
 
     public String generateWebSocketMessage(NotificationType type, String storeName) {
-        return String.format("[%s]\n스토어 오픈!", storeName);
+        return String.format("[%s]\n스토어가 오픈되었습니다.", storeName);
     }
 }

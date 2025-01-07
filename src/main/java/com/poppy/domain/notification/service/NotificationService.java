@@ -237,7 +237,7 @@ public class NotificationService {
                 null
         );
 
-        ScrapedStoreNotificationDto wsNotificationDto = ScrapedStoreNotificationDto.from(
+        ScrapedStoreNotificationDto wsNotificationDto = ScrapedStoreNotificationDto.of(
                 wsMessage,
                 NotificationType.SCRAPED_STORE_OPENING,
                 scrap.getUser().getId(),

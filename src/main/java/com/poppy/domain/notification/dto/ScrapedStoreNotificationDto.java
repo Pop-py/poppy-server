@@ -16,7 +16,7 @@ public class ScrapedStoreNotificationDto extends NotificationDto {
         this.storeId = storeId;
     }
 
-    public static ScrapedStoreNotificationDto from(
+    public static ScrapedStoreNotificationDto of(
             String message,
             NotificationType type,
             Long userId,
