@@ -62,6 +62,8 @@ public class PopupStoreService {
     // 팝업 스토어 상세 조회
     @Transactional
     public PopupStoreRspDto getPopupStore(Long id) {
+        User user = loginUserProvider.getLoggedInUserOrNull();
+
         PopupStore popupStore = popupStoreRepository.findById(id)
                 .orElseThrow(() -> new BusinessException(ErrorCode.STORE_NOT_FOUND));
 
@@ -69,6 +71,7 @@ public class PopupStoreService {
         PopupStoreView view = PopupStoreView.builder()
                 .popupStore(popupStore)
                 .viewedAt(LocalDateTime.now())
+                .user(user)     // 로그인하지 않은 유저인 경우 null로 처리
                 .build();
         popupStoreViewRepository.save(view);
 

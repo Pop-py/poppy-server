@@ -1,5 +1,6 @@
 package com.poppy.domain.popupStore.entity;
 
+import com.poppy.domain.user.entity.User;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -22,6 +23,10 @@ public class PopupStoreView {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "popup_store_id", nullable = false)
     private PopupStore popupStore;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id")
+    private User user;
 
     @Column(name = "viewed_at", nullable = false)
     private LocalDateTime viewedAt; // 조회 시각
