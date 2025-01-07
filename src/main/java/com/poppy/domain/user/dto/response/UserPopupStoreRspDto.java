@@ -28,6 +28,7 @@ public class UserPopupStoreRspDto {
     private Boolean isActive;
     private Boolean isEnd;
     private String thumbnailUrl;
+    private Boolean isAlmostFull;
 
     public static UserPopupStoreRspDto of(User user, PopupStore store) {
         List<Images> images = store.getImages();
@@ -50,6 +51,7 @@ public class UserPopupStoreRspDto {
                 .isActive(store.getIsActive())
                 .isEnd(store.getIsEnd())
                 .thumbnailUrl(images != null && !images.isEmpty() ? images.get(0).getUploadUrl() : null)
+                .isAlmostFull(store.calculateAlmostFull(store.getReservationAvailableSlots(), store.getReservationType()))
                 .build();
     }
 }
