@@ -47,7 +47,6 @@ public class SecurityConfig {
                         // 팝업스토어 관련
                         .requestMatchers("/popup-stores/**").permitAll()
                         .requestMatchers("/search-history/popular").permitAll()
-                        .requestMatchers("/users/recent").permitAll()
                         // 공지사항 관련
                         .requestMatchers("/notices/**").permitAll()
                         // 리뷰 관련
