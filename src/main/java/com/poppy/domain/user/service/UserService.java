@@ -126,13 +126,10 @@ public class UserService {
         user.updateNickname(nickname);
     }
 
-    // 유저별 최근 본 팝업
+    // 로그인한 유저의 최근 본 팝업
     @Transactional(readOnly = true)
     public List<UserPopupStoreRspDto> getUserPopupStoreRecent() {
-        User user = loginUserProvider.getLoggedInUserOrNull();
-
-        if (user == null) return Collections.emptyList();
-
+        User user = loginUserProvider.getLoggedInUser();
         return userRepository.findRecentViewedStores(user.getId(), 10);
     }
 
