@@ -41,6 +41,7 @@ public class JwtTokenizer {
                 .refreshTokenExp(getTokenExpiration(refreshTokenExpireTime))
                 .userEmail(user.getEmail())
                 .nickname(user.getNickname())
+                .phoneNumber(user.getPhoneNumber())
                 .build();
     }
 

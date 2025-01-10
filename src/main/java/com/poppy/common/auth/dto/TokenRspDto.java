@@ -22,4 +22,6 @@ public class TokenRspDto {
     private String userEmail;
 
     private String nickname;
+
+    private String phoneNumber;
 }
