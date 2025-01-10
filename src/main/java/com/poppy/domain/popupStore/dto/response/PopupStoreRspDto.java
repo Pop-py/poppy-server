@@ -52,6 +52,7 @@ public class PopupStoreRspDto {
     private final Integer scrapCount;
     private Boolean isAlmostFull;
     private Integer viewCount;
+    private int reviewCnt;
 
     public static PopupStoreRspDto from(PopupStore store) {
         List<Images> images = store.getImages();
@@ -84,6 +85,7 @@ public class PopupStoreRspDto {
                 .isActive(store.getIsActive())
                 .isEnd(store.getIsEnd())
                 .rating(store.getRating())
+                .reviewCnt(store.getReviews().size())
                 .categoryName(store.getStoreCategory().getName())
                 .reservationType(store.getReservationType().toString())
                 .thumbnailUrl(images != null && !images.isEmpty() ? images.get(0).getUploadUrl() : null)
