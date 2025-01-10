@@ -5,6 +5,7 @@ import com.poppy.common.entity.Images;
 import com.poppy.domain.popupStore.dto.request.PopupStoreUpdateReqDto;
 import com.poppy.domain.reservation.entity.PopupStoreStatus;
 import com.poppy.domain.reservation.entity.ReservationAvailableSlot;
+import com.poppy.domain.review.entity.Review;
 import com.poppy.domain.scrap.entity.Scrap;
 import com.poppy.domain.storeCategory.entity.StoreCategory;
 import com.poppy.domain.user.entity.User;
@@ -97,6 +98,9 @@ public class PopupStore extends BaseTimeEntity {
 
     @OneToMany(mappedBy = "popupStore", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<Images> images = new ArrayList<>();
+
+    @OneToMany(mappedBy = "popupStore", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private List<Review> reviews = new ArrayList<>();
 
     @OneToMany(mappedBy = "popupStore", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<ReservationAvailableSlot> reservationAvailableSlots = new ArrayList<>();
