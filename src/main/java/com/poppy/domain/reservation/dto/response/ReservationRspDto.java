@@ -14,6 +14,8 @@ import java.time.LocalTime;
 @Getter
 @Builder
 public class ReservationRspDto {
+    private Long reservationId;
+
     private Long popupStoreId;
 
     private String popupStoreName;
@@ -38,6 +40,7 @@ public class ReservationRspDto {
 
     public static ReservationRspDto from(Reservation reservation) {
         return ReservationRspDto.builder()
+                .reservationId(reservation.getId())
                 .popupStoreId(reservation.getPopupStore().getId())
                 .popupStoreName(reservation.getPopupStore().getName())
                 .address(reservation.getPopupStore().getAddress())
