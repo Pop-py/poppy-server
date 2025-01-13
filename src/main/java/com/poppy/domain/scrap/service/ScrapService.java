@@ -41,24 +41,20 @@ public class ScrapService {
         RLock lock = redissonClient.getLock(LOCK_KEY + storeId);
 
         try {
-            // lock 획득
             boolean isLocked = lock.tryLock(LOCK_WAIT_TIME, LOCK_LEASE_TIME, TimeUnit.SECONDS);
             if (!isLocked) throw new BusinessException(ErrorCode.SCRAP_CONFLICT);
 
-            User user = loginProvider.getLoggedInUser();    // 로그인 유저 확인
+            User user = loginProvider.getLoggedInUser();
             PopupStore store = popupStoreRepository.findById(storeId)
                     .orElseThrow(() -> new BusinessException(ErrorCode.STORE_NOT_FOUND));
 
-            // 스크랩 되어있는지 확인
             boolean isScraped = scrapRepository.existsByUserAndPopupStore(user, store);
             String cacheKey = SCRAP_COUNT_KEY + storeId;
 
-            // 스크랩 되어있는 경우 삭제, 그렇지 않은 경우 스크랩
             if (isScraped) {
-                scrapRepository.deleteByUserAndPopupStore(user, store);
                 updateScrapCount(store, cacheKey, false);
-            }
-            else {
+                scrapRepository.deleteByUserAndPopupStore(user, store);
+            } else {
                 scrapRepository.save(Scrap.builder()
                         .user(user)
                         .popupStore(store)
@@ -66,7 +62,10 @@ public class ScrapService {
                 updateScrapCount(store, cacheKey, true);
             }
 
-            Integer currentCount = getCurrentScrapCount(store, cacheKey);
+            PopupStore updatedStore = popupStoreRepository.findById(storeId)
+                    .orElseThrow(() -> new BusinessException(ErrorCode.STORE_NOT_FOUND));
+
+            Integer currentCount = getCurrentScrapCount(updatedStore, cacheKey);
             return ScrapRspDto.of(!isScraped, currentCount);
         }
         catch (InterruptedException e) {
@@ -80,24 +79,27 @@ public class ScrapService {
         }
     }
 
-    // 스크랩 수 업데이트
     private void updateScrapCount(PopupStore store, String cacheKey, boolean isIncrement) {
+        // Redis 캐시 업데이트
         Integer cachedCount = redisTemplate.opsForValue().get(cacheKey);
         if (cachedCount == null) {
             cachedCount = store.getScrapCount();
             redisTemplate.opsForValue().set(cacheKey, cachedCount);
         }
 
+        // DB 업데이트
+        PopupStore refreshedStore = popupStoreRepository.findById(store.getId())
+                .orElseThrow(() -> new BusinessException(ErrorCode.STORE_NOT_FOUND));
+
         if (isIncrement) {
             redisTemplate.opsForValue().increment(cacheKey);
-            store.updateScrapCount(store.getScrapCount() + 1);
+            refreshedStore.updateScrapCount(refreshedStore.getScrapCount() + 1);
         } else {
             redisTemplate.opsForValue().decrement(cacheKey);
-            store.updateScrapCount(store.getScrapCount() - 1);
+            refreshedStore.updateScrapCount(refreshedStore.getScrapCount() - 1);
         }
     }
 
-    // 팝업 스토어의 현재 스크랩 수 확인
     private Integer getCurrentScrapCount(PopupStore store, String cacheKey) {
         Integer cachedCount = redisTemplate.opsForValue().get(cacheKey);
         if (cachedCount == null) {
@@ -107,7 +109,6 @@ public class ScrapService {
         return cachedCount;
     }
 
-    // 유저의 팝업 스토어 스크랩 상태 조회
     public ScrapRspDto getScrapStatus(Long storeId) {
         User user = loginProvider.getLoggedInUser();
         PopupStore store = popupStoreRepository.findById(storeId)
@@ -122,7 +123,6 @@ public class ScrapService {
         );
     }
 
-    // 유저가 스크랩한 팝업 스토어 조회
     @Transactional(readOnly = true)
     public List<UserScrapRspDto> getUserScraps(ScrapSortType scrapSortType) {
         User user = loginProvider.getLoggedInUser();
@@ -132,25 +132,20 @@ public class ScrapService {
                 .toList();
     }
 
-    // 스크랩 삭제
     @Transactional
     public void deleteScrap(Long scrapId) {
         User user = loginProvider.getLoggedInUser();
-
         Scrap scrap = scrapRepository.findById(scrapId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.SCRAP_NOT_FOUND));
 
-        // 본인의 스크랩인지 확인
-        if (!scrap.getUser().getId().equals(user.getId()))
+        if (!scrap.getUser().getId().equals(user.getId())) {
             throw new BusinessException(ErrorCode.SCRAP_NOT_AUTHORIZED);
-
-        scrapRepository.delete(scrap);
+        }
 
         PopupStore store = scrap.getPopupStore();
-        Long storeId = scrap.getPopupStore().getId();
+        String cacheKey = SCRAP_COUNT_KEY + store.getId();
 
-        // 스크랩 수 업데이트
-        String cacheKey = SCRAP_COUNT_KEY + storeId;
         updateScrapCount(store, cacheKey, false);
+        scrapRepository.delete(scrap);
     }
 }
