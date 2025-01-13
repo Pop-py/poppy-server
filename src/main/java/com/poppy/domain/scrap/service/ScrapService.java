@@ -87,17 +87,20 @@ public class ScrapService {
             redisTemplate.opsForValue().set(cacheKey, cachedCount);
         }
 
-        // DB 업데이트
-        PopupStore refreshedStore = popupStoreRepository.findById(store.getId())
+        PopupStore latestStore = popupStoreRepository.findById(store.getId())
                 .orElseThrow(() -> new BusinessException(ErrorCode.STORE_NOT_FOUND));
 
+        int newCount;
         if (isIncrement) {
             redisTemplate.opsForValue().increment(cacheKey);
-            refreshedStore.updateScrapCount(refreshedStore.getScrapCount() + 1);
+            newCount = cachedCount + 1;
         } else {
             redisTemplate.opsForValue().decrement(cacheKey);
-            refreshedStore.updateScrapCount(refreshedStore.getScrapCount() - 1);
+            newCount = cachedCount - 1;
         }
+
+        latestStore.updateScrapCount(newCount);
+        popupStoreRepository.save(latestStore);
     }
 
     private Integer getCurrentScrapCount(PopupStore store, String cacheKey) {
