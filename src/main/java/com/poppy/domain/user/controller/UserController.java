@@ -30,8 +30,8 @@ public class UserController {
     }
 
     // 유저의 예약 내역 전체 조회
-    @GetMapping("/{id}/reservations")
-    public RspTemplate<List<UserReservationRspDto>> getReservations(@PathVariable Long id) {
+    @GetMapping("/reservations")
+    public RspTemplate<List<UserReservationRspDto>> getReservations() {
         List<UserReservationRspDto> reservations = userService.getReservations();
         if(reservations.isEmpty()) return new RspTemplate<>(HttpStatus.OK, "예약 내역이 존재하지 않습니다.");
 
@@ -39,15 +39,15 @@ public class UserController {
     }
 
     // 유저의 예약 내역 상세 조회
-    @GetMapping("/{id}/reservations/{reservationId}")
-    public RspTemplate<UserReservationDetailRspDto> getReservation(@PathVariable Long id, @PathVariable Long reservationId) {
+    @GetMapping("/reservations/{reservationId}")
+    public RspTemplate<UserReservationDetailRspDto> getReservation(@PathVariable Long reservationId) {
         UserReservationDetailRspDto reservation = userService.getReservationById(reservationId);
         return new RspTemplate<>(HttpStatus.OK, "예약 내역 상세 조회", reservation);
     }
 
     // 예약 취소
-    @DeleteMapping("/{id}/reservations/{reservationId}")
-    public RspTemplate<Void> cancelReservation(@PathVariable Long id, @PathVariable Long reservationId) {
+    @DeleteMapping("/reservations/{reservationId}")
+    public RspTemplate<Void> cancelReservation(@PathVariable Long reservationId) {
         userService.cancelUserReservation(reservationId);
         return new RspTemplate<>(HttpStatus.OK, "예약이 취소되었습니다.");
     }
