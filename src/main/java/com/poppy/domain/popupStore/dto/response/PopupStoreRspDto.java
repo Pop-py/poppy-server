@@ -53,6 +53,7 @@ public class PopupStoreRspDto {
     private Boolean isAlmostFull;
     private Integer viewCount;
     private int reviewCnt;
+    private Boolean isScraped;
 
     public static PopupStoreRspDto from(PopupStore store) {
         List<Images> images = store.getImages();
@@ -99,6 +100,57 @@ public class PopupStoreRspDto {
                 .instagramUrl(store.getInstagramUrl())
                 .blogUrl(store.getBlogUrl())
                 .scrapCount(store.getScrapCount())
+                .isAlmostFull(store.calculateAlmostFull(store.getReservationAvailableSlots(), store.getReservationType()))
+                .viewCount(store.getViews() != null ? store.getViews().size() : 0)
+                .build();
+    }
+
+    public static PopupStoreRspDto of(PopupStore store, boolean isScraped) {
+        List<Images> images = store.getImages();
+
+        return PopupStoreRspDto.builder()
+                .id(store.getId())
+                .name(store.getName())
+                .description(store.getDescription())
+                .location(store.getLocation())
+                .address(store.getAddress())
+                .startDate(DateInfo.builder()
+                        .year(store.getStartDate().getYear())
+                        .month(store.getStartDate().getMonthValue())
+                        .day(store.getStartDate().getDayOfMonth())
+                        .build())
+                .endDate(DateInfo.builder()
+                        .year(store.getEndDate().getYear())
+                        .month(store.getEndDate().getMonthValue())
+                        .day(store.getEndDate().getDayOfMonth())
+                        .build())
+                .openingTime(TimeInfo.builder()
+                        .hour(store.getOpeningTime().getHour())
+                        .minute(store.getOpeningTime().getMinute())
+                        .build())
+                .closingTime(TimeInfo.builder()
+                        .hour(store.getClosingTime().getHour())
+                        .minute(store.getClosingTime().getMinute())
+                        .build())
+                .availableSlot(store.getAvailableSlot())
+                .isActive(store.getIsActive())
+                .isEnd(store.getIsEnd())
+                .rating(store.getRating())
+                .reviewCnt(store.getReviews().size())
+                .categoryName(store.getStoreCategory().getName())
+                .reservationType(store.getReservationType().toString())
+                .thumbnailUrl(images != null && !images.isEmpty() ? images.get(0).getUploadUrl() : null)
+                .imageUrls(images != null ?
+                        images.stream()
+                                .map(Images::getUploadUrl)
+                                .toList()
+                        : Collections.emptyList())
+                .price(store.getPrice())
+                .homepageUrl(store.getHomepageUrl())
+                .instagramUrl(store.getInstagramUrl())
+                .blogUrl(store.getBlogUrl())
+                .scrapCount(store.getScrapCount())
+                .isScraped(isScraped)
                 .isAlmostFull(store.calculateAlmostFull(store.getReservationAvailableSlots(), store.getReservationType()))
                 .viewCount(store.getViews() != null ? store.getViews().size() : 0)
                 .build();

@@ -17,6 +17,9 @@ public interface ScrapRepository extends JpaRepository<Scrap, Long> {
     // 유저와 팝업스토어로 스크랩 존재 여부 확인
     boolean existsByUserAndPopupStore(User user, PopupStore popupStore);
 
+    @Query("SELECT COUNT(s) > 0 FROM Scrap s WHERE s.user.id = :userId AND s.popupStore.id = :popupStoreId")
+    boolean existsByUserIdAndPopupStoreId(@Param("userId") Long userId, @Param("popupStoreId") Long popupStoreId);
+
     // 유저와 팝업스토어로 스크랩 삭제
     @Modifying(clearAutomatically = true)
     @Query("DELETE FROM Scrap s WHERE s.user = :user AND s.popupStore = :popupStore")
