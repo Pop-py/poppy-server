@@ -23,7 +23,6 @@ import java.util.concurrent.TimeUnit;
 
 @Service
 @RequiredArgsConstructor
-@Transactional(readOnly = true)
 public class ScrapService {
     private static final String SCRAP_COUNT_KEY = "store:scrap:count:";
     private static final String LOCK_KEY = "store:scrap:lock:";
@@ -51,22 +50,26 @@ public class ScrapService {
             boolean isScraped = scrapRepository.existsByUserAndPopupStore(user, store);
             String cacheKey = SCRAP_COUNT_KEY + storeId;
 
+            int currentCount = store.getScrapCount();   // 현재 스크랩 수 조회
+
             if (isScraped) {
-                updateScrapCount(store, cacheKey, false);
+                store.updateScrapCount(currentCount - 1);
                 scrapRepository.deleteByUserAndPopupStore(user, store);
-            } else {
+                redisTemplate.opsForValue().decrement(cacheKey);
+            }
+            else {
+                store.updateScrapCount(currentCount + 1);
                 scrapRepository.save(Scrap.builder()
                         .user(user)
                         .popupStore(store)
                         .build());
-                updateScrapCount(store, cacheKey, true);
+                redisTemplate.opsForValue().increment(cacheKey);
             }
 
-            PopupStore updatedStore = popupStoreRepository.findById(storeId)
-                    .orElseThrow(() -> new BusinessException(ErrorCode.STORE_NOT_FOUND));
+            // 명시적 저장 추가
+            popupStoreRepository.saveAndFlush(store);
 
-            Integer currentCount = getCurrentScrapCount(updatedStore, cacheKey);
-            return ScrapRspDto.of(!isScraped, currentCount);
+            return ScrapRspDto.of(!isScraped, store.getScrapCount());
         }
         catch (InterruptedException e) {
             Thread.currentThread().interrupt();
@@ -79,30 +82,6 @@ public class ScrapService {
         }
     }
 
-    private void updateScrapCount(PopupStore store, String cacheKey, boolean isIncrement) {
-        // Redis 캐시 업데이트
-        Integer cachedCount = redisTemplate.opsForValue().get(cacheKey);
-        if (cachedCount == null) {
-            cachedCount = store.getScrapCount();
-            redisTemplate.opsForValue().set(cacheKey, cachedCount);
-        }
-
-        PopupStore latestStore = popupStoreRepository.findById(store.getId())
-                .orElseThrow(() -> new BusinessException(ErrorCode.STORE_NOT_FOUND));
-
-        int newCount;
-        if (isIncrement) {
-            redisTemplate.opsForValue().increment(cacheKey);
-            newCount = cachedCount + 1;
-        } else {
-            redisTemplate.opsForValue().decrement(cacheKey);
-            newCount = cachedCount - 1;
-        }
-
-        latestStore.updateScrapCount(newCount);
-        popupStoreRepository.save(latestStore);
-    }
-
     private Integer getCurrentScrapCount(PopupStore store, String cacheKey) {
         Integer cachedCount = redisTemplate.opsForValue().get(cacheKey);
         if (cachedCount == null) {
@@ -112,6 +91,7 @@ public class ScrapService {
         return cachedCount;
     }
 
+    @Transactional(readOnly = true)
     public ScrapRspDto getScrapStatus(Long storeId) {
         User user = loginProvider.getLoggedInUser();
         PopupStore store = popupStoreRepository.findById(storeId)
@@ -133,22 +113,5 @@ public class ScrapService {
                 .stream()
                 .map(UserScrapRspDto::from)
                 .toList();
-    }
-
-    @Transactional
-    public void deleteScrap(Long scrapId) {
-        User user = loginProvider.getLoggedInUser();
-        Scrap scrap = scrapRepository.findById(scrapId)
-                .orElseThrow(() -> new BusinessException(ErrorCode.SCRAP_NOT_FOUND));
-
-        if (!scrap.getUser().getId().equals(user.getId())) {
-            throw new BusinessException(ErrorCode.SCRAP_NOT_AUTHORIZED);
-        }
-
-        PopupStore store = scrap.getPopupStore();
-        String cacheKey = SCRAP_COUNT_KEY + store.getId();
-
-        updateScrapCount(store, cacheKey, false);
-        scrapRepository.delete(scrap);
     }
 }

@@ -200,6 +200,10 @@ public class ReviewService {
     // 팝업 스토어 리뷰 전체 조회
     @Transactional(readOnly = true)
     public Page<ReviewRspDto> getReviews(Long popupStoreId, ReviewSortType sortType, PageRequest pageRequest) {
+        // 현재 로그인한 사용자 조회 시도 (로그인하지 않은 경우 null)
+        User currentUser = loginUserProvider.getLoggedInUserOrNull();
+
+        // 리뷰 목록 조회
         Page<Review> reviews = switch (sortType) {
             case RECENT -> reviewRepository.findByPopupStoreIdOrderByCreatedAtDesc(popupStoreId, pageRequest);
             case LIKES -> reviewRepository.findByPopupStoreIdOrderByLikeCountDesc(popupStoreId, pageRequest);
@@ -207,15 +211,19 @@ public class ReviewService {
             case RATING_LOW -> reviewRepository.findByPopupStoreIdOrderByRatingAsc(popupStoreId, pageRequest);
         };
 
-        return reviews.map(ReviewRspDto::from);
-    }
+        // 현재 사용자가 있는 경우 좋아요 상태를 포함하여 변환
+        if (currentUser != null) {
+            return reviews.map(review -> {
+                boolean isLiked = reviewLikeRepository.existsByUserIdAndReviewId(
+                        currentUser.getId(),
+                        review.getId()
+                );
+                return ReviewRspDto.of(review, isLiked);
+            });
+        }
 
-    // 팝업 스토어 리뷰 상세 조회
-    @Transactional(readOnly = true)
-    public ReviewRspDto getReview(Long reviewId) {
-        Review review = reviewRepository.findById(reviewId)
-                .orElseThrow(() -> new BusinessException(ErrorCode.REVIEW_NOT_FOUND));
-        return ReviewRspDto.from(review);
+        // 로그인하지 않은 경우 기본 DTO로 변환 (isLiked = false)
+        return reviews.map(review -> ReviewRspDto.of(review, false));
     }
 
     // 해당 팝업스토어의 리뷰 평점 계산

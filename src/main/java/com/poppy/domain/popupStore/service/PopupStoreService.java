@@ -19,6 +19,7 @@ import com.poppy.domain.reservation.entity.PopupStoreStatus;
 import com.poppy.domain.reservation.entity.ReservationAvailableSlot;
 import com.poppy.domain.reservation.repository.ReservationAvailableSlotRepository;
 import com.poppy.domain.reservation.repository.ReservationRepository;
+import com.poppy.domain.scrap.repository.ScrapRepository;
 import com.poppy.domain.storeCategory.entity.StoreCategory;
 import com.poppy.domain.storeCategory.repository.StoreCategoryRepository;
 import com.poppy.domain.user.entity.Role;
@@ -46,6 +47,7 @@ public class PopupStoreService {
     private final PopupStoreViewRepository popupStoreViewRepository;
     private final StoreCategoryRepository storeCategoryRepository;
     private final ReservationRepository reservationRepository;
+    private final ScrapRepository scrapRepository;
     private final ImageService imageService;
     private final LoginUserProvider loginUserProvider;
     private final AsyncRedisSlotInitializationService asyncRedisSlotService;
@@ -75,7 +77,10 @@ public class PopupStoreService {
                 .build();
         popupStoreViewRepository.save(view);
 
-        return PopupStoreRspDto.from(popupStore);
+        boolean isScraped = false;
+        if (user != null) isScraped = scrapRepository.existsByUserIdAndPopupStoreId(user.getId(), id);
+
+        return PopupStoreRspDto.of(popupStore, isScraped);
     }
 
     // 팝업 스토어 조회 필터링

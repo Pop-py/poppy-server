@@ -34,6 +34,8 @@ public class ReviewRspDto {
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy.MM.dd")
     private LocalDate date;    // 작성일 (수정 시 해당 날짜로 갱신됨)
 
+    private Boolean isLiked;
+
     public static ReviewRspDto from(Review review) {
         return ReviewRspDto.builder()
                 .id(review.getId())
@@ -46,6 +48,22 @@ public class ReviewRspDto {
                 .userName(review.getUser().getNickname())
                 .popupStoreName(review.getPopupStore().getName())
                 .date(review.getUpdateTime().toLocalDate())
+                .build();
+    }
+
+    public static ReviewRspDto of(Review review, Boolean isLiked) {
+        return ReviewRspDto.builder()
+                .id(review.getId())
+                .content(review.getContent())
+                .imageUrls(review.getImages().stream()
+                        .map(Images::getUploadUrl)
+                        .collect(Collectors.toList()))
+                .rating(review.getRating())
+                .likes(review.getReviewLikes().size())
+                .userName(review.getUser().getNickname())
+                .popupStoreName(review.getPopupStore().getName())
+                .date(review.getUpdateTime().toLocalDate())
+                .isLiked(isLiked)
                 .build();
     }
 }
