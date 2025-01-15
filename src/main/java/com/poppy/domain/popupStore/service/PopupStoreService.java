@@ -173,6 +173,24 @@ public class PopupStoreService {
                 .collect(Collectors.toList());
     }
 
+    // 비슷한 팝업 추천
+    public List<PopupStoreRspDto> getSimilarStore(Long id) {
+        // 현재 팝업스토어 조회
+        PopupStore currentStore = popupStoreRepository.findById(id)
+                .orElseThrow(() -> new BusinessException(ErrorCode.STORE_NOT_FOUND));
+
+        // 현재 스토어의 카테고리 ID로 비슷한 스토어 조회
+        List<PopupStore> stores = popupStoreRepository.findSimilarStores(
+                currentStore.getStoreCategory().getId(),
+                id,
+                5
+        );
+
+        return stores.stream()
+                .map(PopupStoreRspDto::from)
+                .collect(Collectors.toList());
+    }
+
     // 팝업 스토어 캘린더 반환
     @Transactional(readOnly = true)
     public PopupStoreCalenderRspDto getCalender(Long id) {
