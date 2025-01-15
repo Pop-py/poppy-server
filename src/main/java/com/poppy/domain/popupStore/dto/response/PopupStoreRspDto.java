@@ -86,7 +86,7 @@ public class PopupStoreRspDto {
                 .isActive(store.getIsActive())
                 .isEnd(store.getIsEnd())
                 .rating(store.getRating())
-                .reviewCnt(store.getReviews().size())
+                .reviewCnt(store.getReviews() != null ? store.getReviews().size() : 0)
                 .categoryName(store.getStoreCategory().getName())
                 .reservationType(store.getReservationType().toString())
                 .thumbnailUrl(images != null && !images.isEmpty() ? images.get(0).getUploadUrl() : null)
