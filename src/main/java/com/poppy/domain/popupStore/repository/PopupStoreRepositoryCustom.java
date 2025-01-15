@@ -10,4 +10,5 @@ public interface PopupStoreRepositoryCustom {
     List<PopupStore> findByKeyword(String name);
     List<PopupStore> findNewStores(LocalDateTime fromDate);
     List<PopupStore> findBySearchCondition(PopupStoreSearchReqDto popupStoreSearchReqDto);
+    List<PopupStore> findSimilarStores(Long categoryId, Long currentStoreId, int limit);
 }

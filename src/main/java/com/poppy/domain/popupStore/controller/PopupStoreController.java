@@ -104,6 +104,12 @@ public class PopupStoreController {
         );
     }
 
+    // 비슷한 팝업 스토어 조회
+    @GetMapping("/detail/{id}/similar")
+    public RspTemplate<List<PopupStoreRspDto>> getSimilarStores(@PathVariable Long id) {
+        return new RspTemplate<>(HttpStatus.OK, "비슷한 팝업 스토어 조회", popupStoreService.getSimilarStore(id));
+    }
+
     // 팝업스토어 예약 가능 날짜 조회
     @GetMapping("/{id}/calendar")
     public RspTemplate<PopupStoreCalenderRspDto> getCalender(@PathVariable Long id) {

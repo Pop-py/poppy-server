@@ -4,6 +4,7 @@ import com.poppy.domain.popupStore.dto.request.PopupStoreSearchReqDto;
 import com.poppy.domain.popupStore.entity.PopupStore;
 import com.poppy.domain.popupStore.entity.QPopupStore;
 import com.querydsl.core.types.dsl.BooleanExpression;
+import com.querydsl.core.types.dsl.Expressions;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import lombok.RequiredArgsConstructor;
 
@@ -72,6 +73,21 @@ public class PopupStoreRepositoryImpl implements PopupStoreRepositoryCustom {
                 )
                 .orderBy(store.createTime.desc())
                 .distinct()
+                .fetch();
+    }
+
+    // 비슷한 팝업 랜덤 추천
+    @Override
+    public List<PopupStore> findSimilarStores(Long categoryId, Long currentStoreId, int limit) {
+        return queryFactory
+                .selectFrom(store)
+                .where(
+                        isEndFalse(),
+                        store.storeCategory.id.eq(categoryId),
+                        store.id.ne(currentStoreId)  // 현재 스토어 제외
+                )
+                .orderBy(Expressions.numberTemplate(Double.class, "function('rand')").asc())  // 랜덤 정렬
+                .limit(limit)
                 .fetch();
     }
 
