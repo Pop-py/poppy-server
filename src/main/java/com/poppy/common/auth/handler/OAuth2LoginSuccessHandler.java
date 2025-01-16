@@ -83,10 +83,11 @@ public class OAuth2LoginSuccessHandler extends SimpleUrlAuthenticationSuccessHan
 
         return UriComponentsBuilder
                 .newInstance()
-                .scheme("https")
-                .host("poppy-fe-git-dev-poppy-ca4d5978.vercel.app")
-//                .host("localhost")
-//                .port(3000)
+                .scheme("http")
+//                .scheme("https")
+//                .host("poppy-fe-git-dev-poppy-ca4d5978.vercel.app")
+                .host("localhost")
+                .port(3000)
                 .path(path)
                 .queryParams(queryParams)
                 .build()
