@@ -17,11 +17,11 @@ public class UserWaitingController {
     private final UserWaitingService userWaitingService;
 
     @PostMapping("/waiting")
-    public RspTemplate<WaitingRspDto> registerWaiting(@RequestParam Long storeId, @AuthenticationPrincipal Long userId) {
+    public RspTemplate<WaitingRspDto> registerWaiting(@RequestParam Long storeId) {
         return new RspTemplate<>(
                 HttpStatus.CREATED,
-                "대기 등록이 완료되었습니다",
-                userWaitingService.registerWaiting(storeId, userId)
+                "대기 등록이 완료되었습니다.",
+                userWaitingService.registerWaiting(storeId)
         );
     }
 

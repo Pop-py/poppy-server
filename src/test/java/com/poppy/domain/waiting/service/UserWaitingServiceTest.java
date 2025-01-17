@@ -96,7 +96,7 @@ class UserWaitingServiceTest {
         when(waitingRepository.save(any(Waiting.class))).thenReturn(waiting);
 
         // when
-        WaitingRspDto result = userWaitingService.registerWaiting(1L, 1L);
+        WaitingRspDto result = userWaitingService.registerWaiting(1L);
 
         // then
         assertNotNull(result);
@@ -111,7 +111,7 @@ class UserWaitingServiceTest {
 
         // when & then
         assertThrows(BusinessException.class, () ->
-                userWaitingService.registerWaiting(1L, 1L));
+                userWaitingService.registerWaiting(1L));
     }
 
     @Test
@@ -125,7 +125,7 @@ class UserWaitingServiceTest {
 
         // when & then
         assertThrows(BusinessException.class, () ->
-                userWaitingService.registerWaiting(1L, 1L));
+                userWaitingService.registerWaiting(1L));
     }
 
     @Test
