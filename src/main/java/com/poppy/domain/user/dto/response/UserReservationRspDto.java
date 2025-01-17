@@ -34,9 +34,12 @@ public class UserReservationRspDto {
 
     private Integer person;
 
+    private Long reservationId;
+
     public static UserReservationRspDto from(Reservation reservation) {
         return UserReservationRspDto.builder()
                 .userId(reservation.getUser().getId())
+                .reservationId(reservation.getId())
                 .popupStoreId(reservation.getPopupStore().getId())
                 .popupStoreName(reservation.getPopupStore().getName())
                 .reservationDate(reservation.getDate())
