@@ -23,4 +23,11 @@ public interface PopupStoreRepository extends JpaRepository<PopupStore, Long>, P
 
     @Query("SELECT p FROM PopupStore p WHERE p.address LIKE %:address%")
     List<PopupStore> findByAddress(@Param("address") String address);
+
+    @Query("SELECT p " +
+            "FROM PopupStore p " +
+            "JOIN p.reservationAvailableSlots slots " +
+            "GROUP BY p.id " +
+            "HAVING SUM(slots.totalSlot) BETWEEN 1 AND 10")
+    List<PopupStore> findAllByTotalSlotLessOrEqualTo10();
 }

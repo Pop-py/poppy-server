@@ -44,6 +44,14 @@ public class PopupStoreController {
         );
     }
 
+    // 마감 임박 팝업스토어 조회
+    @GetMapping("/deadline")
+    public RspTemplate<List<PopupStoreRspDto>> getDeadLineStores(){
+        return new RspTemplate<>(HttpStatus.OK,
+                "마감이 임박한 팝업스토어 조회 성공",
+                popupStoreService.getDeadlinePopupStores());
+    }
+
     // 3시간 내 인기 팝업 스토어 조회
     @GetMapping("/popular")
     public RspTemplate<List<PopupStoreRspDto>> getPopularStores() {

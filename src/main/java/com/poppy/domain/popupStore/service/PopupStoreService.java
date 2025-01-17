@@ -191,6 +191,15 @@ public class PopupStoreService {
                 .collect(Collectors.toList());
     }
 
+    // 마감 임박 팝업스토어 반환
+    public List<PopupStoreRspDto> getDeadlinePopupStores() {
+        return popupStoreRepository.findAllByTotalSlotLessOrEqualTo10()
+                .stream()
+                .limit(10)
+                .map(PopupStoreRspDto::from)
+                .collect(Collectors.toList());
+    }
+
     // 팝업 스토어 캘린더 반환
     @Transactional(readOnly = true)
     public PopupStoreCalenderRspDto getCalender(Long id) {
