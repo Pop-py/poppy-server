@@ -21,6 +21,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
+import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
@@ -174,7 +175,9 @@ public class UserWaitingService {
 
     private void validateOperatingHours(PopupStore store) {
         LocalDate currentDate = LocalDate.now();
-        LocalTime currentTime = LocalTime.now();
+        LocalTime currentTime = LocalTime.now().truncatedTo(ChronoUnit.MINUTES);
+        LocalTime openingTime = store.getOpeningTime().truncatedTo(ChronoUnit.MINUTES);
+        LocalTime closingTime = store.getClosingTime().truncatedTo(ChronoUnit.MINUTES);
 
         // 운영 날짜 체크
         if (currentDate.isBefore(store.getStartDate()) || currentDate.isAfter(store.getEndDate())) {
@@ -182,16 +185,14 @@ public class UserWaitingService {
         }
 
         // 운영 시간 체크
-        if (currentTime.isBefore(store.getOpeningTime()) || currentTime.isAfter(store.getClosingTime())) {
+        if (currentTime.isBefore(openingTime) || currentTime.isAfter(closingTime)) {
             throw new BusinessException(ErrorCode.STORE_NOT_OPERATING_HOURS);
         }
 
-        // 종료된 팝업스토어 체크
         if (store.getIsEnd()) {
             throw new BusinessException(ErrorCode.STORE_ENDED);
         }
 
-        // 비활성화된 팝업스토어 체크
         if (!store.getIsActive()) {
             throw new BusinessException(ErrorCode.STORE_INACTIVE);
         }
