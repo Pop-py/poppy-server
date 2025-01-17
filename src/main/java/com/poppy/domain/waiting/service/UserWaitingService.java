@@ -14,6 +14,7 @@ import com.poppy.domain.waiting.entity.Waiting;
 import com.poppy.domain.waiting.entity.WaitingStatus;
 import com.poppy.domain.waiting.repository.WaitingRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.redisson.api.RLock;
 import org.redisson.api.RedissonClient;
 import org.springframework.stereotype.Service;
@@ -29,6 +30,7 @@ import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class UserWaitingService {
     private final WaitingRepository waitingRepository;
     private final NotificationService notificationService;
@@ -44,7 +46,7 @@ public class UserWaitingService {
 
     // 선착순 대기 등록 (앱으로 사용자가 수행)
     @Transactional
-    public WaitingRspDto registerWaiting(Long storeId, Long userId) {
+    public WaitingRspDto registerWaiting(Long storeId) {
         String lockKey = LOCK_PREFIX + storeId;
         RLock lock = redissonClient.getLock(lockKey);
 
@@ -61,7 +63,7 @@ public class UserWaitingService {
             User user = loginUserProvider.getLoggedInUser();
 
             checkMaxWaitingCount(storeId);
-            checkDuplicateWaiting(storeId, userId);
+            checkDuplicateWaiting(storeId, user.getId());
 
             // 대기번호 생성
             Integer waitingNumber = getNextWaitingNumber(storeId);
@@ -178,6 +180,9 @@ public class UserWaitingService {
         LocalTime currentTime = LocalTime.now().truncatedTo(ChronoUnit.MINUTES);
         LocalTime openingTime = store.getOpeningTime().truncatedTo(ChronoUnit.MINUTES);
         LocalTime closingTime = store.getClosingTime().truncatedTo(ChronoUnit.MINUTES);
+
+        log.info("Comparing times (minutes only) - Current: {}, Opening: {}, Closing: {}",
+                currentTime, openingTime, closingTime);
 
         // 운영 날짜 체크
         if (currentDate.isBefore(store.getStartDate()) || currentDate.isAfter(store.getEndDate())) {
