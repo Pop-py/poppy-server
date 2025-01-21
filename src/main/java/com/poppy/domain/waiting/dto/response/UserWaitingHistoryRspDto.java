@@ -1,6 +1,7 @@
 package com.poppy.domain.waiting.dto.response;
 
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.poppy.common.entity.Images;
 import com.poppy.common.util.LocalDateWithDayOfWeekSerializer;
 import com.poppy.common.util.LocalTimeWithAmPmSerializer;
 import com.poppy.domain.waiting.entity.Waiting;
@@ -10,6 +11,9 @@ import lombok.Getter;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
+import java.util.Collections;
+import java.util.List;
+import java.util.Optional;
 
 @Getter
 @Builder
@@ -32,6 +36,8 @@ public class UserWaitingHistoryRspDto {
     @JsonSerialize(using = LocalTimeWithAmPmSerializer.class)
     private final LocalTime time;
 
+    private final String thumbnailUrl;
+
     public static UserWaitingHistoryRspDto from(Waiting waiting) {
         return UserWaitingHistoryRspDto.builder()
                 .waitingId(waiting.getId())
@@ -42,6 +48,13 @@ public class UserWaitingHistoryRspDto {
                 .status(waiting.getStatus())
                 .date(waiting.getWaitingDate())
                 .time(waiting.getWaitingTime())
+                .thumbnailUrl(
+                        Optional.ofNullable(waiting.getPopupStore().getImages())
+                                .filter(images -> !images.isEmpty())
+                                .map(images -> images.get(0).getUploadUrl())
+                                .orElse(null)
+                )
+
                 .build();
     }
 }
