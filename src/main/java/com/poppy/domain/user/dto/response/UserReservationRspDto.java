@@ -28,6 +28,8 @@ public class UserReservationRspDto {
 
     private String location;
 
+    private String address;
+
     private ReservationStatus status;
 
     private String thumbnail;
@@ -45,6 +47,7 @@ public class UserReservationRspDto {
                 .reservationDate(reservation.getDate())
                 .reservationTime(reservation.getTime())
                 .location(reservation.getPopupStore().getLocation())
+                .address(reservation.getPopupStore().getAddress())
                 .status(reservation.getStatus())
                 .thumbnail(reservation.getPopupStore().getImages().get(0).getUploadUrl())
                 .person(reservation.getPerson())

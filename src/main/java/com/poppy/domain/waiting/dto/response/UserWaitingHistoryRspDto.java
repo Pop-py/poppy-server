@@ -18,6 +18,10 @@ import java.util.Optional;
 @Getter
 @Builder
 public class UserWaitingHistoryRspDto {
+    private final Long userId;
+
+    private final String nickname;
+
     private final Long waitingId;
 
     private final Integer waitingNumber;
@@ -25,6 +29,8 @@ public class UserWaitingHistoryRspDto {
     private final String storeName;
 
     private final String location;
+
+    private final String address;
 
     private final String phoneNumber;
 
@@ -40,10 +46,13 @@ public class UserWaitingHistoryRspDto {
 
     public static UserWaitingHistoryRspDto from(Waiting waiting) {
         return UserWaitingHistoryRspDto.builder()
+                .userId(waiting.getUser().getId())
+                .nickname(waiting.getUser().getNickname())
                 .waitingId(waiting.getId())
                 .waitingNumber(waiting.getWaitingNumber())
                 .storeName(waiting.getPopupStore().getName())
                 .location(waiting.getPopupStore().getLocation())
+                .address(waiting.getPopupStore().getAddress())
                 .phoneNumber(waiting.getUser().getPhoneNumber())
                 .status(waiting.getStatus())
                 .date(waiting.getWaitingDate())
