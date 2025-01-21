@@ -26,6 +26,8 @@ public class UserWaitingHistoryRspDto {
 
     private final Integer waitingNumber;
 
+    private final Long storeId;
+
     private final String storeName;
 
     private final String location;
@@ -50,6 +52,7 @@ public class UserWaitingHistoryRspDto {
                 .nickname(waiting.getUser().getNickname())
                 .waitingId(waiting.getId())
                 .waitingNumber(waiting.getWaitingNumber())
+                .storeId(waiting.getPopupStore().getId())
                 .storeName(waiting.getPopupStore().getName())
                 .location(waiting.getPopupStore().getLocation())
                 .address(waiting.getPopupStore().getAddress())
