@@ -19,6 +19,8 @@ public class TokenRspDto {
     @JsonFormat(shape= JsonFormat.Shape.STRING, pattern="yyyy-MM-dd HH:mm:ss", timezone="Asia/Seoul")
     private Date refreshTokenExp;
 
+    private Long userId;
+
     private String userEmail;
 
     private String nickname;
