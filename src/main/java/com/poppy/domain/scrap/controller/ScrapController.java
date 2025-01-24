@@ -33,4 +33,11 @@ public class ScrapController {
     public RspTemplate<List<UserScrapRspDto>> getUserScraps(@RequestParam(defaultValue = "RECENT_SAVED") ScrapSortType sortType) {
         return new RspTemplate<>(HttpStatus.OK, "스크랩 목록 조회", scrapService.getUserScraps(sortType));
     }
+
+    // 스크랩 삭제
+    @DeleteMapping("/{scrapId}")
+    public RspTemplate<Void> deleteScrap(@PathVariable Long scrapId) {
+        scrapService.deleteScrap(scrapId);
+        return new RspTemplate<>(HttpStatus.OK, "스크랩 삭제 완료");
+    }
 }

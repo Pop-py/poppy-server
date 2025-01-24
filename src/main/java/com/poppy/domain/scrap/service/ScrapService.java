@@ -114,4 +114,28 @@ public class ScrapService {
                 .map(UserScrapRspDto::from)
                 .toList();
     }
+
+    // 스크랩 삭제
+    @Transactional
+    public void deleteScrap(Long scrapId) {
+        User user = loginProvider.getLoggedInUser();
+        Scrap scrap = scrapRepository.findById(scrapId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.SCRAP_NOT_FOUND));
+
+        // 본인의 스크랩인지 확인
+        if (!scrap.getUser().getId().equals(user.getId()))
+            throw new BusinessException(ErrorCode.SCRAP_NOT_AUTHORIZED);
+
+        PopupStore store = scrap.getPopupStore();
+        String cacheKey = SCRAP_COUNT_KEY + store.getId();
+        int currentCount = store.getScrapCount();   // 현재 스크랩 수 조회
+
+        store.updateScrapCount(currentCount - 1);
+        scrapRepository.deleteByUserAndPopupStore(user, store);
+        redisTemplate.opsForValue().decrement(cacheKey);
+
+        popupStoreRepository.saveAndFlush(store);
+
+        scrapRepository.delete(scrap);
+    }
 }
