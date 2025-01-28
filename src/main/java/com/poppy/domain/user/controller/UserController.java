@@ -2,6 +2,8 @@ package com.poppy.domain.user.controller;
 
 import com.poppy.common.api.RspTemplate;
 import com.poppy.common.auth.dto.TokenRspDto;
+import com.poppy.domain.user.dto.response.UserReviewRspDto;
+import com.poppy.domain.review.service.ReviewService;
 import com.poppy.domain.user.dto.request.UpdateFcmTokenReqDto;
 import com.poppy.domain.user.dto.request.UpdateNicknameReqDto;
 import com.poppy.domain.user.dto.response.UserPopupStoreRspDto;
@@ -21,6 +23,7 @@ import java.util.List;
 @RequestMapping("/users")
 public class UserController {
     private final UserService userService;
+    private final ReviewService reviewService;
 
     // 회원가입 후 초기 닉네임 설정
     @PatchMapping("/initial")
@@ -63,6 +66,12 @@ public class UserController {
     @GetMapping("/recent")
     public RspTemplate<List<UserPopupStoreRspDto>> getRecentUserReservations() {
         return new RspTemplate<>(HttpStatus.OK, "최근 본 팝업 조회", userService.getUserPopupStoreRecent());
+    }
+
+    // 유저의 리뷰 조회
+    @GetMapping("/review")
+    public RspTemplate<List<UserReviewRspDto>> getUserReviews() {
+        return new RspTemplate<>(HttpStatus.OK, "유저의 리뷰 조회", reviewService.getUserReviews());
     }
 
     // FCM 토큰 저장
