@@ -8,6 +8,7 @@ import com.poppy.domain.likes.repository.ReviewLikeRepository;
 import com.poppy.domain.likes.entity.ReviewLike;
 import com.poppy.domain.popupStore.entity.PopupStore;
 import com.poppy.domain.popupStore.repository.PopupStoreRepository;
+import com.poppy.domain.user.dto.response.UserReviewRspDto;
 import com.poppy.domain.review.entity.ReviewSortType;
 import com.poppy.domain.review.dto.request.ReviewReqDto;
 import com.poppy.domain.review.dto.response.ReviewLikeRspDto;
@@ -234,5 +235,15 @@ public class ReviewService {
         popupStore.updateAverageRating(averageRating);
         // 변경사항 저장
         popupStoreRepository.save(popupStore);
+    }
+
+    // 유저의 리뷰 조회
+    @Transactional(readOnly = true)
+    public List<UserReviewRspDto> getUserReviews() {
+        User user = loginUserProvider.getLoggedInUser();
+        List<Review> reviews = reviewRepository.findByUserIdOrderByCreateTimeDesc(user.getId());
+        return reviews.stream()
+                .map(UserReviewRspDto::from)
+                .collect(Collectors.toList());
     }
 }
