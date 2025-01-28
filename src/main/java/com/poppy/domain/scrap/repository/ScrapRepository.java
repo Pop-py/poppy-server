@@ -43,4 +43,6 @@ public interface ScrapRepository extends JpaRepository<Scrap, Long> {
             "JOIN FETCH s.popupStore p " +
             "WHERE p.startDate = :date")
     List<Scrap> findByPopupStoreStartDate(LocalDate date);
+
+    List<Scrap> findByUserIdAndIdIn(Long userId, List<Long> scrapIds);
 }

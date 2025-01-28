@@ -1,4 +1,4 @@
-package com.poppy.domain.scrap.dto;
+package com.poppy.domain.scrap.dto.response;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Builder;

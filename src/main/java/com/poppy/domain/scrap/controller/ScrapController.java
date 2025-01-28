@@ -1,8 +1,9 @@
 package com.poppy.domain.scrap.controller;
 
 import com.poppy.common.api.RspTemplate;
-import com.poppy.domain.scrap.dto.ScrapRspDto;
-import com.poppy.domain.scrap.dto.UserScrapRspDto;
+import com.poppy.domain.scrap.dto.request.UserScrapReqDto;
+import com.poppy.domain.scrap.dto.response.ScrapRspDto;
+import com.poppy.domain.scrap.dto.response.UserScrapRspDto;
 import com.poppy.domain.scrap.entity.ScrapSortType;
 import com.poppy.domain.scrap.service.ScrapService;
 import lombok.RequiredArgsConstructor;
@@ -35,9 +36,9 @@ public class ScrapController {
     }
 
     // 스크랩 삭제
-    @DeleteMapping("/{scrapId}")
-    public RspTemplate<Void> deleteScrap(@PathVariable Long scrapId) {
-        scrapService.deleteScrap(scrapId);
+    @DeleteMapping
+    public RspTemplate<Void> deleteScraps(@RequestBody UserScrapReqDto reqDto) {
+        scrapService.deleteScrap(reqDto.getScrapIds());
         return new RspTemplate<>(HttpStatus.OK, "스크랩 삭제 완료");
     }
 }

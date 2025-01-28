@@ -4,8 +4,8 @@ import com.poppy.common.exception.BusinessException;
 import com.poppy.common.exception.ErrorCode;
 import com.poppy.domain.popupStore.entity.PopupStore;
 import com.poppy.domain.popupStore.repository.PopupStoreRepository;
-import com.poppy.domain.scrap.dto.ScrapRspDto;
-import com.poppy.domain.scrap.dto.UserScrapRspDto;
+import com.poppy.domain.scrap.dto.response.ScrapRspDto;
+import com.poppy.domain.scrap.dto.response.UserScrapRspDto;
 import com.poppy.domain.scrap.entity.Scrap;
 import com.poppy.domain.scrap.entity.ScrapSortType;
 import com.poppy.domain.scrap.repository.ScrapRepository;
@@ -18,8 +18,9 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -117,25 +118,39 @@ public class ScrapService {
 
     // 스크랩 삭제
     @Transactional
-    public void deleteScrap(Long scrapId) {
+    public void deleteScrap(List<Long> scrapIds) {
         User user = loginProvider.getLoggedInUser();
-        Scrap scrap = scrapRepository.findById(scrapId)
-                .orElseThrow(() -> new BusinessException(ErrorCode.SCRAP_NOT_FOUND));
 
-        // 본인의 스크랩인지 확인
-        if (!scrap.getUser().getId().equals(user.getId()))
-            throw new BusinessException(ErrorCode.SCRAP_NOT_AUTHORIZED);
+        // 중복 제거
+        List<Long> uniqueScrapIds = scrapIds.stream()
+                .distinct()
+                .toList();
 
-        PopupStore store = scrap.getPopupStore();
-        String cacheKey = SCRAP_COUNT_KEY + store.getId();
-        int currentCount = store.getScrapCount();   // 현재 스크랩 수 조회
+        // 해당 유저의 스크랩 목록만 조회
+        List<Scrap> scraps = scrapRepository.findByUserIdAndIdIn(user.getId(), uniqueScrapIds);
 
-        store.updateScrapCount(currentCount - 1);
-        scrapRepository.deleteByUserAndPopupStore(user, store);
-        redisTemplate.opsForValue().decrement(cacheKey);
+        // 요청된 모든 스크랩이 존재하는지 확인
+        if(scraps.size() != uniqueScrapIds.size())
+            throw new BusinessException(ErrorCode.SCRAP_NOT_FOUND);
 
-        popupStoreRepository.saveAndFlush(store);
+        // PopupStore별로 스크랩 그룹화
+        Map<PopupStore, Long> storeScrapCounts = scraps.stream()
+                .collect(Collectors.groupingBy(
+                        Scrap::getPopupStore,
+                        Collectors.counting()
+                ));
 
-        scrapRepository.delete(scrap);
+        // 각 PopupStore의 스크랩 카운트 업데이트
+        storeScrapCounts.forEach((store, count) -> {
+            String cacheKey = SCRAP_COUNT_KEY + store.getId();
+            int currentCount = store.getScrapCount();
+
+            store.updateScrapCount(currentCount - count.intValue());
+            redisTemplate.opsForValue().decrement(cacheKey, count);
+            popupStoreRepository.saveAndFlush(store);
+        });
+
+        // 스크랩 일괄 삭제
+        scrapRepository.deleteAllById(scrapIds);
     }
 }

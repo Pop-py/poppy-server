@@ -1,4 +1,4 @@
-package com.poppy.domain.scrap.dto;
+package com.poppy.domain.scrap.dto.response;
 
 import com.poppy.common.entity.Images;
 import com.poppy.domain.popupStore.entity.PopupStore;
