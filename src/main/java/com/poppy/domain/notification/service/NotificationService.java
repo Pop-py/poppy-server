@@ -70,7 +70,6 @@ public class NotificationService {
         // WebSocket 알림 생성
         String wsMessage = messageGenerator.generateWebSocketMessage(
                 type,
-                waiting.getPopupStore().getName(),
                 waiting.getWaitingNumber(),
                 peopleAhead);
 
@@ -114,13 +113,7 @@ public class NotificationService {
     @Transactional
     public void sendNotification(Reservation reservation, ReservationStatus status, NotificationType type) {
         // WebSocket 알림 생성
-        String wsMessage = messageGenerator.generateWebSocketMessage(
-                status,
-                reservation.getPopupStore().getName(),
-                reservation.getDate().toString(),
-                reservation.getTime().toString(),
-                reservation.getPerson()
-        );
+        String wsMessage = messageGenerator.generateWebSocketMessage(status);
 
         // wsMessage가 null이면 알림을 발송하지 않음
         if (wsMessage == null) return;
@@ -185,7 +178,6 @@ public class NotificationService {
         // WebSocket 알림 생성
         String wsMessage = messageGenerator.generateWebSocketMessage(
                 NotificationType.REMIND_24H,
-                storeName,
                 null,
                 null
         );
@@ -244,7 +236,6 @@ public class NotificationService {
         // WebSocket 알림 생성
         String wsMessage = messageGenerator.generateWebSocketMessage(
                 NotificationType.SCRAPED_STORE_OPENING,
-                storeName,
                 null,
                 null
         );
