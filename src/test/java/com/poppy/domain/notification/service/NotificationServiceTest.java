@@ -80,7 +80,7 @@ class NotificationServiceTest {
 
         when(messageGenerator.generateFCMTitle(any(), any())).thenReturn(fcmTitle);
         when(messageGenerator.generateFCMBody(any(), any(), any())).thenReturn(fcmBody);
-        when(messageGenerator.generateWebSocketMessage(any(), any(), any(), any()))
+        when(messageGenerator.generateWebSocketMessage(any(), any(), any()))  // storeName 파라미터 제거
                 .thenReturn(wsMessage);
 
         // when
@@ -108,7 +108,7 @@ class NotificationServiceTest {
                 .build();
 
         String wsMessage = "웹소켓 메시지";
-        when(messageGenerator.generateWebSocketMessage(any(), any(), any(), any()))
+        when(messageGenerator.generateWebSocketMessage(any(), any(), any()))
                 .thenReturn(wsMessage);
 
         // when

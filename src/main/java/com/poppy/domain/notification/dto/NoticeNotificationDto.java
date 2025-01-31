@@ -7,7 +7,8 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
 
-import java.time.LocalDateTime;
+import java.time.LocalDate;
+import java.time.LocalTime;
 
 @Getter
 @SuperBuilder
@@ -15,15 +16,19 @@ import java.time.LocalDateTime;
 public class NoticeNotificationDto extends NotificationDto {
     private String title;
 
-    @JsonFormat(pattern = "yyyy.MM.dd HH:mm")
-    private LocalDateTime noticeDate;
+    @JsonFormat(pattern = "yyyy.MM.dd")
+    private LocalDate noticeDate;
+
+    @JsonFormat(pattern = "HH:mm")
+    private LocalTime noticeTime;
 
     protected NoticeNotificationDto(String message, NotificationType type, Long userId,
                                     String popupStoreName, Boolean isRead,
-                                    String title, LocalDateTime noticeDate) {
+                                    String title, LocalDate noticeDate, LocalTime noticeTime) {
         super(message, type, userId, popupStoreName, isRead);
         this.title = title;
         this.noticeDate = noticeDate;
+        this.noticeTime = noticeTime;
     }
 
     public static NoticeNotificationDto of(User user, String message) {
@@ -33,7 +38,8 @@ public class NoticeNotificationDto extends NotificationDto {
                 .userId(user.getId())
                 .popupStoreName(null)
                 .isRead(false)
-                .noticeDate(LocalDateTime.now())
+                .noticeDate(LocalDate.now())
+                .noticeTime(LocalTime.now())
                 .build();
     }
 }
