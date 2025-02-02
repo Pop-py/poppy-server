@@ -69,4 +69,10 @@ public class ReviewController {
 
         return new RspTemplate<>(HttpStatus.OK, "리뷰 조회 완료", response);
     }
+
+    // 리뷰 상세 조회
+    @GetMapping("/{id}")
+    public RspTemplate<ReviewRspDto> getReview(@PathVariable Long id) {
+        return new RspTemplate<>(HttpStatus.OK, "리뷰 상세 조회", reviewService.getReview(id));
+    }
 }
