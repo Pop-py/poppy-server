@@ -227,6 +227,14 @@ public class ReviewService {
         return reviews.map(review -> ReviewRspDto.of(review, false));
     }
 
+    // 리뷰 상세 조회
+    @Transactional(readOnly = true)
+    public ReviewRspDto getReview(Long reviewId) {
+        Review review = reviewRepository.findById(reviewId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.REVIEW_NOT_FOUND));
+        return ReviewRspDto.from(review);
+    }
+
     // 해당 팝업스토어의 리뷰 평점 계산
     private void updatePopupStoreRating(PopupStore popupStore) {
         // 해당 팝업스토어의 모든 리뷰 평점의 평균을 계산
