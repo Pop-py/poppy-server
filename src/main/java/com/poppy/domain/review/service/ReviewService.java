@@ -89,32 +89,32 @@ public class ReviewService {
         if (!review.getUser().getId().equals(user.getId()))
             throw new BusinessException(ErrorCode.NOT_REVIEW_AUTHOR);
 
-        // 새 이미지 업로드 및 저장
-        List<Images> newImages;
-        if (reviewUpdateReqDto.getImages() != null && !reviewUpdateReqDto.getImages().isEmpty()) {
-            newImages = uploadReviewImages(reviewUpdateReqDto.getImages(), review);
+        // 삭제할 이미지 처리
+        if (reviewUpdateReqDto.getDeleteImageIds() != null && !reviewUpdateReqDto.getDeleteImageIds().isEmpty()) {
+            List<Images> imagesToDelete = review.getImages().stream()
+                    .filter(image -> reviewUpdateReqDto.getDeleteImageIds().contains(image.getId()))
+                    .collect(Collectors.toList());
+
+            // 이미지 삭제
+            imagesToDelete.forEach(image -> {
+                review.getImages().remove(image);  // 리뷰에서 이미지 제거
+                imageService.deleteImage(image.getId());  // S3와 DB에서 이미지 삭제
+            });
         }
-        else newImages = new ArrayList<>();
 
-        // 기존 이미지 중 새로 업로드된 이미지에 포함되지 않은 것만 삭제
-        List<Images> imagesToDelete = review.getImages().stream()
-                .filter(oldImage -> newImages.stream()
-                        .noneMatch(newImage ->
-                                oldImage.getStoredName().equals(newImage.getStoredName())))
-                .toList();
+        // 새 이미지가 있는 경우 업로드 및 저장
+        List<MultipartFile> newImages = reviewUpdateReqDto.getImages();
+        if (newImages != null && !newImages.isEmpty() && !newImages.get(0).isEmpty()) {
+            List<Images> uploadedImages = uploadReviewImages(newImages, review);
+            uploadedImages.forEach(review::addImage);
+        }
 
-        // 불필요한 이미지 삭제
-        imagesToDelete.forEach(image -> imageService.deleteImage(image.getId()));
-
-        // 리뷰 내용, 평점 업데이트 및 새 이미지 설정
-        review.update(reviewUpdateReqDto.getContent(), newImages, reviewUpdateReqDto.getRating());
+        // 리뷰 내용과 평점 업데이트
+        review.updateReview(reviewUpdateReqDto.getContent(), reviewUpdateReqDto.getRating());
 
         Review updatedReview = reviewRepository.save(review);
-
-        // 리뷰 갱신
         updatePopupStoreRating(review.getPopupStore());
 
-        // 리뷰 엔티티 저장
         return ReviewRspDto.from(updatedReview);
     }
 
