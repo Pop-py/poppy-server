@@ -18,6 +18,8 @@ public class ReviewReqDto {
 
     private List<MultipartFile> images;
 
+    private List<Long> deleteImageIds;  // 삭제할 이미지들의 ID 리스트 (리뷰 수정 시 사용)
+
     @NotNull(message = "평점은 필수입니다.")
     @Min(value = 0, message = "평점은 0점 이상이어야 합니다.")
     @Max(value = 5, message = "평점은 5점 이하여야 합니다.")

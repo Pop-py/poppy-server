@@ -23,6 +23,8 @@ public class ReviewRspDto {
 
     private List<String> imageUrls;
 
+    private List<Long> imageIds;
+
     private Double rating;
 
     private Integer likes;  // 좋아요 개수
@@ -45,6 +47,9 @@ public class ReviewRspDto {
                 .imageUrls(review.getImages().stream()
                         .map(Images::getUploadUrl)
                         .collect(Collectors.toList()))
+                .imageIds(review.getImages().stream()
+                        .map(Images::getId)
+                        .collect(Collectors.toList()))
                 .rating(review.getRating())
                 .likes(review.getReviewLikes().size())
                 .userName(review.getUser().getNickname())
@@ -55,18 +60,19 @@ public class ReviewRspDto {
     }
 
     public static ReviewRspDto of(Review review, Boolean isLiked) {
+        ReviewRspDto dto = from(review);
+
         return ReviewRspDto.builder()
-                .id(review.getId())
-                .content(review.getContent())
-                .imageUrls(review.getImages().stream()
-                        .map(Images::getUploadUrl)
-                        .collect(Collectors.toList()))
-                .rating(review.getRating())
-                .likes(review.getReviewLikes().size())
-                .userName(review.getUser().getNickname())
-                .popupStoreId(review.getPopupStore().getId())
-                .popupStoreName(review.getPopupStore().getName())
-                .date(review.getUpdateTime().toLocalDate())
+                .id(dto.getId())
+                .content(dto.getContent())
+                .imageUrls(dto.getImageUrls())
+                .imageIds(dto.getImageIds())  // 이미지 ID 리스트 추가
+                .rating(dto.getRating())
+                .likes(dto.getLikes())
+                .userName(dto.getUserName())
+                .popupStoreId(dto.getPopupStoreId())
+                .popupStoreName(dto.getPopupStoreName())
+                .date(dto.getDate())
                 .isLiked(isLiked)
                 .build();
     }

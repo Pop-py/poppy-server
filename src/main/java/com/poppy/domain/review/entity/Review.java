@@ -56,10 +56,8 @@ public class Review extends BaseTimeEntity {
         this.reviewLikes = new ArrayList<>();
     }
 
-    public void update(String content, List<Images> images, Double rating) {
+    public void updateReview(String content, Double rating) {
         this.content = content;
-        this.images.clear();
-        this.images.addAll(images);
         this.rating = rating;
     }
 
