@@ -29,6 +29,8 @@ public class ReviewRspDto {
 
     private String userName;
 
+    private Long popupStoreId;
+
     private String popupStoreName;
 
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy.MM.dd")
@@ -46,6 +48,7 @@ public class ReviewRspDto {
                 .rating(review.getRating())
                 .likes(review.getReviewLikes().size())
                 .userName(review.getUser().getNickname())
+                .popupStoreId(review.getPopupStore().getId())
                 .popupStoreName(review.getPopupStore().getName())
                 .date(review.getUpdateTime().toLocalDate())
                 .build();
@@ -61,6 +64,7 @@ public class ReviewRspDto {
                 .rating(review.getRating())
                 .likes(review.getReviewLikes().size())
                 .userName(review.getUser().getNickname())
+                .popupStoreId(review.getPopupStore().getId())
                 .popupStoreName(review.getPopupStore().getName())
                 .date(review.getUpdateTime().toLocalDate())
                 .isLiked(isLiked)
