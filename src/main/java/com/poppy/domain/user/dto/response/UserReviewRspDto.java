@@ -21,6 +21,9 @@ public class UserReviewRspDto {
     private String userName;
     private Long popupStoreId;
     private String popupStoreName;
+    private String thumbnailUrl;
+    private String location;
+
 
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy.MM.dd")
     private LocalDate date;
@@ -35,6 +38,8 @@ public class UserReviewRspDto {
                 .rating(review.getRating())
                 .likes(review.getReviewLikes().size())
                 .userName(review.getUser().getNickname())
+                .thumbnailUrl(review.getImages().get(0).getUploadUrl())
+                .location(review.getPopupStore().getLocation())
                 .popupStoreId(review.getPopupStore().getId())
                 .popupStoreName(review.getPopupStore().getName())
                 .date(review.getUpdateTime().toLocalDate())
