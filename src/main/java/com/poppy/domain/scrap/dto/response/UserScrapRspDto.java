@@ -40,7 +40,7 @@ public class UserScrapRspDto {
 
     private DateInfo endDate;
 
-    private String thumbnail;
+    private String thumbnailUrl;
 
     private Boolean isAlmostFull;
 
@@ -91,7 +91,7 @@ public class UserScrapRspDto {
                         .month(store.getEndDate().getMonthValue())
                         .day(store.getEndDate().getDayOfMonth())
                         .build())
-                .thumbnail(images != null && !images.isEmpty() ? images.get(0).getUploadUrl() : null)
+                .thumbnailUrl(images != null && !images.isEmpty() ? images.get(0).getUploadUrl() : null)
                 .isAlmostFull(store.calculateAlmostFull(
                         store.getReservationAvailableSlots(),
                         store.getReservationType()))
