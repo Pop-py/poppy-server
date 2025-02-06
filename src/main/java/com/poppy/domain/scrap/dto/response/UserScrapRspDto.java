@@ -28,7 +28,7 @@ public class UserScrapRspDto {
     
     private Long scrapId;
 
-    private Long popupStoreId;
+    private Long id;    // 팝업 스토어 id
 
     private String popupStoreName;
 
@@ -77,7 +77,7 @@ public class UserScrapRspDto {
 
         return UserScrapRspDto.builder()
                 .scrapId(scrap.getId())
-                .popupStoreId(store.getId())
+                .id(store.getId())
                 .popupStoreName(store.getName())
                 .location(store.getLocation())
                 .address(store.getAddress())
