@@ -33,8 +33,12 @@ public class NotificationSubscriber implements MessageListener {
 
     private void sendWebSocketNotification(NotificationDto notification) {
         try {
-            String destination = String.format("/user/%s/queue/notifications", notification.getUserId());
-            messagingTemplate.convertAndSend(destination, notification);
+            String destination = "/queue/notifications";
+            messagingTemplate.convertAndSendToUser(
+                    String.valueOf(notification.getUserId()), // userId를 username으로 사용
+                    destination,
+                    notification
+            );
             log.info("WebSocket notification sent - message: {}, type: {}, userId: {}, popupStoreName: {}, isRead: {}",
                     notification.getMessage(),
                     notification.getType(),
