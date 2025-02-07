@@ -35,7 +35,12 @@ public class NotificationSubscriber implements MessageListener {
         try {
             String destination = String.format("/user/%s/queue/notifications", notification.getUserId());
             messagingTemplate.convertAndSend(destination, notification);
-            log.info("WebSocket notification sent: {}", notification);
+            log.info("WebSocket notification sent - message: {}, type: {}, userId: {}, popupStoreName: {}, isRead: {}",
+                    notification.getMessage(),
+                    notification.getType(),
+                    notification.getUserId(),
+                    notification.getPopupStoreName(),
+                    notification.getIsRead());
         } catch (Exception e) {
             log.error("Failed to send WebSocket notification: {}", e.getMessage(), e);
         }
