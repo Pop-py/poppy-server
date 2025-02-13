@@ -96,6 +96,10 @@ jobs:
             INSTANCE_2="${{ secrets.BLUE_INSTANCE_2 }}"
             TARGET_GROUP_ARN="${{ secrets.BLUE_TARGET_GROUP_ARN }}"
           fi
+          
+          # 인스턴스 출력
+          echo "INSTANCE_1: $INSTANCE_1"
+          echo "INSTANCE_2: $INSTANCE_2"
 
           # 3. docker-compose.yml을 S3에 업로드
           echo "$DOCKER_COMPOSE_YML" > docker-compose.yml
