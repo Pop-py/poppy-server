@@ -72,13 +72,39 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ap-northeast-2
 
-      - name: EC2에 Docker Compose 배포
+      - name: Blue/Green 배포
         run: |
+          # 1. 현재 프로덕션 타겟 그룹 확인
+          PROD_TARGET_GROUP=$(aws elbv2 describe-listeners \
+            --listener-arn ${{ secrets.ALB_LISTENER_ARN }} \
+            --query 'Listeners[0].DefaultActions[0].ForwardConfig.TargetGroups[0].TargetGroupArn' \
+            --output text)
+          
+          echo "Current production target group: $PROD_TARGET_GROUP"
+
+          # 2. 배포 대상 결정
+          if [[ $PROD_TARGET_GROUP == *"blue"* ]]; then
+            echo "Current production is Blue. Deploying to Green..."
+            DEPLOY_TARGET="green"
+            INSTANCE_1="${{ secrets.GREEN_INSTANCE_1 }}"
+            INSTANCE_2="${{ secrets.GREEN_INSTANCE_2 }}"
+            TARGET_GROUP_ARN="${{ secrets.GREEN_TARGET_GROUP_ARN }}"
+          else
+            echo "Current production is Green. Deploying to Blue..."
+            DEPLOY_TARGET="blue"
+            INSTANCE_1="${{ secrets.BLUE_INSTANCE_1 }}"
+            INSTANCE_2="${{ secrets.BLUE_INSTANCE_2 }}"
+            TARGET_GROUP_ARN="${{ secrets.BLUE_TARGET_GROUP_ARN }}"
+          fi
+
+          # 3. docker-compose.yml을 S3에 업로드
           echo "$DOCKER_COMPOSE_YML" > docker-compose.yml
           aws s3 cp docker-compose.yml s3://poppy-server-bucket/docker-compose.yml
-          
+
+          # 4. 첫 번째 인스턴스 배포
+          echo "Deploying to first instance ($INSTANCE_1)..."
           aws ssm send-command \
-            --instance-ids i-01991812d9b9ff3b2 \
+            --instance-ids $INSTANCE_1 \
             --document-name "AWS-RunShellScript" \
             --parameters "commands=[
               'cd /home/ubuntu',
@@ -86,21 +112,63 @@ jobs:
               'sudo docker compose down',
               'sudo docker rmi poppyserver/poppy:latest || true',
               'sudo docker pull poppyserver/poppy:latest',
-              'sudo docker tag poppyserver/poppy:latest poppy',
-              'sudo docker compose up -d'
-            ]" --output text
-          
-#          aws ssm send-command \
-#            --instance-ids i-06b3478042177ee5f \
-#            --document-name "AWS-RunShellScript" \
-#            --parameters "commands=[
-#              'cd /home/ubuntu',
-#              'aws s3 cp s3://poppy-server-bucket/docker-compose.yml .',
-#              'sudo docker compose down',
-#              'sudo docker rmi poppyserver/poppy:latest || true',
-#              'sudo docker pull poppyserver/poppy:latest',
-#              'sudo docker tag poppyserver/poppy:latest poppy',
-#              'sudo docker compose up -d'
-#            ]" --output text
+              'sudo docker compose up -d',
+              'sleep 30',
+              'HEALTH_CHECK_RESPONSE=$(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:8080/)',
+              'if [ \"$HEALTH_CHECK_RESPONSE\" != \"200\" ]; then exit 1; fi'
+            ]"
+
+          # 5. 첫 번째 인스턴스 헬스체크
+          echo "Checking health of first instance..."
+          sleep 30
+          HEALTH_1=$(aws elbv2 describe-target-health \
+            --target-group-arn $TARGET_GROUP_ARN \
+            --targets Id=$INSTANCE_1 \
+            --query 'TargetHealthDescriptions[0].TargetHealth.State' \
+            --output text)
+
+          if [ "$HEALTH_1" != "healthy" ]; then
+            echo "First instance deployment failed"
+            exit 1
+          fi
+
+          # 6. 두 번째 인스턴스 배포
+          echo "Deploying to second instance ($INSTANCE_2)..."
+          aws ssm send-command \
+            --instance-ids $INSTANCE_2 \
+            --document-name "AWS-RunShellScript" \
+            --parameters "commands=[
+              'cd /home/ubuntu',
+              'aws s3 cp s3://poppy-server-bucket/docker-compose.yml .',
+              'sudo docker compose down',
+              'sudo docker rmi poppyserver/poppy:latest || true',
+              'sudo docker pull poppyserver/poppy:latest',
+              'sudo docker compose up -d',
+              'sleep 30',
+              'HEALTH_CHECK_RESPONSE=$(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:8080/)',
+              'if [ \"$HEALTH_CHECK_RESPONSE\" != \"200\" ]; then exit 1; fi'
+            ]"
+
+          # 7. 두 번째 인스턴스 헬스체크
+          echo "Checking health of second instance..."
+          sleep 30
+          HEALTH_2=$(aws elbv2 describe-target-health \
+            --target-group-arn $TARGET_GROUP_ARN \
+            --targets Id=$INSTANCE_2 \
+            --query 'TargetHealthDescriptions[0].TargetHealth.State' \
+            --output text)
+
+          if [ "$HEALTH_2" != "healthy" ]; then
+            echo "Second instance deployment failed"
+            exit 1
+          fi
+
+          # 8. 모든 배포가 성공하면 트래픽 전환
+          echo "All instances are healthy. Switching traffic to $DEPLOY_TARGET environment..."
+          aws elbv2 modify-listener \
+            --listener-arn ${{ secrets.ALB_LISTENER_ARN }} \
+            --default-actions Type=forward,TargetGroupArn=$TARGET_GROUP_ARN
+
+          echo "Deployment completed successfully to $DEPLOY_TARGET environment"
         env:
           DOCKER_COMPOSE_YML: ${{ secrets.DOCKER_COMPOSE_YML }}
