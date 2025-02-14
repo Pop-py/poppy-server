@@ -96,10 +96,6 @@ jobs:
             INSTANCE_2="${{ secrets.BLUE_INSTANCE_2 }}"
             TARGET_GROUP_ARN="${{ secrets.BLUE_TARGET_GROUP_ARN }}"
           fi
-          
-          # 인스턴스 출력
-          echo "INSTANCE_1: $INSTANCE_1"
-          echo "INSTANCE_2: $INSTANCE_2"
 
           # 3. docker-compose.yml을 S3에 업로드
           echo "$DOCKER_COMPOSE_YML" > docker-compose.yml
@@ -117,7 +113,7 @@ jobs:
               'sudo docker rmi poppyserver/poppy:latest || true',
               'sudo docker pull poppyserver/poppy:latest',
               'sudo docker compose up -d',
-              'sleep 30',
+              'sleep 60',
               'HEALTH_CHECK_RESPONSE=$(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:8080/)',
               'if [ \"$HEALTH_CHECK_RESPONSE\" != \"200\" ]; then exit 1; fi'
             ]"
@@ -148,7 +144,7 @@ jobs:
               'sudo docker rmi poppyserver/poppy:latest || true',
               'sudo docker pull poppyserver/poppy:latest',
               'sudo docker compose up -d',
-              'sleep 30',
+              'sleep 60',
               'HEALTH_CHECK_RESPONSE=$(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:8080/)',
               'if [ \"$HEALTH_CHECK_RESPONSE\" != \"200\" ]; then exit 1; fi'
             ]"
